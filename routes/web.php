@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\StoreController;
 use App\Http\Controllers\CheckoutController;
@@ -21,6 +22,30 @@ Route::post('/verify/check', [VerifyController::class, 'check'])->name('verify.c
 Route::post('/verify/generate', [VerifyController::class, 'generate'])->name('verify.generate');
 Route::get('/verify/status', [VerifyController::class, 'status'])->name('verify.status');
 Route::post('/verify/logout', [VerifyController::class, 'logout'])->name('verify.logout');
+
+// Debug: cek koneksi database minecraft (LuckPerms) - HAPUS setelah selesai debug
+Route::get('/debug-db', function () {
+    try {
+        $host = env('MINECRAFT_DB_HOST');
+        $db = env('MINECRAFT_DB_DATABASE');
+        $user = env('MINECRAFT_DB_USERNAME');
+
+        $conn = DB::connection('minecraft')->getPdo();
+        return response()->json([
+            'status' => 'connected',
+            'host' => $host,
+            'database' => $db,
+            'username' => $user,
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'failed',
+            'host' => env('MINECRAFT_DB_HOST'),
+            'database' => env('MINECRAFT_DB_DATABASE'),
+            'error' => $e->getMessage(),
+        ]);
+    }
+});
 
 // Minecraft server verify command callback
 Route::post('/api/verify/confirm', [VerifyController::class, 'confirm'])->name('verify.confirm');
