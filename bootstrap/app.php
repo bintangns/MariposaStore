@@ -12,6 +12,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Railway (dan platform proxy lain) terminate HTTPS di edge lalu forward ke app via HTTP.
+        // Tanpa ini, Laravel generate URL http:// meski halaman diakses https:// -> mixed content diblokir browser.
+        $middleware->trustProxies(at: '*');
         $middleware->redirectGuestsTo(fn () => route('admin.login'));
     })
     ->withExceptions(function (Exceptions $exceptions): void {

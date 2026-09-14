@@ -152,6 +152,8 @@
                 spinner.style.display = 'flex';
                 img.style.display = 'none';
 
+                const fallbackUrl = `https://mc-heads.net/avatar/${encodeURIComponent(raw)}/64`;
+
                 const probe = new Image();
                 probe.onload = () => {
                     img.src = probe.src;
@@ -159,6 +161,12 @@
                     img.style.display = 'block';
                 };
                 probe.onerror = () => {
+                    // Crafatar gagal untuk username non-premium (server pakai AuthMe/offline mode) -> fallback ke skin generik
+                    if (probe.src !== fallbackUrl) {
+                        probe.onerror = () => { spinner.style.display = 'none'; };
+                        probe.src = fallbackUrl;
+                        return;
+                    }
                     spinner.style.display = 'none';
                 };
                 probe.src = `https://crafatar.com/avatars/${encodeURIComponent(raw)}?size=64&overlay`;

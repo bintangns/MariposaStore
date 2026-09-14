@@ -10,12 +10,30 @@
     </div>
 
     @if(session('verified_username'))
-    <div style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.25);border-radius:0.75rem;padding:1rem 1.25rem;margin-bottom:2.5rem;display:flex;align-items:center;gap:0.75rem;">
-        <span style="color:#4ade80;font-size:1.25rem;">✓</span>
-        <div>
-            <span style="color:#4ade80;font-weight:500;">Terverifikasi</span>
-            <span style="color:#94a3b8;font-size:0.875rem;"> — Kamu bisa membeli produk sebagai </span>
-            <span style="color:#e2e8f0;font-weight:500;font-family:'JetBrains Mono',monospace;">{{ session('verified_username') }}</span>
+    <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:1rem;padding:1.25rem 1.5rem;margin-bottom:2.5rem;display:flex;align-items:center;gap:1.25rem;flex-wrap:wrap;">
+        <img src="https://mc-heads.net/avatar/{{ urlencode(session('verified_username')) }}/64"
+             alt="{{ session('verified_username') }}" width="56" height="56"
+             style="border-radius:9999px;border:2px solid #a78bfa;box-shadow:0 0 12px rgba(167,139,250,0.4);image-rendering:pixelated;flex-shrink:0;">
+
+        <div style="flex:1;min-width:10rem;">
+            @if($groupLabel)
+            <span style="display:inline-block;background:linear-gradient(135deg,#ec4899,#a78bfa);color:white;font-size:0.75rem;font-weight:600;padding:0.2rem 0.75rem;border-radius:9999px;margin-bottom:0.375rem;">{{ $groupLabel }}</span>
+            @endif
+            <div style="color:white;font-weight:600;font-size:1.0625rem;font-family:'JetBrains Mono',monospace;">{{ session('verified_username') }}</div>
+        </div>
+
+        <div style="display:flex;gap:0.625rem;">
+            <button type="button" disabled title="Segera hadir"
+                style="display:flex;align-items:center;gap:0.375rem;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#64748b;padding:0.5rem 1rem;border-radius:0.5rem;font-size:0.8125rem;cursor:not-allowed;font-family:inherit;">
+                🪙 Credits
+            </button>
+            <form method="POST" action="{{ route('verify.logout') }}">
+                @csrf
+                <button type="submit"
+                    style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);color:#f87171;padding:0.5rem 1rem;border-radius:0.5rem;font-size:0.8125rem;cursor:pointer;font-family:inherit;">
+                    Logout
+                </button>
+            </form>
         </div>
     </div>
     @endif

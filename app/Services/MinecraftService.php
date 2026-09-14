@@ -9,6 +9,40 @@ use Illuminate\Support\Facades\Log;
 class MinecraftService
 {
     /**
+     * Mapping nama group LuckPerms (lowercase) -> label yang ditampilkan.
+     * Group yang tidak ada di sini akan pakai ucfirst() dari nama aslinya.
+     */
+    private const GROUP_LABELS = [
+        'default'    => 'Member',
+        'adventure2' => 'Adventurer',
+        'adventure3' => 'Adventurer',
+    ];
+
+    /**
+     * Ambil label rank/group player dari LuckPerms database (kolom primary_group)
+     */
+    public function getPlayerGroupLabel(string $username): ?string
+    {
+        try {
+            $player = DB::connection('minecraft')
+                ->table('luckperms_players')
+                ->whereRaw('LOWER(username) = ?', [strtolower($username)])
+                ->first();
+
+            if (!$player || !$player->primary_group) {
+                return null;
+            }
+
+            $group = strtolower($player->primary_group);
+
+            return self::GROUP_LABELS[$group] ?? ucfirst($group);
+        } catch (\Exception $e) {
+            Log::error('MinecraftService::getPlayerGroupLabel error: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
      * Cek apakah player sudah pernah join server
      * via LuckPerms database
      */
