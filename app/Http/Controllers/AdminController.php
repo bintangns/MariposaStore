@@ -16,7 +16,7 @@ class AdminController extends Controller
         private DiscordService   $discord,
     ) {}
 
-    public function index()
+    public function index(Request $request)
     {
         $stats = [
             'total_orders'     => Order::count(),
@@ -25,7 +25,60 @@ class AdminController extends Controller
             'delivered_orders' => Order::where('status', 'delivered')->count(),
         ];
         $recentOrders = Order::with('product')->latest()->limit(10)->get();
-        return view('admin.index', compact('stats', 'recentOrders'));
+
+        [$from, $to] = $this->resolveAnalyticsRange($request);
+
+        $rangeQuery = Order::whereBetween('created_at', [$from, $to]);
+
+        $analytics = [
+            'from'         => $from,
+            'to'           => $to,
+            'transactions' => (clone $rangeQuery)->count(),
+            'revenue'      => (clone $rangeQuery)->where('status', 'delivered')->sum('amount'),
+            'delivered'    => (clone $rangeQuery)->where('status', 'delivered')->count(),
+            'pending'      => (clone $rangeQuery)->where('status', 'pending')->count(),
+        ];
+
+        $dailyRevenue = (clone $rangeQuery)
+            ->selectRaw('DATE(created_at) as date, SUM(CASE WHEN status = "delivered" THEN amount ELSE 0 END) as revenue')
+            ->groupBy('date')
+            ->pluck('revenue', 'date');
+
+        $chartData = [];
+        for ($cursor = $from->copy(); $cursor->lte($to); $cursor->addDay()) {
+            $key = $cursor->format('Y-m-d');
+            $chartData[] = [
+                'date'    => $key,
+                'label'   => $cursor->format('d M'),
+                'revenue' => (int) ($dailyRevenue[$key] ?? 0),
+            ];
+        }
+        $maxRevenue = max(1, collect($chartData)->max('revenue'));
+
+        $rangeOrders = (clone $rangeQuery)->with('product')->latest()->paginate(15, ['*'], 'page')->withQueryString();
+
+        return view('admin.index', compact('stats', 'recentOrders', 'analytics', 'chartData', 'maxRevenue', 'rangeOrders'));
+    }
+
+    /**
+     * Ambil & validasi rentang tanggal analytics dari query string (?from=&to=).
+     * Default 30 hari terakhir. Dibatasi maksimal 90 hari supaya grafik harian
+     * tetap kebaca (gak jadi ratusan bar tipis).
+     */
+    private function resolveAnalyticsRange(Request $request): array
+    {
+        $to   = $request->filled('to') ? \Carbon\Carbon::parse($request->query('to'))->endOfDay() : now()->endOfDay();
+        $from = $request->filled('from') ? \Carbon\Carbon::parse($request->query('from'))->startOfDay() : $to->copy()->subDays(29)->startOfDay();
+
+        if ($from->gt($to)) {
+            [$from, $to] = [$to->copy()->startOfDay(), $from->copy()->endOfDay()];
+        }
+
+        if ($from->diffInDays($to) > 90) {
+            $from = $to->copy()->subDays(90)->startOfDay();
+        }
+
+        return [$from, $to];
     }
 
     public function products()
@@ -130,10 +183,13 @@ class AdminController extends Controller
         $validated = $request->validate([
             'durations.7.enabled'         => 'nullable|boolean',
             'durations.7.price'           => 'nullable|integer|min:0',
+            'durations.7.commands'        => 'nullable|string',
             'durations.30.enabled'        => 'nullable|boolean',
             'durations.30.price'          => 'nullable|integer|min:0',
+            'durations.30.commands'       => 'nullable|string',
             'durations.permanent.enabled' => 'nullable|boolean',
             'durations.permanent.price'   => 'nullable|integer|min:0',
+            'durations.permanent.commands' => 'nullable|string',
         ]);
 
         $hasEnabled = collect($input)->contains(fn ($d) => !empty($d['enabled']));
@@ -159,8 +215,9 @@ class AdminController extends Controller
         ];
 
         foreach ($definitions as $key => $meta) {
-            $enabled = !empty($input[$key]['enabled']);
-            $price   = (int) ($input[$key]['price'] ?? 0);
+            $enabled  = !empty($input[$key]['enabled']);
+            $price    = (int) ($input[$key]['price'] ?? 0);
+            $commands = array_values(array_filter(array_map('trim', explode("\n", $input[$key]['commands'] ?? ''))));
 
             $query = $meta['days'] === null
                 ? $product->durations()->whereNull('days')
@@ -173,13 +230,14 @@ class AdminController extends Controller
 
             $existing = $query->first();
             if ($existing) {
-                $existing->update(['label' => $meta['label'], 'price' => $price]);
+                $existing->update(['label' => $meta['label'], 'price' => $price, 'commands' => $commands]);
             } else {
                 $product->durations()->create([
                     'label'      => $meta['label'],
                     'days'       => $meta['days'],
                     'price'      => $price,
                     'sort_order' => $meta['sort_order'],
+                    'commands'   => $commands,
                 ]);
             }
         }

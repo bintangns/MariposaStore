@@ -48,6 +48,7 @@ class CheckoutController extends Controller
             'product_duration_id' => $duration?->id,
             'duration_label'      => $duration?->label,
             'duration_days'       => $duration?->days,
+            'duration_commands'   => $duration?->commands,
             'amount'              => $duration?->price ?? $product->price,
             'status'              => 'pending',
         ]);

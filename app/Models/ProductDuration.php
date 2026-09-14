@@ -12,11 +12,13 @@ class ProductDuration extends Model
         'days',      // null = permanent
         'price',
         'sort_order',
+        'commands',  // JSON array of commands khusus durasi ini (override auto lp command)
     ];
 
     protected $casts = [
-        'days'  => 'integer',
-        'price' => 'integer',
+        'days'     => 'integer',
+        'price'    => 'integer',
+        'commands' => 'array',
     ];
 
     public function product()

@@ -113,18 +113,24 @@
                             ];
                         @endphp
                         @foreach($durationRows as $key => $row)
-                        <div style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem 1rem;{{ !$loop->last ? 'border-bottom:1px solid rgba(255,255,255,0.06);' : '' }}">
-                            <input type="checkbox" name="durations[{{ $key }}][enabled]" value="1"
-                                {{ old("durations.$key.enabled", $row['existing'] ? true : false) ? 'checked' : '' }}
-                                style="width:auto;accent-color:#7c3aed;" id="duration-{{ $key }}">
-                            <label for="duration-{{ $key }}" style="margin-bottom:0;cursor:pointer;width:6rem;flex-shrink:0;">{{ $row['label'] }}</label>
-                            <input type="number" name="durations[{{ $key }}][price]"
-                                value="{{ old("durations.$key.price", $row['existing']->price ?? '') }}"
-                                placeholder="Harga (Rupiah)" style="flex:1;">
+                        <div style="padding:0.75rem 1rem;{{ !$loop->last ? 'border-bottom:1px solid rgba(255,255,255,0.06);' : '' }}">
+                            <div style="display:flex;align-items:center;gap:0.75rem;">
+                                <input type="checkbox" name="durations[{{ $key }}][enabled]" value="1"
+                                    {{ old("durations.$key.enabled", $row['existing'] ? true : false) ? 'checked' : '' }}
+                                    style="width:auto;accent-color:#7c3aed;" id="duration-{{ $key }}">
+                                <label for="duration-{{ $key }}" style="margin-bottom:0;cursor:pointer;width:6rem;flex-shrink:0;">{{ $row['label'] }}</label>
+                                <input type="number" name="durations[{{ $key }}][price]"
+                                    value="{{ old("durations.$key.price", $row['existing']->price ?? '') }}"
+                                    placeholder="Harga (Rupiah)" style="flex:1;">
+                            </div>
+                            <div style="margin-top:0.625rem;">
+                                <textarea name="durations[{{ $key }}][commands]" style="font-family:'JetBrains Mono',monospace;font-size:0.75rem;min-height:70px;"
+                                    placeholder="Kosongkan buat pakai auto lp command dari Rank Name.&#10;Isi kalau durasi ini butuh perk beda, mis:&#10;lp user {player} parent addtemp vip 7d&#10;give {player} diamond 3">{{ old("durations.$key.commands", $row['existing']?->commands ? implode("\n", $row['existing']->commands) : '') }}</textarea>
+                            </div>
                         </div>
                         @endforeach
                     </div>
-                    <div class="hint">Aktifkan salah satu/semua, isi harga masing-masing. Command LuckPerms otomatis dibuat dari Rank Name di atas — tidak perlu ditulis manual di kolom Commands.</div>
+                    <div class="hint">Aktifkan salah satu/semua, isi harga masing-masing. Kosongkan kolom Commands di durasi kalau mau pakai auto command LuckPerms dari Rank Name (perk sama, cuma beda lama waktu). Isi manual (satu command per baris, pakai <code style="color:#a78bfa;">{player}</code>) kalau durasi itu perlu perk yang beda — command manual ini akan dipakai, bukan yang auto.</div>
                 </div>
 
                 <div class="form-group">

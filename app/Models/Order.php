@@ -14,6 +14,7 @@ class Order extends Model
         'product_duration_id',
         'duration_label',
         'duration_days',
+        'duration_commands',
         'amount',
         'status',           // pending, paid, delivered, failed
         'payment_type',
@@ -27,6 +28,7 @@ class Order extends Model
         'delivered_at' => 'datetime',
         'amount' => 'integer',
         'duration_days' => 'integer',
+        'duration_commands' => 'array',
     ];
 
     public function product()
@@ -40,10 +42,15 @@ class Order extends Model
     }
 
     /**
-     * Command yang dijalankan saat delivery. Kalau order ini beli rank dengan
-     * durasi, command LuckPerms di-generate otomatis dari rank_name + durasi
-     * yang tersimpan di order (bukan bergantung pada row product_durations,
-     * yang bisa saja sudah dihapus/diubah admin setelah order dibuat).
+     * Command yang dijalankan saat delivery. Kalau durasi yang dibeli punya
+     * command khusus (diisi admin per-durasi, misal 30 Hari dapet kit tambahan
+     * yang 7 Hari nggak dapet), itu yang dipakai. Kalau nggak diisi, fallback ke
+     * auto-generate command LuckPerms dari rank_name + durasi.
+     *
+     * duration_commands & duration_days/label disnapshot ke order saat checkout
+     * (bukan dibaca live dari row product_durations), supaya command yang
+     * dieksekusi tetap konsisten dengan yang dibeli walau admin edit/hapus
+     * durasi tsb setelah order dibuat.
      *
      * Pakai UUID (bukan username) sebagai target LuckPerms: LP memvalidasi
      * argumen <user> sebagai format username Mojang standar, jadi username
@@ -53,14 +60,24 @@ class Order extends Model
      */
     public function resolveCommands(): array
     {
-        if ($this->product_duration_id && $this->product->rank_name) {
-            $target   = $this->minecraft_uuid ?: $this->minecraft_username;
-            $rankName = $this->product->rank_name;
-            $command  = $this->duration_days
-                ? "lp user {$target} parent addtemp {$rankName} {$this->duration_days}d"
-                : "lp user {$target} parent set {$rankName}";
+        $target = $this->minecraft_uuid ?: $this->minecraft_username;
 
-            return [$command];
+        if ($this->product_duration_id) {
+            if (!empty($this->duration_commands)) {
+                return array_map(
+                    fn ($cmd) => str_replace('{player}', $target, $cmd),
+                    $this->duration_commands
+                );
+            }
+
+            if ($this->product->rank_name) {
+                $rankName = $this->product->rank_name;
+                $command  = $this->duration_days
+                    ? "lp user {$target} parent addtemp {$rankName} {$this->duration_days}d"
+                    : "lp user {$target} parent set {$rankName}";
+
+                return [$command];
+            }
         }
 
         return $this->product->commands ?? [];
