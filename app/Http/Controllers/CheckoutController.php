@@ -145,7 +145,7 @@ class CheckoutController extends Controller
         // Deliver produk via RCON
         $commands = $order->resolveCommands();
         if (!empty($commands)) {
-            $results      = $this->minecraft->deliverProduct($order->minecraft_username, $commands);
+            $results      = $this->minecraft->deliverProduct($commands);
             $allDelivered = collect($results)->every(fn ($r) => $r['success']);
 
             $order->update([

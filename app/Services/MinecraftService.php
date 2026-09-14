@@ -125,23 +125,23 @@ class MinecraftService
     }
 
     /**
-     * Deliver produk ke player setelah pembayaran sukses. Tiap baris command
-     * boleh diawali prefix target RCON, mis. "survival: give {player} ...".
-     * Tanpa prefix, default ke RCON "global".
+     * Deliver produk ke player setelah pembayaran sukses. $commands harus
+     * commands yang udah final (placeholder {player}/{uuid} sudah di-replace
+     * oleh Order::resolveCommands()). Tiap baris boleh diawali prefix target
+     * RCON, mis. "survival: give PlayerName ...". Tanpa prefix, default ke
+     * RCON "global".
      */
-    public function deliverProduct(string $username, array $commands): array
+    public function deliverProduct(array $commands): array
     {
         $results = [];
 
         foreach ($commands as $line) {
             [$target, $command] = $this->parseCommandTarget($line);
 
-            // Replace {player} placeholder dengan username asli
-            $cmd = str_replace('{player}', $username, $command);
-            $success = $this->sendRconCommand($cmd, $target);
+            $success = $this->sendRconCommand($command, $target);
             $results[] = [
                 'target'  => $target,
-                'command' => $cmd,
+                'command' => $command,
                 'success' => $success,
             ];
 

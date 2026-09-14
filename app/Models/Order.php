@@ -52,35 +52,40 @@ class Order extends Model
      * dieksekusi tetap konsisten dengan yang dibeli walau admin edit/hapus
      * durasi tsb setelah order dibuat.
      *
-     * Pakai UUID (bukan username) sebagai target LuckPerms: LP memvalidasi
-     * argumen <user> sebagai format username Mojang standar, jadi username
-     * Bedrock yang diawali "." (mis. .BintangNS) ditolak/gagal di-resolve.
-     * UUID sudah tersimpan di order sejak verifikasi dan diterima LP tanpa
-     * perlu validasi format tsb, jadi berlaku sama untuk Java maupun Bedrock.
+     * Dua placeholder tersedia buat command custom (durations/product):
+     * - {player} -> username. Dipakai kebanyakan plugin (PlayerPoints,
+     *   CrazyCrates, give, dll) yang resolve player lewat nama.
+     * - {uuid}   -> UUID. Wajib dipakai buat command LuckPerms ("lp user
+     *   {uuid} ..."), karena LP memvalidasi argumen <user> sebagai format
+     *   username Mojang standar dan menolak username Bedrock yang diawali
+     *   "." (mis. .BintangNS). UUID gak kena validasi itu, jadi aman buat
+     *   Java maupun Bedrock.
+     *
+     * Command auto-generate dari rank_name (kalau duration_commands kosong)
+     * selalu pakai UUID juga, dengan alasan yang sama.
      */
     public function resolveCommands(): array
     {
-        $target = $this->minecraft_uuid ?: $this->minecraft_username;
+        $username = $this->minecraft_username;
+        $uuid     = $this->minecraft_uuid ?: $this->minecraft_username;
+        $replace  = fn (string $cmd) => str_replace(['{player}', '{uuid}'], [$username, $uuid], $cmd);
 
         if ($this->product_duration_id) {
             if (!empty($this->duration_commands)) {
-                return array_map(
-                    fn ($cmd) => str_replace('{player}', $target, $cmd),
-                    $this->duration_commands
-                );
+                return array_map($replace, $this->duration_commands);
             }
 
             if ($this->product->rank_name) {
                 $rankName = $this->product->rank_name;
                 $command  = $this->duration_days
-                    ? "lp user {$target} parent addtemp {$rankName} {$this->duration_days}d"
-                    : "lp user {$target} parent set {$rankName}";
+                    ? "lp user {$uuid} parent addtemp {$rankName} {$this->duration_days}d"
+                    : "lp user {$uuid} parent set {$rankName}";
 
                 return [$command];
             }
         }
 
-        return $this->product->commands ?? [];
+        return array_map($replace, $this->product->commands ?? []);
     }
 
     public function getFormattedAmountAttribute()

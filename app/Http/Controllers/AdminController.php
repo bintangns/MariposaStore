@@ -278,7 +278,7 @@ class AdminController extends Controller
     public function deliver(Order $order)
     {
         $commands = $order->resolveCommands();
-        $results  = $this->minecraft->deliverProduct($order->minecraft_username, $commands);
+        $results  = $this->minecraft->deliverProduct($commands);
         $order->update([
             'status'       => 'delivered',
             'delivered_at' => now(),
