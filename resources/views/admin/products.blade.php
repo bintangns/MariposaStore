@@ -53,7 +53,15 @@
                     <tr>
                         <td style="color:white;font-weight:500;">{{ $product->name }}</td>
                         <td>{{ $product->category->name ?? '—' }}</td>
-                        <td>{{ $product->formatted_price }}</td>
+                        <td>
+                            @if($product->durations->isNotEmpty())
+                                Mulai {{ $product->durations->sortBy('price')->first()->formatted_price }}
+                            @elseif($product->formatted_price)
+                                {{ $product->formatted_price }}
+                            @else
+                                <span style="color:#64748b;">—</span>
+                            @endif
+                        </td>
                         <td><span style="color:{{ $product->is_active ? '#4ade80' : '#f87171' }};">{{ $product->is_active ? 'Aktif' : 'Nonaktif' }}</span></td>
                         <td style="display:flex;gap:0.5rem;">
                             <a href="{{ route('admin.products.edit', $product) }}" class="btn" style="background:rgba(139,92,246,0.2);color:#a78bfa;">Edit</a>

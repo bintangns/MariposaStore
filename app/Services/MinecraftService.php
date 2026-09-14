@@ -98,40 +98,49 @@ class MinecraftService
     }
 
     /**
-     * Kirim command ke server via RCON
+     * Kirim command ke server via RCON. $target menentukan server mana yang
+     * dituju (lihat config/minecraft.php rcon_targets) — default "global".
      */
-    public function sendRconCommand(string $command): bool
+    public function sendRconCommand(string $command, string $target = 'global'): bool
     {
-        try {
-            $host     = config('minecraft.rcon_host');
-            $port     = config('minecraft.rcon_port');
-            $password = config('minecraft.rcon_password');
+        $config = config("minecraft.rcon_targets.{$target}");
 
-            $rcon = new RconClient($host, $port, $password);
+        if (!$config || empty($config['host'])) {
+            Log::error("RCON target '{$target}' tidak dikonfigurasi (cek .env & config/minecraft.php).");
+            return false;
+        }
+
+        try {
+            $rcon = new RconClient($config['host'], (int) $config['port'], $config['password']);
             $rcon->connect();
             $result = $rcon->sendCommand($command);
             $rcon->disconnect();
 
-            Log::info("RCON command sent: {$command} | Response: {$result}");
+            Log::info("RCON [{$target}] command sent: {$command} | Response: {$result}");
             return true;
         } catch (\Exception $e) {
-            Log::error("RCON error: " . $e->getMessage());
+            Log::error("RCON [{$target}] error: " . $e->getMessage());
             return false;
         }
     }
 
     /**
-     * Deliver produk ke player setelah pembayaran sukses
+     * Deliver produk ke player setelah pembayaran sukses. Tiap baris command
+     * boleh diawali prefix target RCON, mis. "survival: give {player} ...".
+     * Tanpa prefix, default ke RCON "global".
      */
     public function deliverProduct(string $username, array $commands): array
     {
         $results = [];
 
-        foreach ($commands as $command) {
+        foreach ($commands as $line) {
+            [$target, $command] = $this->parseCommandTarget($line);
+
             // Replace {player} placeholder dengan username asli
             $cmd = str_replace('{player}', $username, $command);
-            $success = $this->sendRconCommand($cmd);
+            $success = $this->sendRconCommand($cmd, $target);
             $results[] = [
+                'target'  => $target,
                 'command' => $cmd,
                 'success' => $success,
             ];
@@ -141,5 +150,22 @@ class MinecraftService
         }
 
         return $results;
+    }
+
+    /**
+     * Parse prefix target RCON dari satu baris command, mis:
+     * "survival: give {player} diamond 5" -> ['survival', 'give {player} diamond 5']
+     * Tanpa prefix (atau prefix gak dikenal) -> ['global', <command asli>]
+     */
+    private function parseCommandTarget(string $line): array
+    {
+        $line    = trim($line);
+        $targets = array_keys(config('minecraft.rcon_targets', []));
+
+        if (preg_match('/^(' . implode('|', array_map('preg_quote', $targets)) . '):\s*(.+)$/i', $line, $m)) {
+            return [strtolower($m[1]), $m[2]];
+        }
+
+        return ['global', $line];
     }
 }

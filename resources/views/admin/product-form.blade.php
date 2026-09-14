@@ -50,6 +50,13 @@
                 @if($product->id) @method('PUT') @endif
 
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;">
+                    <div class="form-group" style="grid-column:1/-1;display:flex;align-items:center;gap:0.75rem;background:rgba(139,92,246,0.06);border:1px solid rgba(139,92,246,0.2);border-radius:0.5rem;padding:0.875rem 1rem;">
+                        @php $isSubscription = old('is_subscription', $product->durations->isNotEmpty()); @endphp
+                        <input type="checkbox" name="is_subscription" value="1" id="is_subscription"
+                            {{ $isSubscription ? 'checked' : '' }}
+                            onchange="mpToggleProductType(this.checked)" style="width:auto;accent-color:#7c3aed;">
+                        <label for="is_subscription" style="margin-bottom:0;cursor:pointer;">Produk ini Subscription (ada pilihan durasi 7 Hari / 30 Hari / Permanent)</label>
+                    </div>
                     <div class="form-group">
                         <label>Nama Produk</label>
                         <input type="text" name="name" value="{{ old('name', $product->name) }}" required placeholder="VIP, MVP, dll">
@@ -66,10 +73,10 @@
                         <div class="hint">Belum ada kategori. <a href="{{ route('admin.categories') }}" style="color:#a78bfa;">Buat kategori dulu</a>.</div>
                         @endif
                     </div>
-                    <div class="form-group">
+                    <div class="form-group" id="fg-price">
                         <label>Harga (Rupiah)</label>
-                        <input type="number" name="price" value="{{ old('price', $product->price) }}" required placeholder="50000">
-                        <div class="hint">Kalau produk ini pakai Durasi Rank di bawah, harga per-durasi yang dipakai — harga ini cuma fallback.</div>
+                        <input type="number" name="price" id="price-input" value="{{ old('price', $product->price) }}" placeholder="50000">
+                        <div class="hint">Harga sekali bayar. Diabaikan kalau produk ini Subscription (pakai Durasi Rank di bawah).</div>
                     </div>
                     <div class="form-group">
                         <label>Rank Name (grup LuckPerms)</label>
@@ -102,7 +109,7 @@
                     <div class="hint">Setiap baris = satu fitur yang ditampilkan di store</div>
                 </div>
 
-                <div class="form-group">
+                <div class="form-group" id="fg-durations">
                     <label>Durasi Rank</label>
                     <div style="border:1px solid rgba(255,255,255,0.08);border-radius:0.5rem;overflow:hidden;">
                         @php
@@ -125,18 +132,18 @@
                             </div>
                             <div style="margin-top:0.625rem;">
                                 <textarea name="durations[{{ $key }}][commands]" style="font-family:'JetBrains Mono',monospace;font-size:0.75rem;min-height:70px;"
-                                    placeholder="Kosongkan buat pakai auto lp command dari Rank Name.&#10;Isi kalau durasi ini butuh perk beda, mis:&#10;lp user {player} parent addtemp vip 7d&#10;give {player} diamond 3">{{ old("durations.$key.commands", $row['existing']?->commands ? implode("\n", $row['existing']->commands) : '') }}</textarea>
+                                    placeholder="Kosongkan buat pakai auto lp command dari Rank Name.&#10;Isi kalau durasi ini butuh perk beda, mis:&#10;survival: give {player} diamond 3&#10;chunksmp: give {player} diamond 3">{{ old("durations.$key.commands", $row['existing']?->commands ? implode("\n", $row['existing']->commands) : '') }}</textarea>
                             </div>
                         </div>
                         @endforeach
                     </div>
-                    <div class="hint">Aktifkan salah satu/semua, isi harga masing-masing. Kosongkan kolom Commands di durasi kalau mau pakai auto command LuckPerms dari Rank Name (perk sama, cuma beda lama waktu). Isi manual (satu command per baris, pakai <code style="color:#a78bfa;">{player}</code>) kalau durasi itu perlu perk yang beda — command manual ini akan dipakai, bukan yang auto.</div>
+                    <div class="hint">Aktifkan salah satu/semua, isi harga masing-masing. Kosongkan kolom Commands di durasi kalau mau pakai auto command LuckPerms dari Rank Name (perk sama, cuma beda lama waktu). Isi manual kalau durasi itu perlu perk yang beda — command manual ini akan dipakai, bukan yang auto.<br>Format tiap baris: <code style="color:#a78bfa;">{player}</code> buat placeholder username, dan boleh diawali prefix target RCON — <code style="color:#a78bfa;">global:</code>, <code style="color:#a78bfa;">survival:</code>, atau <code style="color:#a78bfa;">chunksmp:</code> (tanpa prefix = <code style="color:#a78bfa;">global</code>). Satu produk bisa nembak ke beberapa server sekaligus, satu command per baris.</div>
                 </div>
 
                 <div class="form-group">
                     <label>Commands (satu per baris)</label>
-                    <textarea name="commands" style="font-family:'JetBrains Mono',monospace;font-size:0.8rem;" placeholder="lp user {player} parent set vip&#10;give {player} diamond 5">{{ old('commands', $product->commands ? implode("\n", $product->commands) : '') }}</textarea>
-                    <div class="hint">Gunakan <code style="color:#a78bfa;">{player}</code> sebagai placeholder username. Diabaikan kalau produk ini pakai Durasi Rank di atas.</div>
+                    <textarea name="commands" style="font-family:'JetBrains Mono',monospace;font-size:0.8rem;" placeholder="global: lp user {player} parent set vip&#10;survival: give {player} diamond 5&#10;chunksmp: give {player} diamond 5">{{ old('commands', $product->commands ? implode("\n", $product->commands) : '') }}</textarea>
+                    <div class="hint">Diabaikan kalau produk ini pakai Durasi Rank di atas. Gunakan <code style="color:#a78bfa;">{player}</code> sebagai placeholder username, dan prefix <code style="color:#a78bfa;">global:</code> / <code style="color:#a78bfa;">survival:</code> / <code style="color:#a78bfa;">chunksmp:</code> buat nentuin RCON server mana yang dituju tiap baris (tanpa prefix = <code style="color:#a78bfa;">global</code>).</div>
                 </div>
 
                 <div style="display:flex;gap:1rem;">
@@ -148,5 +155,13 @@
             </form>
         </div>
     </div>
+    <script>
+        function mpToggleProductType(isSubscription) {
+            document.getElementById('fg-price').style.display = isSubscription ? 'none' : 'block';
+            document.getElementById('fg-durations').style.display = isSubscription ? 'block' : 'none';
+            document.getElementById('price-input').required = !isSubscription;
+        }
+        mpToggleProductType(document.getElementById('is_subscription').checked);
+    </script>
 </body>
 </html>

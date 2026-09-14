@@ -83,7 +83,7 @@ class AdminController extends Controller
 
     public function products()
     {
-        $products = Product::with('category')->orderBy('sort_order')->get();
+        $products = Product::with('category', 'durations')->orderBy('sort_order')->get();
         return view('admin.products', compact('products'));
     }
 
@@ -99,7 +99,7 @@ class AdminController extends Controller
             'name'        => 'required|string|max:100',
             'rank_name'   => 'nullable|string|max:50',
             'description' => 'required|string',
-            'price'       => 'required|integer|min:1000',
+            'price'       => 'nullable|integer|min:1000',
             'category_id' => 'required|exists:categories,id',
             'commands'    => 'nullable|string',
             'features'    => 'nullable|string',
@@ -108,14 +108,7 @@ class AdminController extends Controller
             'is_active'   => 'boolean',
         ]);
 
-        $durations = $this->validateDurations($request);
-
-        $data['commands'] = $data['commands']
-            ? array_filter(explode("\n", $data['commands']))
-            : [];
-        $data['features'] = $data['features']
-            ? array_filter(explode("\n", $data['features']))
-            : [];
+        [$data, $durations] = $this->applyProductType($request, $data);
 
         $product = Product::create($data);
         $this->syncDurations($product, $durations);
@@ -136,7 +129,7 @@ class AdminController extends Controller
             'name'        => 'required|string|max:100',
             'rank_name'   => 'nullable|string|max:50',
             'description' => 'required|string',
-            'price'       => 'required|integer|min:1000',
+            'price'       => 'nullable|integer|min:1000',
             'category_id' => 'required|exists:categories,id',
             'commands'    => 'nullable|string',
             'features'    => 'nullable|string',
@@ -145,14 +138,7 @@ class AdminController extends Controller
             'is_active'   => 'boolean',
         ]);
 
-        $durations = $this->validateDurations($request);
-
-        $data['commands'] = $data['commands']
-            ? array_filter(explode("\n", $data['commands']))
-            : [];
-        $data['features'] = $data['features']
-            ? array_filter(explode("\n", $data['features']))
-            : [];
+        [$data, $durations] = $this->applyProductType($request, $data);
 
         $product->update($data);
         $this->syncDurations($product, $durations);
@@ -172,9 +158,42 @@ class AdminController extends Controller
     }
 
     /**
+     * Tentukan tipe produk (Sekali Bayar vs Subscription) dari checkbox
+     * "is_subscription" di form, lalu siapkan $data & $durations sesuai:
+     * - Sekali Bayar: durasi diabaikan (dihapus semua), Harga wajib diisi.
+     * - Subscription: Harga (fallback) di-null-kan, minimal 1 durasi wajib aktif.
+     */
+    private function applyProductType(Request $request, array $data): array
+    {
+        $isSubscription = $request->boolean('is_subscription');
+
+        if (!$isSubscription) {
+            if (empty($data['price'])) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'price' => 'Harga wajib diisi untuk produk tipe Sekali Bayar.',
+                ]);
+            }
+            $durations = [];
+        } else {
+            $data['price'] = null;
+            $durations = $this->validateDurations($request);
+        }
+
+        $data['commands'] = $data['commands']
+            ? array_filter(explode("\n", $data['commands']))
+            : [];
+        $data['features'] = $data['features']
+            ? array_filter(explode("\n", $data['features']))
+            : [];
+
+        return [$data, $durations];
+    }
+
+    /**
      * Validasi input durasi (7 hari / 30 hari / permanent) dari form produk.
-     * Kalau ada durasi yang diaktifkan, rank_name wajib diisi karena dipakai
-     * untuk generate command LuckPerms otomatis.
+     * Dipanggil cuma untuk produk tipe Subscription: minimal satu durasi wajib
+     * aktif, dan rank_name wajib diisi karena dipakai untuk generate command
+     * LuckPerms otomatis.
      */
     private function validateDurations(Request $request): array
     {
@@ -193,7 +212,14 @@ class AdminController extends Controller
         ]);
 
         $hasEnabled = collect($input)->contains(fn ($d) => !empty($d['enabled']));
-        if ($hasEnabled && !$request->filled('rank_name')) {
+
+        if (!$hasEnabled) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'durations' => 'Aktifkan minimal satu durasi (7 Hari / 30 Hari / Permanent) untuk produk tipe Subscription.',
+            ]);
+        }
+
+        if (!$request->filled('rank_name')) {
             throw \Illuminate\Validation\ValidationException::withMessages([
                 'rank_name' => 'Rank Name (grup LuckPerms) wajib diisi kalau ada durasi yang diaktifkan.',
             ]);

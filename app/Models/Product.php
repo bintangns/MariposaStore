@@ -44,6 +44,10 @@ class Product extends Model
 
     public function getFormattedPriceAttribute()
     {
+        if ($this->price === null) {
+            return null;
+        }
+
         return 'Rp ' . number_format($this->price, 0, ',', '.');
     }
 
