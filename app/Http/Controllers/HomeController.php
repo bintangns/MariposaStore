@@ -18,4 +18,9 @@ class HomeController extends Controller
     {
         return view('pages.staff');
     }
+
+    public function terms()
+    {
+        return view('pages.terms');
+    }
 }

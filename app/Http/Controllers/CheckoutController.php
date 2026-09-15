@@ -30,6 +30,11 @@ class CheckoutController extends Controller
             return back()->with('error', 'Username belum diverifikasi!');
         }
 
+        // Wajib centang Syarat & Ketentuan (termasuk kebijakan no-refund) sebelum bayar
+        if (!$request->boolean('terms_accepted')) {
+            return back()->with('error', 'Kamu harus membaca dan menyetujui Syarat & Ketentuan terlebih dahulu.');
+        }
+
         // Kalau produk ini punya opsi durasi, wajib pilih salah satu
         $duration = null;
         if ($product->durations->isNotEmpty()) {
@@ -44,6 +49,7 @@ class CheckoutController extends Controller
             'order_id'            => 'MRP-' . strtoupper(Str::random(8)),
             'minecraft_username'  => $username,
             'minecraft_uuid'      => session('verified_uuid'),
+            'terms_accepted_at'   => now(),
             'product_id'          => $product->id,
             'product_duration_id' => $duration?->id,
             'duration_label'      => $duration?->label,

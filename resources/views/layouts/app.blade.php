@@ -42,6 +42,7 @@
                 <a href="{{ route('store') }}"  style="color:#94a3b8;text-decoration:none;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#94a3b8'">Store</a>
                 <a href="{{ route('rules') }}"  style="color:#94a3b8;text-decoration:none;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#94a3b8'">Peraturan</a>
                 <a href="{{ route('staff') }}"  style="color:#94a3b8;text-decoration:none;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#94a3b8'">Staff</a>
+                <a href="{{ route('terms') }}"  style="color:#94a3b8;text-decoration:none;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#94a3b8'">S&K</a>
                 <a href="{{ route('orders') }}" style="color:#94a3b8;text-decoration:none;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#94a3b8'">Riwayat</a>
             </div>
             <div style="display:flex;align-items:center;gap:0.75rem;">

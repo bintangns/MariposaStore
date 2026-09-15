@@ -10,6 +10,7 @@ class Order extends Model
         'order_id',
         'minecraft_username',
         'minecraft_uuid',
+        'terms_accepted_at',
         'product_id',
         'product_duration_id',
         'duration_label',
@@ -26,6 +27,7 @@ class Order extends Model
 
     protected $casts = [
         'delivered_at' => 'datetime',
+        'terms_accepted_at' => 'datetime',
         'amount' => 'integer',
         'duration_days' => 'integer',
         'duration_commands' => 'array',

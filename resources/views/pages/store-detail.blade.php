@@ -76,6 +76,13 @@
                     <p style="font-size:0.7rem;color:#64748b;margin-top:0.5rem;">Menunggu verifikasi...</p>
                 </div>
 
+                <div style="display:flex;align-items:flex-start;gap:0.5rem;margin-bottom:1rem;">
+                    <input type="checkbox" name="terms_accepted" id="terms-checkbox" value="1" style="width:auto;margin-top:0.2rem;accent-color:#7c3aed;flex-shrink:0;">
+                    <label for="terms-checkbox" style="margin-bottom:0;cursor:pointer;font-size:0.8rem;color:#94a3b8;line-height:1.5;">
+                        Saya sudah membaca dan menyetujui <a href="{{ route('terms') }}" target="_blank" style="color:#a78bfa;">Syarat & Ketentuan</a>, termasuk kebijakan <strong style="color:#cbd5e1;">tidak ada pengembalian dana</strong> atas barang yang sudah dibeli.
+                    </label>
+                </div>
+
                 <button type="submit" id="submit-btn" disabled
                     style="width:100%;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:white;padding:0.75rem;border-radius:0.5rem;font-weight:600;font-size:0.875rem;border:none;cursor:not-allowed;opacity:0.5;transition:all 0.2s;font-family:inherit;">
                     Verifikasi dulu untuk lanjut
@@ -117,6 +124,19 @@ const usernameInput = document.getElementById('username-field');
 const usernameHidden = document.getElementById('username-hidden');
 const submitBtn = document.getElementById('submit-btn');
 const checkResult = document.getElementById('username-check-result');
+const termsCheckbox = document.getElementById('terms-checkbox');
+
+function updateSubmitState() {
+    const canSubmit = isVerified && termsCheckbox.checked;
+    submitBtn.disabled = !canSubmit;
+    submitBtn.style.opacity = canSubmit ? '1' : '0.5';
+    submitBtn.style.cursor = canSubmit ? 'pointer' : 'not-allowed';
+    submitBtn.textContent = !isVerified
+        ? 'Verifikasi dulu untuk lanjut'
+        : (termsCheckbox.checked ? 'Beli Sekarang →' : 'Setujui Syarat & Ketentuan dulu');
+}
+
+termsCheckbox.addEventListener('change', updateSubmitState);
 
 const durationButtons = document.querySelectorAll('.duration-option');
 const durationIdInput = document.getElementById('duration-id-input');
@@ -146,10 +166,7 @@ document.getElementById('checkout-platform-toggle').addEventListener('mp:platfor
     syncHiddenUsername();
     // Platform berubah -> username efektif berubah, minta verifikasi ulang
     isVerified = false;
-    submitBtn.disabled = true;
-    submitBtn.style.opacity = '0.5';
-    submitBtn.style.cursor = 'not-allowed';
-    submitBtn.textContent = 'Verifikasi dulu untuk lanjut';
+    updateSubmitState();
     checkResult.innerHTML = '';
     document.getElementById('verify-section').style.display = 'none';
     if (pollInterval) clearInterval(pollInterval);
@@ -224,10 +241,7 @@ function showVerified(username) {
     isVerified = true;
     checkResult.innerHTML = '<span style="color:#4ade80;">✓ Terverifikasi!</span>';
     document.getElementById('verify-section').style.display = 'none';
-    submitBtn.disabled = false;
-    submitBtn.style.opacity = '1';
-    submitBtn.style.cursor = 'pointer';
-    submitBtn.textContent = 'Beli Sekarang →';
+    updateSubmitState();
     usernameHidden.value = username;
     sessionStorage.setItem('mc_username', username);
 }
