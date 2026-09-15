@@ -87,4 +87,6 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::post('/categories', [AdminController::class, 'storeCategory'])->name('categories.store');
     Route::put('/categories/{category}', [AdminController::class, 'updateCategory'])->name('categories.update');
     Route::delete('/categories/{category}', [AdminController::class, 'destroyCategory'])->name('categories.destroy');
+    Route::get('/settings', [AdminController::class, 'settings'])->name('settings');
+    Route::post('/settings', [AdminController::class, 'updateSettings'])->name('settings.update');
 });

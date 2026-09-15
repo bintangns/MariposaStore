@@ -1,6 +1,8 @@
 @extends('layouts.app')
 @section('title', 'Store')
 
+@php use App\Models\Setting; @endphp
+
 @section('content')
 <div style="max-width:72rem;margin:0 auto;padding:3rem 1.5rem;">
 
@@ -8,6 +10,18 @@
         <h1 style="font-size:2.5rem;font-weight:700;color:white;margin-bottom:0.5rem;">Store Donasi</h1>
         <p style="color:#94a3b8;">Dukung server dan dapatkan keuntungan eksklusif!</p>
     </div>
+
+    @if(Setting::isMaintenanceMode())
+    <div style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.3);border-radius:0.75rem;padding:1rem 1.25rem;margin-bottom:2.5rem;display:flex;align-items:center;gap:0.75rem;">
+        <span style="color:#fbbf24;font-size:1.25rem;">🛠</span>
+        <span style="color:#fcd34d;font-size:0.875rem;">{{ Setting::maintenanceMessage() }}</span>
+    </div>
+    @elseif(Setting::isPromoActive() && Setting::promoLabel())
+    <div style="background:rgba(236,72,153,0.08);border:1px solid rgba(236,72,153,0.3);border-radius:0.75rem;padding:1rem 1.25rem;margin-bottom:2.5rem;display:flex;align-items:center;gap:0.75rem;">
+        <span style="font-size:1.25rem;">🏷</span>
+        <span style="color:#f9a8d4;font-size:0.875rem;font-weight:500;">{{ Setting::promoLabel() }}</span>
+    </div>
+    @endif
 
     @if(session('verified_username'))
     <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:1rem;padding:1.25rem 1.5rem;margin-bottom:2.5rem;display:flex;align-items:center;gap:1.25rem;flex-wrap:wrap;">
@@ -58,14 +72,32 @@
                     @endforeach
                 </ul>
                 @endif
+                @php
+                    $cheapestPrice = $product->durations->isNotEmpty()
+                        ? $product->durations->sortBy('price')->first()->price
+                        : $product->price;
+                    $promoPrice = Setting::applyPromo($cheapestPrice);
+                    $hasDiscount = Setting::isPromoActive() && $promoPrice !== null && $promoPrice < $cheapestPrice;
+                @endphp
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-top:auto;">
                     <div>
                         <div style="font-size:0.75rem;color:#64748b;">{{ $product->durations->isNotEmpty() ? 'Mulai dari' : 'Harga' }}</div>
-                        <div style="font-size:1.25rem;font-weight:700;color:white;">{{ $product->durations->isNotEmpty() ? $product->durations->sortBy('price')->first()->formatted_price : $product->formatted_price }}</div>
+                        @if($hasDiscount)
+                        <div style="font-size:0.75rem;color:#64748b;text-decoration:line-through;">Rp {{ number_format($cheapestPrice, 0, ',', '.') }}</div>
+                        <div style="font-size:1.25rem;font-weight:700;color:#4ade80;">Rp {{ number_format($promoPrice, 0, ',', '.') }}</div>
+                        @else
+                        <div style="font-size:1.25rem;font-weight:700;color:white;">{{ $cheapestPrice !== null ? 'Rp '.number_format($cheapestPrice, 0, ',', '.') : '—' }}</div>
+                        @endif
                     </div>
+                    @if(Setting::isMaintenanceMode())
+                    <span title="{{ Setting::maintenanceMessage() }}" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#64748b;font-size:0.875rem;padding:0.5rem 1.25rem;border-radius:0.5rem;cursor:not-allowed;">
+                        Maintenance
+                    </span>
+                    @else
                     <a href="{{ route('store.show', $product) }}" class="btn-primary" style="text-decoration:none;font-size:0.875rem;padding:0.5rem 1.25rem;">
                         Beli
                     </a>
+                    @endif
                 </div>
             </div>
             @endforeach

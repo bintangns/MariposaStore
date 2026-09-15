@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\Setting;
 use App\Services\MinecraftService;
 use App\Services\DiscordService;
 use Illuminate\Http\Request;
@@ -324,5 +325,46 @@ class AdminController extends Controller
 
         $category->delete();
         return back()->with('success', 'Kategori berhasil dihapus!');
+    }
+
+    public function settings()
+    {
+        $settings = [
+            'maintenance_mode'    => Setting::isMaintenanceMode(),
+            'maintenance_message' => Setting::get('maintenance_message', ''),
+            'promo_enabled'       => Setting::isPromoActive(),
+            'promo_type'          => Setting::promoType(),
+            'promo_value'         => Setting::promoValue(),
+            'promo_label'         => Setting::promoLabel(),
+        ];
+
+        return view('admin.settings', compact('settings'));
+    }
+
+    public function updateSettings(Request $request)
+    {
+        $data = $request->validate([
+            'maintenance_mode'    => 'nullable|boolean',
+            'maintenance_message' => 'nullable|string|max:255',
+            'promo_enabled'       => 'nullable|boolean',
+            'promo_type'          => 'required|in:percentage,fixed',
+            'promo_value'         => 'nullable|numeric|min:0',
+            'promo_label'         => 'nullable|string|max:100',
+        ]);
+
+        if ($data['promo_type'] === 'percentage' && ($data['promo_value'] ?? 0) > 100) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'promo_value' => 'Diskon persentase maksimal 100%.',
+            ]);
+        }
+
+        Setting::set('maintenance_mode', $request->boolean('maintenance_mode') ? '1' : '0');
+        Setting::set('maintenance_message', $data['maintenance_message'] ?? '');
+        Setting::set('promo_enabled', $request->boolean('promo_enabled') ? '1' : '0');
+        Setting::set('promo_type', $data['promo_type']);
+        Setting::set('promo_value', $data['promo_value'] ?? 0);
+        Setting::set('promo_label', $data['promo_label'] ?? '');
+
+        return back()->with('success', 'Pengaturan berhasil disimpan!');
     }
 }

@@ -25,6 +25,7 @@
         <a href="{{ route('admin.products') }}" class="nav-link">Produk</a>
         <a href="{{ route('admin.categories') }}" class="nav-link">Kategori</a>
         <a href="{{ route('admin.orders') }}" class="nav-link active">Orders</a>
+        <a href="{{ route('admin.settings') }}" class="nav-link">Pengaturan</a>
         <a href="{{ route('home') }}" class="nav-link" style="margin-top:1rem;">← Ke Website</a>
         <form method="POST" action="{{ route('admin.logout') }}">
             @csrf

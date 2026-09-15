@@ -1,6 +1,14 @@
 @extends('layouts.app')
 @section('title', $product->name)
 
+@php
+    use App\Models\Setting;
+    $maintenanceMode = Setting::isMaintenanceMode();
+    $promoFormatted = fn (?int $price) => $price !== null
+        ? 'Rp ' . number_format(Setting::applyPromo($price), 0, ',', '.')
+        : '';
+@endphp
+
 @section('content')
 <div style="max-width:56rem;margin:0 auto;padding:3rem 1.5rem;">
 
@@ -30,21 +38,38 @@
 
         {{-- Checkout form --}}
         <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:1rem;padding:1.75rem;position:sticky;top:5rem;">
+            @php
+                $firstPrice = $product->durations->first()->price ?? $product->price;
+                $firstHasDiscount = Setting::isPromoActive() && Setting::applyPromo($firstPrice) < $firstPrice;
+            @endphp
             @if($product->durations->isNotEmpty())
-            <div id="detail-price" style="font-size:2rem;font-weight:700;color:white;margin-bottom:0.25rem;">{{ $product->durations->first()->formatted_price }}</div>
+            <div id="detail-price-original" style="font-size:1rem;color:#64748b;text-decoration:line-through;{{ $firstHasDiscount ? '' : 'display:none;' }}">{{ $product->durations->first()->formatted_price }}</div>
+            <div id="detail-price" style="font-size:2rem;font-weight:700;color:{{ $firstHasDiscount ? '#4ade80' : 'white' }};margin-bottom:0.25rem;">{{ $promoFormatted($firstPrice) }}</div>
             <div style="font-size:0.875rem;color:#64748b;margin-bottom:1rem;">Pilih durasi rank</div>
             <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:1.5rem;">
                 @foreach($product->durations as $i => $duration)
                 <button type="button" class="duration-option{{ $i === 0 ? ' active' : '' }}"
-                    data-id="{{ $duration->id }}" data-formatted="{{ $duration->formatted_price }}">
+                    data-id="{{ $duration->id }}" data-formatted="{{ $promoFormatted($duration->price) }}"
+                    data-original="{{ $duration->formatted_price }}"
+                    data-discounted="{{ Setting::isPromoActive() && Setting::applyPromo($duration->price) < $duration->price ? '1' : '0' }}">
                     {{ $duration->label }}
                 </button>
                 @endforeach
             </div>
             @else
-            <div style="font-size:2rem;font-weight:700;color:white;margin-bottom:0.25rem;">{{ $product->formatted_price }}</div>
+            @if($firstHasDiscount)
+            <div style="font-size:1rem;color:#64748b;text-decoration:line-through;">{{ $product->formatted_price }}</div>
+            @endif
+            <div style="font-size:2rem;font-weight:700;color:{{ $firstHasDiscount ? '#4ade80' : 'white' }};margin-bottom:0.25rem;">{{ $promoFormatted($firstPrice) }}</div>
             <div style="font-size:0.875rem;color:#64748b;margin-bottom:1.5rem;">Pembayaran sekali bayar</div>
             @endif
+
+            @if($maintenanceMode)
+            <div style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.3);border-radius:0.5rem;padding:1rem;text-align:center;">
+                <div style="color:#fbbf24;font-size:1.25rem;margin-bottom:0.5rem;">🛠</div>
+                <div style="color:#fcd34d;font-size:0.8125rem;">{{ Setting::maintenanceMessage() }}</div>
+            </div>
+            @else
 
             <form action="{{ route('checkout.create', $product) }}" method="POST" id="checkout-form">
                 @csrf
@@ -88,6 +113,7 @@
                     Verifikasi dulu untuk lanjut
                 </button>
             </form>
+            @endif
 
             <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid rgba(255,255,255,0.06);">
                 <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.75rem;color:#64748b;margin-bottom:0.375rem;">
@@ -115,6 +141,7 @@
 .duration-option.active { background: rgba(139,92,246,0.18); border-color: rgba(139,92,246,0.5); color: #c4b5fd; }
 </style>
 
+@unless($maintenanceMode)
 @push('scripts')
 <script>
 let isVerified = false;
@@ -141,12 +168,21 @@ termsCheckbox.addEventListener('change', updateSubmitState);
 const durationButtons = document.querySelectorAll('.duration-option');
 const durationIdInput = document.getElementById('duration-id-input');
 const priceDisplay = document.getElementById('detail-price');
+const priceOriginalDisplay = document.getElementById('detail-price-original');
 durationButtons.forEach(btn => {
     btn.addEventListener('click', () => {
         durationButtons.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         durationIdInput.value = btn.dataset.id;
-        if (priceDisplay) priceDisplay.textContent = btn.dataset.formatted;
+        const discounted = btn.dataset.discounted === '1';
+        if (priceDisplay) {
+            priceDisplay.textContent = btn.dataset.formatted;
+            priceDisplay.style.color = discounted ? '#4ade80' : 'white';
+        }
+        if (priceOriginalDisplay) {
+            priceOriginalDisplay.textContent = btn.dataset.original;
+            priceOriginalDisplay.style.display = discounted ? 'block' : 'none';
+        }
     });
 });
 
@@ -247,4 +283,5 @@ function showVerified(username) {
 }
 </script>
 @endpush
+@endunless
 @endsection

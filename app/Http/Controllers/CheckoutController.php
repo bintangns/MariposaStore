@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\Setting;
 use App\Services\MidtransService;
 use App\Services\MinecraftService;
 use App\Services\DiscordService;
@@ -21,6 +22,10 @@ class CheckoutController extends Controller
 
     public function create(Request $request, Product $product)
     {
+        if (Setting::isMaintenanceMode()) {
+            return back()->with('error', Setting::maintenanceMessage());
+        }
+
         $request->validate(['username' => ['required', 'string', 'regex:/^\.?[a-zA-Z0-9_]{3,16}$/']]);
 
         $username = $request->username;
@@ -55,7 +60,7 @@ class CheckoutController extends Controller
             'duration_label'      => $duration?->label,
             'duration_days'       => $duration?->days,
             'duration_commands'   => $duration?->commands,
-            'amount'              => $duration?->price ?? $product->price,
+            'amount'              => Setting::applyPromo($duration?->price ?? $product->price),
             'status'              => 'pending',
         ]);
 
