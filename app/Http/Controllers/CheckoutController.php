@@ -11,6 +11,7 @@ use App\Services\DiscordService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class CheckoutController extends Controller
 {
@@ -64,6 +65,12 @@ class CheckoutController extends Controller
             'status'              => 'pending',
         ]);
 
+        // Mode pembayaran manual (Midtrans dimatikan sementara): skip Snap,
+        // arahkan ke halaman upload bukti transfer.
+        if (Setting::isManualPaymentMode()) {
+            return redirect()->route('checkout.manual', $order->order_id);
+        }
+
         // Buat transaksi Midtrans
         $snap = $this->midtrans->createTransaction($order);
         $order->update(['midtrans_transaction_id' => $snap['token'] ?? null]);
@@ -75,6 +82,63 @@ class CheckoutController extends Controller
             'clientKey'  => $this->midtrans->getClientKey(),
             'isProduction' => $this->midtrans->isProduction(),
         ]);
+    }
+
+    /**
+     * Halaman instruksi transfer manual + form upload bukti pembayaran.
+     */
+    public function manualPayment(Order $order)
+    {
+        abort_unless(strtolower($order->minecraft_username) === session('verified_username'), 403);
+
+        if ($order->status !== 'pending') {
+            return redirect()->route('orders.invoice', $order->order_id);
+        }
+
+        return view('pages.checkout-manual', ['order' => $order]);
+    }
+
+    /**
+     * Simpan bukti pembayaran yang diupload. Order tetap "pending" sampai
+     * admin verifikasi manual & trigger delivery dari panel admin.
+     */
+    public function uploadProof(Request $request, Order $order)
+    {
+        abort_unless(strtolower($order->minecraft_username) === session('verified_username'), 403);
+
+        if ($order->status !== 'pending') {
+            return redirect()->route('orders.invoice', $order->order_id);
+        }
+
+        $request->validate([
+            'proof' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+        ], [
+            'proof.required' => 'Upload bukti pembayaran dulu ya.',
+            'proof.image'    => 'File harus berupa gambar (JPG/PNG/WEBP).',
+            'proof.mimes'    => 'Format gambar harus JPG, PNG, atau WEBP.',
+            'proof.max'      => 'Ukuran gambar maksimal 5MB.',
+            'proof.uploaded' => 'Gagal upload, kemungkinan ukuran filenya kegedean. Coba kompres/screenshot ulang lalu upload lagi.',
+        ]);
+
+        // Nama file sendiri (bukan nama asli upload) supaya gak bisa ditebak/di-enumerate.
+        $filename = $order->order_id . '-' . Str::random(20) . '.' . $request->file('proof')->extension();
+        $path = $request->file('proof')->storeAs('payment-proofs', $filename, 'local');
+
+        $order->update([
+            'payment_proof' => $path,
+            'payment_type'  => 'manual_transfer',
+        ]);
+
+        $this->discord->notifyNewOrder($order);
+
+        return redirect()->route('checkout.manual.uploaded', $order->order_id);
+    }
+
+    public function manualUploaded(Order $order)
+    {
+        abort_unless(strtolower($order->minecraft_username) === session('verified_username'), 403);
+
+        return view('pages.checkout-result', ['status' => 'manual_pending', 'order' => $order]);
     }
 
     public function notification(Request $request)
@@ -162,7 +226,7 @@ class CheckoutController extends Controller
             $order->update([
                 'status'       => $allDelivered ? 'delivered' : 'paid',
                 'delivered_at' => $allDelivered ? now() : null,
-                'delivery_log' => json_encode($results),
+                'delivery_log' => $results,
             ]);
 
             if (!$allDelivered) {

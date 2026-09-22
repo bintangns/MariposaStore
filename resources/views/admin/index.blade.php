@@ -129,7 +129,7 @@
                             <td>{{ $order->minecraft_username }}</td>
                             <td>{{ $order->product->name }}{{ $order->duration_label ? ' - '.$order->duration_label : '' }}</td>
                             <td>{{ $order->formatted_amount }}</td>
-                            <td><span style="color:{{ $order->status === 'delivered' ? '#4ade80' : ($order->status === 'pending' ? '#fbbf24' : '#f87171') }};">{{ $order->status_label }}</span></td>
+                            <td><span style="color:{{ $order->status === 'delivered' ? '#4ade80' : ($order->status === 'pending' && $order->payment_proof ? '#a78bfa' : ($order->status === 'pending' ? '#fbbf24' : '#f87171')) }};">{{ $order->status_label }}</span></td>
                             <td>{{ $order->created_at->format('d/m/Y H:i') }}</td>
                         </tr>
                         @empty
@@ -156,9 +156,15 @@
                         <td>{{ $order->minecraft_username }}</td>
                         <td>{{ $order->product->name }}{{ $order->duration_label ? ' - '.$order->duration_label : '' }}</td>
                         <td>{{ $order->formatted_amount }}</td>
-                        <td><span style="color:{{ $order->status === 'delivered' ? '#4ade80' : ($order->status === 'pending' ? '#fbbf24' : '#f87171') }};">{{ $order->status_label }}</span></td>
+                        <td><span style="color:{{ $order->status === 'delivered' ? '#4ade80' : ($order->status === 'pending' && $order->payment_proof ? '#a78bfa' : ($order->status === 'pending' ? '#fbbf24' : '#f87171')) }};">{{ $order->status_label }}</span></td>
                         <td>
-                            @if($order->status === 'paid')
+                            @if($order->status === 'pending' && $order->payment_proof)
+                            <a href="{{ route('admin.orders.proof', $order) }}" target="_blank" style="color:#a78bfa;font-size:0.75rem;margin-right:0.5rem;">🖼 Bukti</a>
+                            <form action="{{ route('admin.orders.verify-payment', $order) }}" method="POST" style="display:inline;" onsubmit="return confirm('Konfirmasi pembayaran valid & kirim produk sekarang?')">
+                                @csrf
+                                <button type="submit" style="background:#7c3aed;color:white;border:none;padding:0.25rem 0.75rem;border-radius:0.375rem;font-size:0.75rem;cursor:pointer;">✓ Verifikasi</button>
+                            </form>
+                            @elseif($order->status === 'paid')
                             <form action="{{ route('admin.orders.deliver', $order) }}" method="POST" style="display:inline;">
                                 @csrf
                                 <button type="submit" style="background:#7c3aed;color:white;border:none;padding:0.25rem 0.75rem;border-radius:0.375rem;font-size:0.75rem;cursor:pointer;">Kirim</button>

@@ -38,30 +38,75 @@
         @if(session('success'))
         <div style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);color:#4ade80;padding:0.75rem 1rem;border-radius:0.5rem;margin-bottom:1rem;font-size:0.875rem;">{{ session('success') }}</div>
         @endif
+        @if(session('error'))
+        <div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#f87171;padding:0.75rem 1rem;border-radius:0.5rem;margin-bottom:1rem;font-size:0.875rem;">{{ session('error') }}</div>
+        @endif
 
         <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:0.75rem;overflow:auto;">
             <table>
                 <thead><tr><th>Order ID</th><th>Username</th><th>Produk</th><th>Jumlah</th><th>Status</th><th>Tanggal</th><th>Aksi</th></tr></thead>
                 <tbody>
                     @foreach($orders as $order)
+                    @php $failedCommands = $order->failed_commands; @endphp
                     <tr>
                         <td style="font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:#a78bfa;">{{ $order->order_id }}</td>
                         <td>{{ $order->minecraft_username }}</td>
                         <td>{{ $order->product->name }}{{ $order->duration_label ? ' - '.$order->duration_label : '' }}</td>
                         <td>{{ $order->formatted_amount }}</td>
-                        <td><span style="color:{{ $order->status === 'delivered' ? '#4ade80' : ($order->status === 'pending' ? '#fbbf24' : '#f87171') }};">{{ $order->status_label }}</span></td>
+                        <td>
+                            <span style="color:{{ $order->status === 'delivered' ? '#4ade80' : ($order->status === 'pending' && $order->payment_proof ? '#a78bfa' : ($order->status === 'pending' ? '#fbbf24' : '#f87171')) }};">{{ $order->status_label }}</span>
+                            @if($order->status === 'pending' && $order->payment_proof)
+                            <div style="color:#a78bfa;font-size:0.7rem;margin-top:0.25rem;">📎 Bukti transfer masuk</div>
+                            @endif
+                            @if(count($failedCommands))
+                            <div style="color:#f87171;font-size:0.7rem;margin-top:0.25rem;">⚠ {{ count($failedCommands) }} command gagal</div>
+                            @endif
+                        </td>
                         <td>{{ $order->created_at->format('d/m/Y H:i') }}</td>
                         <td>
-                            @if($order->status === 'paid')
+                            @if($order->status === 'pending' && $order->payment_proof)
+                            <div style="display:flex;flex-direction:column;gap:0.375rem;align-items:flex-start;">
+                                <a href="{{ route('admin.orders.proof', $order) }}" target="_blank" style="color:#a78bfa;font-size:0.75rem;">🖼 Lihat Bukti</a>
+                                <div style="display:flex;gap:0.375rem;">
+                                    <form action="{{ route('admin.orders.verify-payment', $order) }}" method="POST" onsubmit="return confirm('Konfirmasi pembayaran valid & kirim produk sekarang?')">
+                                        @csrf
+                                        <button type="submit" style="background:#7c3aed;color:white;border:none;padding:0.25rem 0.75rem;border-radius:0.375rem;font-size:0.75rem;cursor:pointer;font-family:inherit;">✓ Verifikasi & Kirim</button>
+                                    </form>
+                                    <form action="{{ route('admin.orders.reject-payment', $order) }}" method="POST" onsubmit="return confirm('Tolak bukti pembayaran ini?')">
+                                        @csrf
+                                        <button type="submit" style="background:rgba(239,68,68,0.2);color:#f87171;border:none;padding:0.25rem 0.75rem;border-radius:0.375rem;font-size:0.75rem;cursor:pointer;font-family:inherit;">✕ Tolak</button>
+                                    </form>
+                                </div>
+                            </div>
+                            @elseif($order->status === 'paid' && empty($failedCommands))
                             <form action="{{ route('admin.orders.deliver', $order) }}" method="POST">
                                 @csrf
                                 <button type="submit" style="background:#7c3aed;color:white;border:none;padding:0.25rem 0.75rem;border-radius:0.375rem;font-size:0.75rem;cursor:pointer;font-family:inherit;">Kirim Manual</button>
+                            </form>
+                            @elseif(count($failedCommands))
+                            <form action="{{ route('admin.orders.retry', $order) }}" method="POST">
+                                @csrf
+                                <button type="submit" style="background:rgba(239,68,68,0.2);color:#f87171;border:none;padding:0.25rem 0.75rem;border-radius:0.375rem;font-size:0.75rem;cursor:pointer;font-family:inherit;">↻ Kirim Ulang yang Gagal</button>
                             </form>
                             @else
                             <span style="color:#475569;font-size:0.75rem;">-</span>
                             @endif
                         </td>
                     </tr>
+                    @if(count($failedCommands))
+                    <tr>
+                        <td colspan="7" style="background:rgba(239,68,68,0.04);padding:0.75rem 1rem;border-bottom:1px solid rgba(255,255,255,0.04);">
+                            <div style="font-size:0.7rem;color:#fca5a5;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.5rem;">Command yang gagal terkirim</div>
+                            <div style="display:flex;flex-direction:column;gap:0.375rem;">
+                                @foreach($failedCommands as $cmd)
+                                <div style="font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:#fca5a5;">
+                                    <span style="color:#64748b;">[{{ $cmd['target'] ?? 'global' }}]</span> {{ $cmd['command'] ?? '' }}
+                                </div>
+                                @endforeach
+                            </div>
+                        </td>
+                    </tr>
+                    @endif
                     @endforeach
                 </tbody>
             </table>

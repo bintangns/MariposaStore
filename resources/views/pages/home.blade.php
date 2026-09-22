@@ -41,7 +41,7 @@
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:4rem;">
         @foreach([
             ['label' => 'Mode Server', 'value' => 'Survival, ChunkSMP, Anarchy', 'icon' => '⚔'],
-            ['label' => 'Versi', 'value' => 'Java 1.8 - 1.26.2', 'icon' => '📦'],
+            ['label' => 'Versi', 'value' => 'Java 1.8 - 26.2', 'icon' => '📦'],
             ['label' => 'Anti Grief', 'value' => 'Claim System', 'icon' => '🛡'],
             ['label' => 'Economy', 'value' => 'Player-driven', 'icon' => '💰'],
         ] as $info)

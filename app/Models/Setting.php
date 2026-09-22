@@ -37,6 +37,16 @@ class Setting extends Model
         return static::get('maintenance_message') ?: 'Store sedang maintenance. Pembelian sementara dinonaktifkan, silakan coba lagi nanti.';
     }
 
+    public static function isManualPaymentMode(): bool
+    {
+        return (bool) static::get('manual_payment_mode', false);
+    }
+
+    public static function manualPaymentInstructions(): string
+    {
+        return static::get('manual_payment_instructions') ?: 'Transfer sesuai total ke rekening/e-wallet yang tertera, lalu upload bukti pembayaran di bawah ini.';
+    }
+
     public static function isPromoActive(): bool
     {
         return (bool) static::get('promo_enabled', false);

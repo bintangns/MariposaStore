@@ -133,15 +133,35 @@ class MinecraftService
      */
     public function deliverProduct(array $commands): array
     {
+        $entries = array_map(function (string $line) {
+            [$target, $command] = $this->parseCommandTarget($line);
+            return ['target' => $target, 'command' => $command];
+        }, $commands);
+
+        return $this->executeCommands($entries);
+    }
+
+    /**
+     * Retry ulang command yang target & command-nya udah dipisah sebelumnya
+     * (dari entry delivery_log lama yang gagal) — gak perlu parse prefix lagi.
+     */
+    public function retryCommands(array $entries): array
+    {
+        return $this->executeCommands($entries);
+    }
+
+    /**
+     * @param array<int, array{target: string, command: string}> $entries
+     */
+    private function executeCommands(array $entries): array
+    {
         $results = [];
 
-        foreach ($commands as $line) {
-            [$target, $command] = $this->parseCommandTarget($line);
-
-            $success = $this->sendRconCommand($command, $target);
+        foreach ($entries as $entry) {
+            $success = $this->sendRconCommand($entry['command'], $entry['target']);
             $results[] = [
-                'target'  => $target,
-                'command' => $command,
+                'target'  => $entry['target'],
+                'command' => $entry['command'],
                 'success' => $success,
             ];
 

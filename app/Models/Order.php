@@ -19,6 +19,7 @@ class Order extends Model
         'amount',
         'status',           // pending, paid, delivered, failed
         'payment_type',
+        'payment_proof',
         'midtrans_transaction_id',
         'midtrans_status',
         'delivered_at',
@@ -31,7 +32,20 @@ class Order extends Model
         'amount' => 'integer',
         'duration_days' => 'integer',
         'duration_commands' => 'array',
+        'delivery_log' => 'array',
     ];
+
+    /**
+     * Command yang gagal terkirim pada percobaan delivery terakhir (dari
+     * delivery_log), masing-masing entry {target, command, success: false}.
+     */
+    public function getFailedCommandsAttribute(): array
+    {
+        return collect($this->delivery_log ?? [])
+            ->filter(fn ($entry) => !($entry['success'] ?? false))
+            ->values()
+            ->all();
+    }
 
     public function product()
     {
@@ -97,6 +111,12 @@ class Order extends Model
 
     public function getStatusLabelAttribute()
     {
+        // Sudah upload bukti transfer manual, tinggal nunggu admin verifikasi —
+        // beda kondisi sama "pending" murni yang belum bayar sama sekali.
+        if ($this->status === 'pending' && $this->payment_proof) {
+            return 'Menunggu Konfirmasi';
+        }
+
         return match($this->status) {
             'pending'   => 'Menunggu Pembayaran',
             'paid'      => 'Dibayar',
@@ -108,6 +128,10 @@ class Order extends Model
 
     public function getStatusColorAttribute()
     {
+        if ($this->status === 'pending' && $this->payment_proof) {
+            return 'purple';
+        }
+
         return match($this->status) {
             'pending'   => 'yellow',
             'paid'      => 'blue',

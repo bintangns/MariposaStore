@@ -17,13 +17,14 @@
     <div style="display:flex;flex-direction:column;gap:0.75rem;">
         @foreach($orders as $order)
         @php
-            $statusRgb = match($order->status) {
+            $awaitingConfirmation = $order->status === 'pending' && $order->payment_proof;
+            $statusRgb = $awaitingConfirmation ? '167,139,250' : match($order->status) {
                 'delivered' => '34,197,94',
                 'paid'      => '56,189,248',
                 'pending'   => '251,191,36',
                 default     => '239,68,68',
             };
-            $statusColor = match($order->status) {
+            $statusColor = $awaitingConfirmation ? '#a78bfa' : match($order->status) {
                 'delivered' => '#4ade80',
                 'paid'      => '#38bdf8',
                 'pending'   => '#fbbf24',

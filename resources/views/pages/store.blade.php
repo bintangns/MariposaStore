@@ -64,13 +64,31 @@
                 </div>
                 <p style="color:#94a3b8;font-size:0.8rem;line-height:1.6;margin-bottom:1rem;flex:1;">{{ Str::limit($product->description, 100) }}</p>
                 @if($product->features)
-                <ul style="margin-bottom:1.25rem;display:flex;flex-direction:column;gap:0.375rem;">
-                    @foreach(array_slice($product->features, 0, 4) as $feature)
+                @php
+                    $visibleFeatures = array_slice($product->features, 0, 4);
+                    $extraFeatures = array_slice($product->features, 4);
+                @endphp
+                <ul style="margin-bottom:{{ count($extraFeatures) ? '0.5rem' : '0.75rem' }};display:flex;flex-direction:column;gap:0.375rem;">
+                    @foreach($visibleFeatures as $feature)
                     <li style="display:flex;align-items:center;gap:0.5rem;font-size:0.8rem;color:#cbd5e1;">
                         <span style="color:{{ $product->color ?? '#a78bfa' }};">✦</span> {{ $feature }}
                     </li>
                     @endforeach
                 </ul>
+                @if(count($extraFeatures))
+                <ul class="mp-extra-features" style="display:none;margin-bottom:0.5rem;flex-direction:column;gap:0.375rem;">
+                    @foreach($extraFeatures as $feature)
+                    <li style="display:flex;align-items:center;gap:0.5rem;font-size:0.8rem;color:#cbd5e1;">
+                        <span style="color:{{ $product->color ?? '#a78bfa' }};">✦</span> {{ $feature }}
+                    </li>
+                    @endforeach
+                </ul>
+                <button type="button" onclick="mpToggleFeatures(this)"
+                    data-more="Lihat {{ count($extraFeatures) }} perk lainnya ▾" data-less="Sembunyikan ▴"
+                    style="background:none;border:none;color:{{ $product->color ?? '#a78bfa' }};font-size:0.75rem;padding:0;margin-bottom:0.75rem;cursor:pointer;font-family:inherit;text-align:left;">
+                    Lihat {{ count($extraFeatures) }} perk lainnya ▾
+                </button>
+                @endif
                 @endif
                 @php
                     $cheapestPrice = $product->durations->isNotEmpty()
@@ -112,12 +130,20 @@
 
 </div>
 
-@if(!session('verified_username'))
 @push('scripts')
 <script>
+    // Expand/collapse sisa perks di card produk tanpa perlu buka halaman detail.
+    function mpToggleFeatures(btn) {
+        const list = btn.previousElementSibling;
+        const isHidden = list.style.display === 'none';
+        list.style.display = isHidden ? 'flex' : 'none';
+        btn.textContent = isHidden ? btn.dataset.less : btn.dataset.more;
+    }
+
+    @if(!session('verified_username'))
     // Store wajib login: tampilkan popup username otomatis kalau belum verified.
     window.mpAutoPrompt = true;
+    @endif
 </script>
 @endpush
-@endif
 @endsection

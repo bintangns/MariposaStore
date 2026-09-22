@@ -9,6 +9,7 @@ use App\Models\Setting;
 use App\Services\MinecraftService;
 use App\Services\DiscordService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class AdminController extends Controller
 {
@@ -278,15 +279,128 @@ class AdminController extends Controller
 
     public function deliver(Order $order)
     {
-        $commands = $order->resolveCommands();
-        $results  = $this->minecraft->deliverProduct($commands);
+        $allDelivered = $this->performDelivery($order);
+
+        if ($allDelivered) {
+            return back()->with('success', 'Produk berhasil dikirim!');
+        }
+
+        $failedCount = count($order->fresh()->failed_commands);
+        return back()->with('error', "{$failedCount} command gagal terkirim (RCON gak reachable?). Cek detail di order ini dan coba kirim ulang.");
+    }
+
+    /**
+     * Kirim command RCON produk untuk order ini & update status. Dipakai oleh
+     * deliver() (tombol "Kirim Manual") dan verifyManualPayment() (verifikasi
+     * bukti transfer manual).
+     */
+    private function performDelivery(Order $order): bool
+    {
+        $commands     = $order->resolveCommands();
+        $results      = $this->minecraft->deliverProduct($commands);
+        $allDelivered = collect($results)->every(fn ($r) => $r['success']);
+
         $order->update([
-            'status'       => 'delivered',
-            'delivered_at' => now(),
-            'delivery_log' => json_encode($results),
+            'status'       => $allDelivered ? 'delivered' : 'paid',
+            'delivered_at' => $allDelivered ? now() : $order->delivered_at,
+            'delivery_log' => $results,
         ]);
-        $this->discord->notifyDelivered($order);
-        return back()->with('success', 'Produk berhasil dikirim!');
+
+        if ($allDelivered) {
+            $this->discord->notifyDelivered($order);
+        }
+
+        return $allDelivered;
+    }
+
+    /**
+     * Kirim ulang cuma command yang gagal di percobaan delivery sebelumnya
+     * (dari delivery_log), tanpa resend command yang udah sukses — supaya
+     * command yang pakai "addtemp"/accumulate gak ke-double kalau di-retry.
+     */
+    public function retryFailedDelivery(Order $order)
+    {
+        $log = $order->delivery_log ?? [];
+
+        $failedKeys = [];
+        foreach ($log as $key => $entry) {
+            if (!($entry['success'] ?? false)) {
+                $failedKeys[] = $key;
+            }
+        }
+
+        if (empty($failedKeys)) {
+            return back()->with('error', 'Tidak ada command yang gagal untuk order ini.');
+        }
+
+        $toRetry = array_map(fn ($key) => $log[$key], $failedKeys);
+        $retryResults = $this->minecraft->retryCommands($toRetry);
+
+        foreach ($failedKeys as $i => $key) {
+            $log[$key] = $retryResults[$i];
+        }
+
+        $allDelivered = collect($log)->every(fn ($r) => $r['success'] ?? false);
+
+        $order->update([
+            'delivery_log' => $log,
+            'status'       => $allDelivered ? 'delivered' : 'paid',
+            'delivered_at' => $allDelivered ? now() : $order->delivered_at,
+        ]);
+
+        if ($allDelivered) {
+            $this->discord->notifyDelivered($order);
+            return back()->with('success', 'Semua command berhasil dikirim ulang! Order sudah lengkap.');
+        }
+
+        $stillFailed = collect($log)->where('success', false)->count();
+        return back()->with('error', "Masih ada {$stillFailed} command yang gagal. Cek koneksi RCON server tujuan lalu coba retry lagi.");
+    }
+
+    /**
+     * Stream file bukti pembayaran manual (disimpan di disk private, cuma
+     * bisa diakses admin yang login).
+     */
+    public function paymentProof(Order $order)
+    {
+        abort_unless($order->payment_proof, 404);
+        abort_unless(Storage::disk('local')->exists($order->payment_proof), 404);
+
+        return Storage::disk('local')->response($order->payment_proof);
+    }
+
+    /**
+     * Verifikasi bukti pembayaran manual: tandai order "paid" lalu langsung
+     * kirim command RCON-nya (gabungan konfirmasi + delivery jadi satu tombol).
+     */
+    public function verifyManualPayment(Order $order)
+    {
+        if (!$order->payment_proof || $order->status !== 'pending') {
+            return back()->with('error', 'Order ini gak punya bukti pembayaran yang bisa diverifikasi.');
+        }
+
+        $order->update(['status' => 'paid']);
+        $allDelivered = $this->performDelivery($order);
+
+        if ($allDelivered) {
+            return back()->with('success', 'Pembayaran diverifikasi & produk berhasil dikirim!');
+        }
+
+        $failedCount = count($order->fresh()->failed_commands);
+        return back()->with('error', "Pembayaran diverifikasi, tapi {$failedCount} command gagal terkirim. Coba kirim ulang.");
+    }
+
+    /**
+     * Tolak bukti pembayaran manual (mis. bukti gak valid/palsu).
+     */
+    public function rejectManualPayment(Order $order)
+    {
+        if ($order->status !== 'pending') {
+            return back()->with('error', 'Order ini sudah diproses.');
+        }
+
+        $order->update(['status' => 'failed']);
+        return back()->with('success', 'Order ditolak.');
     }
 
     public function categories()
@@ -336,6 +450,8 @@ class AdminController extends Controller
             'promo_type'          => Setting::promoType(),
             'promo_value'         => Setting::promoValue(),
             'promo_label'         => Setting::promoLabel(),
+            'manual_payment_mode'         => Setting::isManualPaymentMode(),
+            'manual_payment_instructions' => Setting::get('manual_payment_instructions', ''),
         ];
 
         return view('admin.settings', compact('settings'));
@@ -350,6 +466,8 @@ class AdminController extends Controller
             'promo_type'          => 'required|in:percentage,fixed',
             'promo_value'         => 'nullable|numeric|min:0',
             'promo_label'         => 'nullable|string|max:100',
+            'manual_payment_mode'         => 'nullable|boolean',
+            'manual_payment_instructions' => 'nullable|string|max:1000',
         ]);
 
         if ($data['promo_type'] === 'percentage' && ($data['promo_value'] ?? 0) > 100) {
@@ -364,6 +482,8 @@ class AdminController extends Controller
         Setting::set('promo_type', $data['promo_type']);
         Setting::set('promo_value', $data['promo_value'] ?? 0);
         Setting::set('promo_label', $data['promo_label'] ?? '');
+        Setting::set('manual_payment_mode', $request->boolean('manual_payment_mode') ? '1' : '0');
+        Setting::set('manual_payment_instructions', $data['manual_payment_instructions'] ?? '');
 
         return back()->with('success', 'Pengaturan berhasil disimpan!');
     }

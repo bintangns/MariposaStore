@@ -11,6 +11,10 @@
         <div style="font-size:4rem;margin-bottom:1.5rem;">⏳</div>
         <h1 style="font-size:2rem;font-weight:700;color:#fbbf24;margin-bottom:1rem;">Menunggu Pembayaran</h1>
         <p style="color:#94a3b8;margin-bottom:2rem;">Selesaikan pembayaran kamu. Rank akan aktif otomatis setelah dikonfirmasi.</p>
+    @elseif($status === 'manual_pending')
+        <div style="font-size:4rem;margin-bottom:1.5rem;">🕐</div>
+        <h1 style="font-size:2rem;font-weight:700;color:#fbbf24;margin-bottom:1rem;">Bukti Pembayaran Diterima</h1>
+        <p style="color:#94a3b8;margin-bottom:2rem;">Terima kasih! Tim kami akan verifikasi pembayaran kamu secepatnya, rank akan dikirim setelah diverifikasi.</p>
     @else
         <div style="font-size:4rem;margin-bottom:1.5rem;">😢</div>
         <h1 style="font-size:2rem;font-weight:700;color:#f87171;margin-bottom:1rem;">Pembayaran Gagal</h1>

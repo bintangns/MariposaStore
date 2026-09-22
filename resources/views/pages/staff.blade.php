@@ -9,11 +9,10 @@
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1.25rem;">
         @foreach([
             ['name' => 'Binghem', 'role' => 'Owner', 'color' => '#f87171'],
-            ['name' => 'Staff1',  'role' => 'Admin', 'color' => '#fb923c'],
-            ['name' => 'Staff2',  'role' => 'Moderator', 'color' => '#c084fc'],
         ] as $member)
         <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:1rem;padding:1.5rem;text-align:center;">
-            <div style="width:4rem;height:4rem;border-radius:0.75rem;background:rgba(255,255,255,0.05);margin:0 auto 1rem;display:flex;align-items:center;justify-content:center;font-size:1.5rem;">👤</div>
+            <img src="https://mc-heads.net/avatar/{{ urlencode($member['name']) }}/64" alt="{{ $member['name'] }}"
+                style="width:4rem;height:4rem;border-radius:0.75rem;margin:0 auto 1rem;display:block;image-rendering:pixelated;">
             <div style="font-weight:600;color:white;margin-bottom:0.25rem;font-family:'JetBrains Mono',monospace;">{{ $member['name'] }}</div>
             <div style="font-size:0.8rem;color:{{ $member['color'] }};">{{ $member['role'] }}</div>
         </div>
