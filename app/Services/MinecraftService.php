@@ -103,24 +103,43 @@ class MinecraftService
      */
     public function sendRconCommand(string $command, string $target = 'global'): bool
     {
+        return $this->execRcon($command, $target)['success'];
+    }
+
+    /**
+     * Sama kayak sendRconCommand(), tapi balikin response mentah dari server
+     * (bukan cuma bool) — dipakai halaman admin "Test RCON" buat debugging
+     * tanpa perlu bikin order beneran.
+     */
+    public function testRconCommand(string $command, string $target = 'global'): array
+    {
+        return $this->execRcon($command, $target);
+    }
+
+    /**
+     * @return array{success: bool, response: string, error: ?string}
+     */
+    private function execRcon(string $command, string $target): array
+    {
         $config = config("minecraft.rcon_targets.{$target}");
 
         if (!$config || empty($config['host'])) {
-            Log::error("RCON target '{$target}' tidak dikonfigurasi (cek .env & config/minecraft.php).");
-            return false;
+            $error = "RCON target '{$target}' tidak dikonfigurasi (cek .env & config/minecraft.php).";
+            Log::error($error);
+            return ['success' => false, 'response' => '', 'error' => $error];
         }
 
         try {
             $rcon = new RconClient($config['host'], (int) $config['port'], $config['password']);
             $rcon->connect();
-            $result = $rcon->sendCommand($command);
+            $response = $rcon->sendCommand($command);
             $rcon->disconnect();
 
-            Log::info("RCON [{$target}] command sent: {$command} | Response: {$result}");
-            return true;
+            Log::info("RCON [{$target}] command sent: {$command} | Response: {$response}");
+            return ['success' => true, 'response' => $response, 'error' => null];
         } catch (\Exception $e) {
             Log::error("RCON [{$target}] error: " . $e->getMessage());
-            return false;
+            return ['success' => false, 'response' => '', 'error' => $e->getMessage()];
         }
     }
 

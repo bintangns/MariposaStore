@@ -92,6 +92,9 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::get('/orders/{order}/proof', [AdminController::class, 'paymentProof'])->name('orders.proof');
     Route::post('/orders/{order}/verify-payment', [AdminController::class, 'verifyManualPayment'])->name('orders.verify-payment');
     Route::post('/orders/{order}/reject-payment', [AdminController::class, 'rejectManualPayment'])->name('orders.reject-payment');
+    Route::delete('/orders/{order}', [AdminController::class, 'destroyOrder'])->name('orders.destroy');
+    Route::get('/rcon-test', [AdminController::class, 'rconTest'])->name('rcon-test');
+    Route::post('/rcon-test', [AdminController::class, 'rconTestSend'])->name('rcon-test.send');
     Route::get('/categories', [AdminController::class, 'categories'])->name('categories');
     Route::post('/categories', [AdminController::class, 'storeCategory'])->name('categories.store');
     Route::put('/categories/{category}', [AdminController::class, 'updateCategory'])->name('categories.update');

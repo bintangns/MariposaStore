@@ -409,6 +409,48 @@ class AdminController extends Controller
         return back()->with('success', 'Order ditolak.');
     }
 
+    /**
+     * Hapus order (mis. order test/fiktif) biar gak nyampah di data beneran.
+     */
+    public function destroyOrder(Order $order)
+    {
+        $order->delete();
+        return back()->with('success', 'Order berhasil dihapus.');
+    }
+
+    /**
+     * Halaman "Test RCON" — kirim command RCON langsung tanpa perlu bikin
+     * order beneran, buat debugging command/plugin di server Minecraft.
+     */
+    public function rconTest()
+    {
+        return view('admin.rcon-test', [
+            'targets' => array_keys(config('minecraft.rcon_targets', [])),
+            'result'  => null,
+            'command' => '',
+            'target'  => 'global',
+        ]);
+    }
+
+    public function rconTestSend(Request $request)
+    {
+        $targets = array_keys(config('minecraft.rcon_targets', []));
+
+        $data = $request->validate([
+            'target'  => 'required|string|in:' . implode(',', $targets),
+            'command' => 'required|string|max:500',
+        ]);
+
+        $result = $this->minecraft->testRconCommand($data['command'], $data['target']);
+
+        return view('admin.rcon-test', [
+            'targets' => $targets,
+            'result'  => $result,
+            'command' => $data['command'],
+            'target'  => $data['target'],
+        ]);
+    }
+
     public function categories()
     {
         $categories = Category::ordered()->withCount('products')->get();

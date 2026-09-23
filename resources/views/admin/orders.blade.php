@@ -25,6 +25,7 @@
         <a href="{{ route('admin.products') }}" class="nav-link">Produk</a>
         <a href="{{ route('admin.categories') }}" class="nav-link">Kategori</a>
         <a href="{{ route('admin.orders') }}" class="nav-link active">Orders</a>
+        <a href="{{ route('admin.rcon-test') }}" class="nav-link">Test RCON</a>
         <a href="{{ route('admin.settings') }}" class="nav-link">Pengaturan</a>
         <a href="{{ route('home') }}" class="nav-link" style="margin-top:1rem;">← Ke Website</a>
         <form method="POST" action="{{ route('admin.logout') }}">
@@ -91,6 +92,10 @@
                             @else
                             <span style="color:#475569;font-size:0.75rem;">-</span>
                             @endif
+                            <form action="{{ route('admin.orders.destroy', $order) }}" method="POST" style="margin-top:0.375rem;" onsubmit="return confirm('Hapus order {{ $order->order_id }} secara permanen? Aksi ini gak bisa dibatalkan.')">
+                                @csrf @method('DELETE')
+                                <button type="submit" style="background:none;border:none;color:#64748b;padding:0;font-size:0.7rem;cursor:pointer;font-family:inherit;text-decoration:underline;">🗑 Hapus</button>
+                            </form>
                         </td>
                     </tr>
                     @if(count($failedCommands))
