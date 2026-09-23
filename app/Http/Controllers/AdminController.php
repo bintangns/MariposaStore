@@ -92,7 +92,14 @@ class AdminController extends Controller
     public function createProduct()
     {
         $categories = Category::ordered()->get();
-        return view('admin.product-form', ['product' => new Product(), 'categories' => $categories]);
+
+        return view('admin.product-form', [
+            'product'             => new Product(),
+            'categories'          => $categories,
+            'rconTargets'         => array_keys(config('minecraft.rcon_targets', [])),
+            'commandRows'         => [],
+            'durationCommandRows' => ['7' => [], '30' => [], 'permanent' => []],
+        ]);
     }
 
     public function storeProduct(Request $request)
@@ -104,7 +111,9 @@ class AdminController extends Controller
             'description' => 'required|string',
             'price'       => 'nullable|integer|min:1000',
             'category_id' => 'required|exists:categories,id',
-            'commands'    => 'nullable|string',
+            'commands'              => 'nullable|array',
+            'commands.*.target'     => 'nullable|string',
+            'commands.*.command'    => 'nullable|string|max:500',
             'features'    => 'nullable|string',
             'color'       => 'nullable|string',
             'sort_order'  => 'nullable|integer',
@@ -127,7 +136,52 @@ class AdminController extends Controller
     {
         $categories = Category::ordered()->get();
         $product->load('durations');
-        return view('admin.product-form', compact('product', 'categories'));
+
+        $durationDays = ['7' => 7, '30' => 30, 'permanent' => null];
+        $durationCommandRows = [];
+        foreach ($durationDays as $key => $days) {
+            $duration = $product->durations->firstWhere('days', $days);
+            $durationCommandRows[$key] = $this->parseCommandRows($duration->commands ?? []);
+        }
+
+        return view('admin.product-form', [
+            'product'             => $product,
+            'categories'          => $categories,
+            'rconTargets'         => array_keys(config('minecraft.rcon_targets', [])),
+            'commandRows'         => $this->parseCommandRows($product->commands ?? []),
+            'durationCommandRows' => $durationCommandRows,
+        ]);
+    }
+
+    /**
+     * Ubah array command string lama ("target: command") jadi baris
+     * {target, command} buat ditampilin di form produk (select + input).
+     */
+    private function parseCommandRows(array $commands): array
+    {
+        return array_map(function ($line) {
+            [$target, $command] = $this->minecraft->parseCommandTarget($line);
+            return ['target' => $target, 'command' => $command];
+        }, $commands);
+    }
+
+    /**
+     * Kebalikan parseCommandRows(): baris {target, command} dari form jadi
+     * array string "target: command" buat disimpan (format yang dibaca
+     * MinecraftService::parseCommandTarget() pas delivery).
+     */
+    private function buildCommandLines(array $rows, array $validTargets): array
+    {
+        $lines = [];
+        foreach ($rows as $row) {
+            $command = trim($row['command'] ?? '');
+            if ($command === '') {
+                continue;
+            }
+            $target = in_array($row['target'] ?? null, $validTargets, true) ? $row['target'] : 'global';
+            $lines[] = "{$target}: {$command}";
+        }
+        return $lines;
     }
 
     public function updateProduct(Request $request, Product $product)
@@ -139,7 +193,9 @@ class AdminController extends Controller
             'description' => 'required|string',
             'price'       => 'nullable|integer|min:1000',
             'category_id' => 'required|exists:categories,id',
-            'commands'    => 'nullable|string',
+            'commands'              => 'nullable|array',
+            'commands.*.target'     => 'nullable|string',
+            'commands.*.command'    => 'nullable|string|max:500',
             'features'    => 'nullable|string',
             'color'       => 'nullable|string',
             'sort_order'  => 'nullable|integer',
@@ -187,9 +243,8 @@ class AdminController extends Controller
             $durations = $this->validateDurations($request);
         }
 
-        $data['commands'] = $data['commands']
-            ? array_filter(explode("\n", $data['commands']))
-            : [];
+        $rconTargets = array_keys(config('minecraft.rcon_targets', []));
+        $data['commands'] = $this->buildCommandLines($data['commands'] ?? [], $rconTargets);
         $data['features'] = $data['features']
             ? array_filter(explode("\n", $data['features']))
             : [];
@@ -210,13 +265,19 @@ class AdminController extends Controller
         $validated = $request->validate([
             'durations.7.enabled'         => 'nullable|boolean',
             'durations.7.price'           => 'nullable|integer|min:0',
-            'durations.7.commands'        => 'nullable|string',
+            'durations.7.commands'           => 'nullable|array',
+            'durations.7.commands.*.target'  => 'nullable|string',
+            'durations.7.commands.*.command' => 'nullable|string|max:500',
             'durations.30.enabled'        => 'nullable|boolean',
             'durations.30.price'          => 'nullable|integer|min:0',
-            'durations.30.commands'       => 'nullable|string',
+            'durations.30.commands'           => 'nullable|array',
+            'durations.30.commands.*.target'  => 'nullable|string',
+            'durations.30.commands.*.command' => 'nullable|string|max:500',
             'durations.permanent.enabled' => 'nullable|boolean',
             'durations.permanent.price'   => 'nullable|integer|min:0',
-            'durations.permanent.commands' => 'nullable|string',
+            'durations.permanent.commands'           => 'nullable|array',
+            'durations.permanent.commands.*.target'  => 'nullable|string',
+            'durations.permanent.commands.*.command' => 'nullable|string|max:500',
         ]);
 
         $hasEnabled = collect($input)->contains(fn ($d) => !empty($d['enabled']));
@@ -247,11 +308,12 @@ class AdminController extends Controller
             '30'        => ['label' => '30 Hari', 'days' => 30, 'sort_order' => 2],
             'permanent' => ['label' => 'Permanent', 'days' => null, 'sort_order' => 3],
         ];
+        $rconTargets = array_keys(config('minecraft.rcon_targets', []));
 
         foreach ($definitions as $key => $meta) {
             $enabled  = !empty($input[$key]['enabled']);
             $price    = (int) ($input[$key]['price'] ?? 0);
-            $commands = array_values(array_filter(array_map('trim', explode("\n", $input[$key]['commands'] ?? ''))));
+            $commands = $this->buildCommandLines($input[$key]['commands'] ?? [], $rconTargets);
 
             $query = $meta['days'] === null
                 ? $product->durations()->whereNull('days')

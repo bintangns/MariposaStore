@@ -132,6 +132,7 @@
                             ];
                         @endphp
                         @foreach($durationRows as $key => $row)
+                        @php $durationCmdRows = old("durations.$key.commands", $durationCommandRows[$key] ?? []); @endphp
                         <div style="padding:0.75rem 1rem;{{ !$loop->last ? 'border-bottom:1px solid rgba(255,255,255,0.06);' : '' }}">
                             <div style="display:flex;align-items:center;gap:0.75rem;">
                                 <input type="checkbox" name="durations[{{ $key }}][enabled]" value="1"
@@ -143,19 +144,50 @@
                                     placeholder="Harga (Rupiah)" style="flex:1;">
                             </div>
                             <div style="margin-top:0.625rem;">
-                                <textarea name="durations[{{ $key }}][commands]" style="font-family:'JetBrains Mono',monospace;font-size:0.75rem;min-height:70px;"
-                                    placeholder="Kosongkan buat pakai auto lp command dari Rank Name.&#10;Isi kalau durasi ini butuh perk beda, mis:&#10;global: lp user {uuid} parent addtemp vip 7d&#10;survival: give {player} diamond 3&#10;chunksmp: give {player} diamond 3">{{ old("durations.$key.commands", $row['existing']?->commands ? implode("\n", $row['existing']->commands) : '') }}</textarea>
+                                <label style="font-size:0.7rem;color:#64748b;margin-bottom:0.375rem;">Commands khusus durasi ini (kosongkan buat pakai auto command LuckPerms dari Rank Name)</label>
+                                <div id="commands-rows-duration-{{ $key }}">
+                                    @foreach($durationCmdRows as $i => $cmdRow)
+                                    <div class="cmd-row" style="display:flex;gap:0.5rem;margin-bottom:0.5rem;">
+                                        <select name="durations[{{ $key }}][commands][{{ $i }}][target]" style="width:7.5rem;flex-shrink:0;font-size:0.75rem;">
+                                            @foreach($rconTargets as $t)
+                                            <option value="{{ $t }}" {{ ($cmdRow['target'] ?? 'global') === $t ? 'selected' : '' }}>{{ $t }}</option>
+                                            @endforeach
+                                        </select>
+                                        <input type="text" name="durations[{{ $key }}][commands][{{ $i }}][command]" value="{{ $cmdRow['command'] ?? '' }}"
+                                            placeholder="lp user {uuid} parent addtemp vip 7d" style="flex:1;font-family:'JetBrains Mono',monospace;font-size:0.75rem;">
+                                        <button type="button" onclick="this.closest('.cmd-row').remove()" style="background:rgba(239,68,68,0.15);color:#f87171;border:none;border-radius:0.375rem;padding:0 0.75rem;cursor:pointer;flex-shrink:0;">✕</button>
+                                    </div>
+                                    @endforeach
+                                </div>
+                                <button type="button" onclick="mpAddCommandRow('commands-rows-duration-{{ $key }}', 'durations[{{ $key }}][commands]')"
+                                    style="background:rgba(139,92,246,0.1);color:#a78bfa;border:1px solid rgba(139,92,246,0.2);border-radius:0.375rem;padding:0.3rem 0.75rem;font-size:0.7rem;cursor:pointer;font-family:inherit;">+ Tambah Command</button>
                             </div>
                         </div>
                         @endforeach
                     </div>
-                    <div class="hint">Aktifkan salah satu/semua, isi harga masing-masing. Kosongkan kolom Commands di durasi kalau mau pakai auto command LuckPerms dari Rank Name (perk sama, cuma beda lama waktu). Isi manual kalau durasi itu perlu perk yang beda — command manual ini akan dipakai, bukan yang auto.<br>Format tiap baris: prefix target RCON opsional (<code style="color:#a78bfa;">global:</code> / <code style="color:#a78bfa;">survival:</code> / <code style="color:#a78bfa;">chunksmp:</code>, default <code style="color:#a78bfa;">global</code>) diikuti command-nya. Placeholder: <code style="color:#a78bfa;">{player}</code> = username (dipakai kebanyakan plugin kayak PlayerPoints/CrazyCrates), <code style="color:#a78bfa;">{uuid}</code> = UUID (<strong>wajib</strong> dipakai buat command <code style="color:#a78bfa;">lp user ...</code>, supaya player Bedrock yang username-nya diawali titik tetap kena). Satu produk bisa nembak ke beberapa server sekaligus, satu command per baris.</div>
+                    <div class="hint">Aktifkan salah satu/semua, isi harga masing-masing. Kosongkan Commands di durasi kalau mau pakai auto command LuckPerms dari Rank Name (perk sama, cuma beda lama waktu). Isi manual kalau durasi itu perlu perk yang beda — command manual dipakai, bukan yang auto.<br>Pilih target server dulu dari dropdown, baru isi command-nya (tanpa prefix, tanpa "/"). Placeholder: <code style="color:#a78bfa;">{player}</code> = username (PlayerPoints/CrazyCrates dll), <code style="color:#a78bfa;">{uuid}</code> = UUID (<strong>wajib</strong> buat command <code style="color:#a78bfa;">lp user ...</code> biar Bedrock ke-cover). Satu produk/durasi bisa nembak ke beberapa server sekaligus, klik "+ Tambah Command" buat nambah baris.</div>
                 </div>
 
                 <div class="form-group">
-                    <label>Commands (satu per baris)</label>
-                    <textarea name="commands" style="font-family:'JetBrains Mono',monospace;font-size:0.8rem;" placeholder="global: lp user {uuid} parent set vip&#10;survival: give {player} diamond 5&#10;chunksmp: give {player} diamond 5">{{ old('commands', $product->commands ? implode("\n", $product->commands) : '') }}</textarea>
-                    <div class="hint">Diabaikan kalau produk ini pakai Durasi Rank di atas. Prefix <code style="color:#a78bfa;">global:</code> / <code style="color:#a78bfa;">survival:</code> / <code style="color:#a78bfa;">chunksmp:</code> nentuin RCON server tujuan tiap baris (tanpa prefix = <code style="color:#a78bfa;">global</code>). Placeholder: <code style="color:#a78bfa;">{player}</code> = username, <code style="color:#a78bfa;">{uuid}</code> = UUID (pakai ini buat command <code style="color:#a78bfa;">lp user ...</code>), <code style="color:#ec4899;">{nickname}</code> = nickname custom (cuma kepake kalau checkbox "Custom Nickname" di atas dicentang), mis. <code style="color:#a78bfa;">nick set {player} {nickname}</code> (sesuaikan sama command plugin nickname kamu).</div>
+                    <label>Commands</label>
+                    @php $productCmdRows = old('commands', $commandRows ?? []); @endphp
+                    <div id="commands-rows-product">
+                        @foreach($productCmdRows as $i => $cmdRow)
+                        <div class="cmd-row" style="display:flex;gap:0.5rem;margin-bottom:0.5rem;">
+                            <select name="commands[{{ $i }}][target]" style="width:8rem;flex-shrink:0;">
+                                @foreach($rconTargets as $t)
+                                <option value="{{ $t }}" {{ ($cmdRow['target'] ?? 'global') === $t ? 'selected' : '' }}>{{ $t }}</option>
+                                @endforeach
+                            </select>
+                            <input type="text" name="commands[{{ $i }}][command]" value="{{ $cmdRow['command'] ?? '' }}"
+                                placeholder="lp user {uuid} parent set vip" style="flex:1;font-family:'JetBrains Mono',monospace;font-size:0.8rem;">
+                            <button type="button" onclick="this.closest('.cmd-row').remove()" style="background:rgba(239,68,68,0.15);color:#f87171;border:none;border-radius:0.375rem;padding:0 0.75rem;cursor:pointer;flex-shrink:0;">✕</button>
+                        </div>
+                        @endforeach
+                    </div>
+                    <button type="button" onclick="mpAddCommandRow('commands-rows-product', 'commands')"
+                        style="background:rgba(139,92,246,0.1);color:#a78bfa;border:1px solid rgba(139,92,246,0.2);border-radius:0.375rem;padding:0.375rem 0.875rem;font-size:0.75rem;cursor:pointer;font-family:inherit;">+ Tambah Command</button>
+                    <div class="hint">Diabaikan kalau produk ini pakai Durasi Rank di atas. Pilih target server, isi command-nya (tanpa "/"). Placeholder: <code style="color:#a78bfa;">{player}</code> = username, <code style="color:#a78bfa;">{uuid}</code> = UUID (buat command <code style="color:#a78bfa;">lp user ...</code>), <code style="color:#ec4899;">{nickname}</code> = nickname custom (kalau checkbox "Custom Nickname" di atas dicentang), mis. command: <code style="color:#a78bfa;">nick {player} {nickname}</code>.</div>
                 </div>
 
                 <div style="display:flex;gap:1rem;">
@@ -174,6 +206,28 @@
             document.getElementById('price-input').required = !isSubscription;
         }
         mpToggleProductType(document.getElementById('is_subscription').checked);
+
+        // Baris command "pilih target server + command" yang bisa ditambah/dihapus
+        // dinamis, dipakai di Commands level produk maupun tiap durasi.
+        const RCON_TARGETS = @js($rconTargets);
+
+        function mpAddCommandRow(containerId, fieldPrefix) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            const idx = 'n' + Date.now() + Math.floor(Math.random() * 1000);
+            const targetOptions = RCON_TARGETS.map(t => `<option value="${t}">${t}</option>`).join('');
+
+            const row = document.createElement('div');
+            row.className = 'cmd-row';
+            row.style.cssText = 'display:flex;gap:0.5rem;margin-bottom:0.5rem;';
+            row.innerHTML = `
+                <select name="${fieldPrefix}[${idx}][target]" style="width:8rem;flex-shrink:0;">${targetOptions}</select>
+                <input type="text" name="${fieldPrefix}[${idx}][command]" placeholder="lp user {uuid} parent set vip" style="flex:1;font-family:'JetBrains Mono',monospace;font-size:0.8rem;">
+                <button type="button" onclick="this.closest('.cmd-row').remove()" style="background:rgba(239,68,68,0.15);color:#f87171;border:none;border-radius:0.375rem;padding:0 0.75rem;cursor:pointer;flex-shrink:0;">✕</button>
+            `;
+            container.appendChild(row);
+        }
     </script>
 </body>
 </html>

@@ -195,8 +195,10 @@ class MinecraftService
      * Parse prefix target RCON dari satu baris command, mis:
      * "survival: give {player} diamond 5" -> ['survival', 'give {player} diamond 5']
      * Tanpa prefix (atau prefix gak dikenal) -> ['global', <command asli>]
+     * Public karena dipakai juga sama AdminController buat baca command lama
+     * (format string) ke bentuk baris {target, command} di form produk.
      */
-    private function parseCommandTarget(string $line): array
+    public function parseCommandTarget(string $line): array
     {
         $line    = trim($line);
         $targets = array_keys(config('minecraft.rcon_targets', []));
