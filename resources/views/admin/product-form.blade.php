@@ -58,6 +58,13 @@
                             onchange="mpToggleProductType(this.checked)" style="width:auto;accent-color:#7c3aed;">
                         <label for="is_subscription" style="margin-bottom:0;cursor:pointer;">Produk ini Subscription (ada pilihan durasi 7 Hari / 30 Hari / Permanent)</label>
                     </div>
+                    <div class="form-group" style="grid-column:1/-1;display:flex;align-items:center;gap:0.75rem;background:rgba(236,72,153,0.06);border:1px solid rgba(236,72,153,0.2);border-radius:0.5rem;padding:0.875rem 1rem;">
+                        <input type="hidden" name="requires_nickname" value="0">
+                        <input type="checkbox" name="requires_nickname" value="1" id="requires_nickname"
+                            {{ old('requires_nickname', $product->requires_nickname ?? false) ? 'checked' : '' }}
+                            style="width:auto;accent-color:#ec4899;">
+                        <label for="requires_nickname" style="margin-bottom:0;cursor:pointer;">Produk ini butuh Custom Nickname (mis. cosmetics) — customer isi nickname + warna sebelum checkout</label>
+                    </div>
                     <div class="form-group">
                         <label>Nama Produk</label>
                         <input type="text" name="name" value="{{ old('name', $product->name) }}" required placeholder="VIP, MVP, dll">
@@ -88,10 +95,13 @@
                         <label>Warna Aksen (hex)</label>
                         <input type="text" name="color" value="{{ old('color', $product->color ?? '#8b5cf6') }}" placeholder="#8b5cf6">
                     </div>
+                    @if($product->id)
                     <div class="form-group">
                         <label>Urutan Tampil</label>
-                        <input type="number" name="sort_order" value="{{ old('sort_order', $product->sort_order ?? 0) }}">
+                        <input type="number" name="sort_order" value="{{ old('sort_order', $product->sort_order) }}">
+                        <div class="hint">Angka lebih kecil tampil lebih dulu di Store.</div>
                     </div>
+                    @endif
                     <div class="form-group" style="display:flex;align-items:center;gap:0.75rem;padding-top:1.75rem;">
                         <input type="hidden" name="is_active" value="0">
                         <input type="checkbox" name="is_active" value="1" {{ old('is_active', $product->is_active ?? true) ? 'checked' : '' }} style="width:auto;accent-color:#7c3aed;" id="is_active">
@@ -144,7 +154,7 @@
                 <div class="form-group">
                     <label>Commands (satu per baris)</label>
                     <textarea name="commands" style="font-family:'JetBrains Mono',monospace;font-size:0.8rem;" placeholder="global: lp user {uuid} parent set vip&#10;survival: give {player} diamond 5&#10;chunksmp: give {player} diamond 5">{{ old('commands', $product->commands ? implode("\n", $product->commands) : '') }}</textarea>
-                    <div class="hint">Diabaikan kalau produk ini pakai Durasi Rank di atas. Prefix <code style="color:#a78bfa;">global:</code> / <code style="color:#a78bfa;">survival:</code> / <code style="color:#a78bfa;">chunksmp:</code> nentuin RCON server tujuan tiap baris (tanpa prefix = <code style="color:#a78bfa;">global</code>). Placeholder: <code style="color:#a78bfa;">{player}</code> = username, <code style="color:#a78bfa;">{uuid}</code> = UUID (pakai ini buat command <code style="color:#a78bfa;">lp user ...</code>).</div>
+                    <div class="hint">Diabaikan kalau produk ini pakai Durasi Rank di atas. Prefix <code style="color:#a78bfa;">global:</code> / <code style="color:#a78bfa;">survival:</code> / <code style="color:#a78bfa;">chunksmp:</code> nentuin RCON server tujuan tiap baris (tanpa prefix = <code style="color:#a78bfa;">global</code>). Placeholder: <code style="color:#a78bfa;">{player}</code> = username, <code style="color:#a78bfa;">{uuid}</code> = UUID (pakai ini buat command <code style="color:#a78bfa;">lp user ...</code>), <code style="color:#ec4899;">{nickname}</code> = nickname custom (cuma kepake kalau checkbox "Custom Nickname" di atas dicentang), mis. <code style="color:#a78bfa;">nick set {player} {nickname}</code> (sesuaikan sama command plugin nickname kamu).</div>
                 </div>
 
                 <div style="display:flex;gap:1rem;">

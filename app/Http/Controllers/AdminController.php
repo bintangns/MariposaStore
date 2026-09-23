@@ -100,6 +100,7 @@ class AdminController extends Controller
         $data = $request->validate([
             'name'        => 'required|string|max:100',
             'rank_name'   => 'nullable|string|max:50',
+            'requires_nickname' => 'nullable|boolean',
             'description' => 'required|string',
             'price'       => 'nullable|integer|min:1000',
             'category_id' => 'required|exists:categories,id',
@@ -111,6 +112,10 @@ class AdminController extends Controller
         ]);
 
         [$data, $durations] = $this->applyProductType($request, $data);
+
+        // Urutan tampil otomatis ditaruh di paling akhir, gak perlu diisi manual
+        // pas nambah produk baru. Bisa diubah lagi lewat form edit kalau perlu.
+        $data['sort_order'] = (int) (Product::max('sort_order') ?? 0) + 1;
 
         $product = Product::create($data);
         $this->syncDurations($product, $durations);
@@ -130,6 +135,7 @@ class AdminController extends Controller
         $data = $request->validate([
             'name'        => 'required|string|max:100',
             'rank_name'   => 'nullable|string|max:50',
+            'requires_nickname' => 'nullable|boolean',
             'description' => 'required|string',
             'price'       => 'nullable|integer|min:1000',
             'category_id' => 'required|exists:categories,id',

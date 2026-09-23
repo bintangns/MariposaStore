@@ -7,6 +7,14 @@
     $promoFormatted = fn (?int $price) => $price !== null
         ? 'Rp ' . number_format(Setting::applyPromo($price), 0, ',', '.')
         : '';
+
+    $mcColors = [
+        '0' => ['Black', '#000000'], '1' => ['Dark Blue', '#0000AA'], '2' => ['Dark Green', '#00AA00'], '3' => ['Dark Aqua', '#00AAAA'],
+        '4' => ['Dark Red', '#AA0000'], '5' => ['Dark Purple', '#AA00AA'], '6' => ['Gold', '#FFAA00'], '7' => ['Gray', '#AAAAAA'],
+        '8' => ['Dark Gray', '#555555'], '9' => ['Blue', '#5555FF'], 'a' => ['Green', '#55FF55'], 'b' => ['Aqua', '#55FFFF'],
+        'c' => ['Red', '#FF5555'], 'd' => ['Light Purple', '#FF55FF'], 'e' => ['Yellow', '#FFFF55'], 'f' => ['White', '#FFFFFF'],
+    ];
+    $mcFormats = ['k' => 'Obfuscated', 'l' => 'Bold', 'm' => 'Strikethrough', 'n' => 'Underline', 'o' => 'Italic', 'r' => 'Reset'];
 @endphp
 
 @section('content')
@@ -101,6 +109,41 @@
                     <p style="font-size:0.7rem;color:#64748b;margin-top:0.5rem;">Menunggu verifikasi...</p>
                 </div>
 
+                @if($product->requires_nickname)
+                <div style="margin-bottom:1rem;">
+                    <label style="display:block;font-size:0.875rem;color:#94a3b8;margin-bottom:0.5rem;">Nickname Custom</label>
+                    <input type="text" name="nickname" id="nickname-input" maxlength="64" placeholder="Contoh: &aBinghem"
+                        style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:0.5rem;padding:0.625rem 1rem;color:white;font-size:0.875rem;outline:none;box-sizing:border-box;font-family:'JetBrains Mono',monospace;"
+                        required>
+                    <div style="display:flex;justify-content:space-between;margin-top:0.375rem;">
+                        <div id="nickname-error" style="color:#f87171;font-size:0.7rem;"></div>
+                        <div id="nickname-counter" style="color:#64748b;font-size:0.7rem;">0/32</div>
+                    </div>
+
+                    <div style="margin-top:0.625rem;padding:0.875rem 1rem;background:#0f0f16;border:1px solid rgba(255,255,255,0.08);border-radius:0.5rem;">
+                        <div style="font-size:0.625rem;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.5rem;">Preview</div>
+                        <div id="nickname-preview" style="font-family:'JetBrains Mono',monospace;font-size:1rem;min-height:1.4em;"><span style="color:#475569;">Preview nickname muncul di sini...</span></div>
+                    </div>
+
+                    <details style="margin-top:0.625rem;">
+                        <summary style="cursor:pointer;font-size:0.75rem;color:#a78bfa;">Lihat kode warna &amp; format Minecraft</summary>
+                        <div style="margin-top:0.625rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:0.375rem;">
+                            @foreach($mcColors as $code => [$name, $hex])
+                            <div style="display:flex;align-items:center;gap:0.375rem;font-size:0.7rem;color:#cbd5e1;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:0.375rem;padding:0.25rem 0.5rem;">
+                                <span style="width:0.75rem;height:0.75rem;border-radius:9999px;background:{{ $hex }};border:1px solid rgba(255,255,255,0.2);flex-shrink:0;"></span>
+                                <span style="font-family:'JetBrains Mono',monospace;color:#a78bfa;">&amp;{{ $code }}</span> {{ $name }}
+                            </div>
+                            @endforeach
+                            @foreach($mcFormats as $code => $name)
+                            <div style="display:flex;align-items:center;gap:0.375rem;font-size:0.7rem;color:#cbd5e1;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:0.375rem;padding:0.25rem 0.5rem;">
+                                <span style="font-family:'JetBrains Mono',monospace;color:#a78bfa;">&amp;{{ $code }}</span> {{ $name }}
+                            </div>
+                            @endforeach
+                        </div>
+                    </details>
+                </div>
+                @endif
+
                 <div style="display:flex;align-items:flex-start;gap:0.5rem;margin-bottom:1rem;">
                     <input type="checkbox" name="terms_accepted" id="terms-checkbox" value="1" style="width:auto;margin-top:0.2rem;accent-color:#7c3aed;flex-shrink:0;">
                     <label for="terms-checkbox" style="margin-bottom:0;cursor:pointer;font-size:0.8rem;color:#94a3b8;line-height:1.5;">
@@ -152,18 +195,142 @@ const usernameHidden = document.getElementById('username-hidden');
 const submitBtn = document.getElementById('submit-btn');
 const checkResult = document.getElementById('username-check-result');
 const termsCheckbox = document.getElementById('terms-checkbox');
+let nicknameValid = {{ $product->requires_nickname ? 'false' : 'true' }};
 
 function updateSubmitState() {
-    const canSubmit = isVerified && termsCheckbox.checked;
+    const canSubmit = isVerified && termsCheckbox.checked && nicknameValid;
     submitBtn.disabled = !canSubmit;
     submitBtn.style.opacity = canSubmit ? '1' : '0.5';
     submitBtn.style.cursor = canSubmit ? 'pointer' : 'not-allowed';
     submitBtn.textContent = !isVerified
         ? 'Verifikasi dulu untuk lanjut'
-        : (termsCheckbox.checked ? 'Beli Sekarang →' : 'Setujui Syarat & Ketentuan dulu');
+        : (!nicknameValid
+            ? 'Isi nickname yang valid dulu'
+            : (termsCheckbox.checked ? 'Beli Sekarang →' : 'Setujui Syarat & Ketentuan dulu'));
 }
 
 termsCheckbox.addEventListener('change', updateSubmitState);
+
+@if($product->requires_nickname)
+const MC_COLORS = {
+    '0':'#000000','1':'#0000AA','2':'#00AA00','3':'#00AAAA','4':'#AA0000','5':'#AA00AA',
+    '6':'#FFAA00','7':'#AAAAAA','8':'#555555','9':'#5555FF','a':'#55FF55','b':'#55FFFF',
+    'c':'#FF5555','d':'#FF55FF','e':'#FFFF55','f':'#FFFFFF'
+};
+const OBF_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%';
+
+const nicknameInput = document.getElementById('nickname-input');
+const nicknamePreview = document.getElementById('nickname-preview');
+const nicknameCounter = document.getElementById('nickname-counter');
+const nicknameError = document.getElementById('nickname-error');
+let obfuscateInterval = null;
+
+function blankSegment() {
+    return { text: '', color: '#e2e8f0', bold: false, italic: false, underline: false, strike: false, obf: false };
+}
+
+function parseNicknameSegments(raw) {
+    const segments = [];
+    let current = blankSegment();
+    let i = 0;
+    while (i < raw.length) {
+        if (raw[i] === '&' && i + 1 < raw.length) {
+            const code = raw[i + 1].toLowerCase();
+            if (MC_COLORS[code] || 'klmnor'.includes(code)) {
+                if (current.text) segments.push(current);
+                if (code === 'r') {
+                    current = blankSegment();
+                } else {
+                    current = { ...current, text: '' };
+                    if (MC_COLORS[code]) {
+                        current.color = MC_COLORS[code];
+                        current.bold = current.italic = current.underline = current.strike = current.obf = false;
+                    } else if (code === 'l') current.bold = true;
+                    else if (code === 'm') current.strike = true;
+                    else if (code === 'n') current.underline = true;
+                    else if (code === 'o') current.italic = true;
+                    else if (code === 'k') current.obf = true;
+                }
+                i += 2;
+                continue;
+            }
+        }
+        current.text += raw[i];
+        i++;
+    }
+    if (current.text) segments.push(current);
+    return segments;
+}
+
+function randomObf(len) {
+    let s = '';
+    for (let i = 0; i < len; i++) s += OBF_CHARS[Math.floor(Math.random() * OBF_CHARS.length)];
+    return s;
+}
+
+function renderNicknamePreview() {
+    const raw = nicknameInput.value;
+    const segments = parseNicknameSegments(raw);
+    nicknamePreview.innerHTML = '';
+    if (obfuscateInterval) { clearInterval(obfuscateInterval); obfuscateInterval = null; }
+
+    if (!segments.length) {
+        nicknamePreview.innerHTML = '<span style="color:#475569;">Preview nickname muncul di sini...</span>';
+    } else {
+        const obfSpans = [];
+        segments.forEach(seg => {
+            const span = document.createElement('span');
+            span.style.color = seg.color;
+            if (seg.bold) span.style.fontWeight = '700';
+            if (seg.italic) span.style.fontStyle = 'italic';
+            const deco = [];
+            if (seg.underline) deco.push('underline');
+            if (seg.strike) deco.push('line-through');
+            if (deco.length) span.style.textDecoration = deco.join(' ');
+            if (seg.obf) {
+                span.dataset.original = seg.text;
+                span.textContent = randomObf(seg.text.length);
+                obfSpans.push(span);
+            } else {
+                span.textContent = seg.text;
+            }
+            nicknamePreview.appendChild(span);
+        });
+        if (obfSpans.length) {
+            obfuscateInterval = setInterval(() => {
+                obfSpans.forEach(span => { span.textContent = randomObf(span.dataset.original.length); });
+            }, 80);
+        }
+    }
+
+    // Validasi client-side, cerminan dari validasi server (whitelist ketat)
+    const validPattern = /^(?:&[0-9a-fk-or]|[a-zA-Z0-9 ])+$/i;
+    const visibleLength = raw.replace(/&[0-9a-fk-or]/gi, '').length;
+    nicknameCounter.textContent = visibleLength + '/32';
+    nicknameCounter.style.color = visibleLength > 32 ? '#f87171' : '#64748b';
+
+    if (!raw.trim()) {
+        nicknameError.textContent = '';
+        nicknameValid = false;
+    } else if (!validPattern.test(raw)) {
+        nicknameError.textContent = 'Cuma boleh huruf, angka, spasi, & kode warna (&a, &l, dst).';
+        nicknameValid = false;
+    } else if (visibleLength < 1) {
+        nicknameError.textContent = 'Isi teksnya, jangan cuma kode warna.';
+        nicknameValid = false;
+    } else if (visibleLength > 32) {
+        nicknameError.textContent = 'Maksimal 32 karakter (tanpa hitung kode warna).';
+        nicknameValid = false;
+    } else {
+        nicknameError.textContent = '';
+        nicknameValid = true;
+    }
+
+    updateSubmitState();
+}
+
+nicknameInput.addEventListener('input', renderNicknamePreview);
+@endif
 
 const durationButtons = document.querySelectorAll('.duration-option');
 const durationIdInput = document.getElementById('duration-id-input');

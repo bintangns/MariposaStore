@@ -50,11 +50,41 @@ class CheckoutController extends Controller
             }
         }
 
+        // Produk cosmetics/custom nickname: validasi ketat karena string ini
+        // langsung masuk ke command RCON. Whitelist-only: huruf, angka, spasi,
+        // dan kode warna/format &0-9a-f / &k-o / &r — gak ada karakter lain
+        // yang lolos (aman dari command injection / RCON packet corruption).
+        $nickname = null;
+        if ($product->requires_nickname) {
+            $request->validate([
+                'nickname' => [
+                    'required',
+                    'string',
+                    'max:64',
+                    'regex:/^(?:&[0-9a-fk-orA-FK-OR]|[a-zA-Z0-9 ])+$/',
+                ],
+            ], [
+                'nickname.required' => 'Isi nickname kamu dulu ya.',
+                'nickname.regex'    => 'Nickname cuma boleh huruf, angka, spasi, dan kode warna &0-&f / &k-&o / &r.',
+            ]);
+
+            $nickname = trim($request->input('nickname'));
+            $visibleLength = strlen(preg_replace('/&[0-9a-fk-orA-FK-OR]/', '', $nickname));
+
+            if ($visibleLength < 1) {
+                return back()->withErrors(['nickname' => 'Nickname gak boleh cuma kode warna doang, isi teksnya juga.'])->withInput();
+            }
+            if ($visibleLength > 32) {
+                return back()->withErrors(['nickname' => 'Nickname (tanpa kode warna) maksimal 32 karakter.'])->withInput();
+            }
+        }
+
         // Buat order
         $order = Order::create([
             'order_id'            => 'MRP-' . strtoupper(Str::random(8)),
             'minecraft_username'  => $username,
             'minecraft_uuid'      => session('verified_uuid'),
+            'custom_nickname'     => $nickname,
             'terms_accepted_at'   => now(),
             'product_id'          => $product->id,
             'product_duration_id' => $duration?->id,

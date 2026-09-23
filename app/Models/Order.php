@@ -10,6 +10,7 @@ class Order extends Model
         'order_id',
         'minecraft_username',
         'minecraft_uuid',
+        'custom_nickname',
         'terms_accepted_at',
         'product_id',
         'product_duration_id',
@@ -68,14 +69,17 @@ class Order extends Model
      * dieksekusi tetap konsisten dengan yang dibeli walau admin edit/hapus
      * durasi tsb setelah order dibuat.
      *
-     * Dua placeholder tersedia buat command custom (durations/product):
-     * - {player} -> username. Dipakai kebanyakan plugin (PlayerPoints,
+     * Placeholder tersedia buat command custom (durations/product):
+     * - {player}   -> username. Dipakai kebanyakan plugin (PlayerPoints,
      *   CrazyCrates, give, dll) yang resolve player lewat nama.
-     * - {uuid}   -> UUID. Wajib dipakai buat command LuckPerms ("lp user
+     * - {uuid}     -> UUID. Wajib dipakai buat command LuckPerms ("lp user
      *   {uuid} ..."), karena LP memvalidasi argumen <user> sebagai format
      *   username Mojang standar dan menolak username Bedrock yang diawali
      *   "." (mis. .BintangNS). UUID gak kena validasi itu, jadi aman buat
      *   Java maupun Bedrock.
+     * - {nickname} -> nickname custom yang diisi pembeli (cuma ada kalau
+     *   product->requires_nickname). Sudah divalidasi whitelist ketat di
+     *   CheckoutController sebelum disimpan, jadi aman langsung masuk RCON.
      *
      * Command auto-generate dari rank_name (kalau duration_commands kosong)
      * selalu pakai UUID juga, dengan alasan yang sama.
@@ -84,7 +88,12 @@ class Order extends Model
     {
         $username = $this->minecraft_username;
         $uuid     = $this->minecraft_uuid ?: $this->minecraft_username;
-        $replace  = fn (string $cmd) => str_replace(['{player}', '{uuid}'], [$username, $uuid], $cmd);
+        $nickname = $this->custom_nickname ?? '';
+        $replace  = fn (string $cmd) => str_replace(
+            ['{player}', '{uuid}', '{nickname}'],
+            [$username, $uuid, $nickname],
+            $cmd
+        );
 
         if ($this->product_duration_id) {
             if (!empty($this->duration_commands)) {

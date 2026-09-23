@@ -9,6 +9,7 @@ class Product extends Model
     protected $fillable = [
         'name',
         'rank_name',     // LuckPerms group name, dipakai untuk auto-generate command durasi
+        'requires_nickname', // produk butuh input nickname custom (mis. cosmetics) sebelum checkout
         'description',
         'price',
         'image',
@@ -24,6 +25,7 @@ class Product extends Model
         'commands' => 'array',
         'features' => 'array',
         'is_active' => 'boolean',
+        'requires_nickname' => 'boolean',
         'price' => 'integer',
     ];
 
