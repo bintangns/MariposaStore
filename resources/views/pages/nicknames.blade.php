@@ -24,6 +24,13 @@
         <a href="{{ route('store') }}" style="color:#a78bfa;text-decoration:none;">Lihat Store →</a>
     </div>
     @else
+    <div style="background:rgba(139,92,246,0.06);border:1px solid rgba(139,92,246,0.2);border-radius:0.5rem;padding:0.75rem 1rem;margin-bottom:1.25rem;font-size:0.8125rem;color:#c4b5fd;">
+        @if($switchesLeft > 0)
+        Jatah ganti nickname manual kamu hari ini: <strong>{{ $switchesLeft }}x lagi</strong> (reset otomatis 24 jam setelah pemakaian pertama).
+        @else
+        Jatah ganti nickname manual kamu udah habis buat 24 jam ke depan. Coba lagi nanti.
+        @endif
+    </div>
     <div style="display:flex;flex-direction:column;gap:0.75rem;">
         @foreach($nicknames as $n)
         <div style="background:rgba(255,255,255,0.03);border:1px solid {{ $n->is_active ? 'rgba(167,139,250,0.4)' : 'rgba(255,255,255,0.07)' }};border-radius:0.75rem;padding:1.25rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
@@ -36,11 +43,13 @@
             <div>
                 @if($n->is_active)
                 <span style="background:rgba(167,139,250,0.15);color:#c4b5fd;font-size:0.75rem;padding:0.5rem 0.875rem;border-radius:9999px;border:1px solid rgba(167,139,250,0.3);white-space:nowrap;">✓ Terpasang</span>
-                @else
+                @elseif($switchesLeft > 0)
                 <form action="{{ route('nicknames.equip', $n) }}" method="POST">
                     @csrf
                     <button type="submit" class="btn-primary" style="font-size:0.8125rem;padding:0.5rem 1.25rem;">Pasang</button>
                 </form>
+                @else
+                <button type="button" disabled title="Jatah ganti nickname hari ini udah habis" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#64748b;font-size:0.8125rem;padding:0.5rem 1.25rem;border-radius:0.5rem;cursor:not-allowed;">Pasang</button>
                 @endif
             </div>
         </div>
