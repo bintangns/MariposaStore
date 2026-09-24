@@ -26,6 +26,7 @@
         <a href="{{ route('admin.index') }}" class="nav-link">Dashboard</a>
         <a href="{{ route('admin.products') }}" class="nav-link">Produk</a>
         <a href="{{ route('admin.categories') }}" class="nav-link">Kategori</a>
+        <a href="{{ route('admin.gradients') }}" class="nav-link">Gradients</a>
         <a href="{{ route('admin.orders') }}" class="nav-link">Orders</a>
         <a href="{{ route('admin.rcon-test') }}" class="nav-link">Test RCON</a>
         <a href="{{ route('admin.settings') }}" class="nav-link">Pengaturan</a>
@@ -59,12 +60,27 @@
                             onchange="mpToggleProductType(this.checked)" style="width:auto;accent-color:#7c3aed;">
                         <label for="is_subscription" style="margin-bottom:0;cursor:pointer;">Produk ini Subscription (ada pilihan durasi 7 Hari / 30 Hari / Permanent)</label>
                     </div>
-                    <div class="form-group" style="grid-column:1/-1;display:flex;align-items:center;gap:0.75rem;background:rgba(236,72,153,0.06);border:1px solid rgba(236,72,153,0.2);border-radius:0.5rem;padding:0.875rem 1rem;">
-                        <input type="hidden" name="requires_nickname" value="0">
-                        <input type="checkbox" name="requires_nickname" value="1" id="requires_nickname"
-                            {{ old('requires_nickname', $product->requires_nickname ?? false) ? 'checked' : '' }}
-                            style="width:auto;accent-color:#ec4899;">
-                        <label for="requires_nickname" style="margin-bottom:0;cursor:pointer;">Produk ini butuh Custom Nickname (mis. cosmetics) — customer isi nickname + warna sebelum checkout</label>
+                    <div class="form-group" style="grid-column:1/-1;background:rgba(236,72,153,0.06);border:1px solid rgba(236,72,153,0.2);border-radius:0.5rem;padding:0.875rem 1rem;">
+                        <div style="display:flex;align-items:center;gap:0.75rem;">
+                            <input type="hidden" name="requires_nickname" value="0">
+                            <input type="checkbox" name="requires_nickname" value="1" id="requires_nickname"
+                                {{ old('requires_nickname', $product->requires_nickname ?? false) ? 'checked' : '' }}
+                                onchange="mpToggleNicknameFields(this.checked)" style="width:auto;accent-color:#ec4899;">
+                            <label for="requires_nickname" style="margin-bottom:0;cursor:pointer;">Produk ini butuh Custom Nickname (cosmetics) sebelum checkout</label>
+                        </div>
+                        <div id="fg-nickname-type" style="margin-top:0.75rem;padding-left:1.75rem;">
+                            <div style="display:flex;gap:1.5rem;flex-wrap:wrap;">
+                                <label style="display:flex;align-items:center;gap:0.5rem;font-weight:normal;color:#e2e8f0;cursor:pointer;margin-bottom:0;">
+                                    <input type="radio" name="nickname_type" value="custom" {{ old('nickname_type', $product->nickname_type ?? 'custom') === 'custom' ? 'checked' : '' }} style="width:auto;accent-color:#ec4899;">
+                                    Custom (customer ketik sendiri + kode warna)
+                                </label>
+                                <label style="display:flex;align-items:center;gap:0.5rem;font-weight:normal;color:#e2e8f0;cursor:pointer;margin-bottom:0;">
+                                    <input type="radio" name="nickname_type" value="gradient" {{ old('nickname_type', $product->nickname_type ?? 'custom') === 'gradient' ? 'checked' : '' }} style="width:auto;accent-color:#ec4899;">
+                                    Gradient (pilih preset, otomatis apply ke username customer)
+                                </label>
+                            </div>
+                            <div class="hint">Preset gradient dikelola di <a href="{{ route('admin.gradients') }}" style="color:#a78bfa;">Admin → Gradients</a>.</div>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label>Nama Produk</label>
@@ -206,6 +222,11 @@
             document.getElementById('price-input').required = !isSubscription;
         }
         mpToggleProductType(document.getElementById('is_subscription').checked);
+
+        function mpToggleNicknameFields(requiresNickname) {
+            document.getElementById('fg-nickname-type').style.display = requiresNickname ? 'block' : 'none';
+        }
+        mpToggleNicknameFields(document.getElementById('requires_nickname').checked);
 
         // Baris command "pilih target server + command" yang bisa ditambah/dihapus
         // dinamis, dipakai di Commands level produk maupun tiap durasi.

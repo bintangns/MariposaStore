@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Gradient;
 use App\Models\Order;
+use App\Models\PlayerNickname;
 use App\Models\Product;
 use App\Models\Setting;
 use App\Services\MidtransService;
@@ -50,32 +52,51 @@ class CheckoutController extends Controller
             }
         }
 
-        // Produk cosmetics/custom nickname: validasi ketat karena string ini
-        // langsung masuk ke command RCON. Whitelist-only: huruf, angka, spasi,
-        // dan kode warna/format &0-9a-f / &k-o / &r — gak ada karakter lain
-        // yang lolos (aman dari command injection / RCON packet corruption).
+        // Produk cosmetics/custom nickname: dua mode.
+        // - "gradient": pilih dari preset gradient, warnanya di-compute SERVER-SIDE
+        //   (bukan trust input client) dari gradient->apply(username asli).
+        // - "custom": whitelist-only huruf, angka, spasi, kode warna/format
+        //   &0-9a-f / &k-o / &r — karena string ini langsung masuk ke command
+        //   RCON, karakter lain ditolak (anti command injection).
         $nickname = null;
+        $nicknameLabel = null;
+        $gradient = null;
         if ($product->requires_nickname) {
-            $request->validate([
-                'nickname' => [
-                    'required',
-                    'string',
-                    'max:64',
-                    'regex:/^(?:&[0-9a-fk-orA-FK-OR]|[a-zA-Z0-9 ])+$/',
-                ],
-            ], [
-                'nickname.required' => 'Isi nickname kamu dulu ya.',
-                'nickname.regex'    => 'Nickname cuma boleh huruf, angka, spasi, dan kode warna &0-&f / &k-&o / &r.',
-            ]);
+            if ($product->nickname_type === 'gradient') {
+                $request->validate([
+                    'gradient_id' => ['required', 'integer', 'exists:gradients,id'],
+                ], [
+                    'gradient_id.required' => 'Pilih gradient dulu ya.',
+                    'gradient_id.exists'   => 'Gradient yang dipilih gak valid.',
+                ]);
 
-            $nickname = trim($request->input('nickname'));
-            $visibleLength = strlen(preg_replace('/&[0-9a-fk-orA-FK-OR]/', '', $nickname));
+                $gradient = Gradient::findOrFail($request->input('gradient_id'));
+                $nickname = $gradient->apply($username);
+                $nicknameLabel = $gradient->name;
+            } else {
+                $request->validate([
+                    'nickname' => [
+                        'required',
+                        'string',
+                        'max:64',
+                        'regex:/^(?:&[0-9a-fk-orA-FK-OR]|[a-zA-Z0-9 ])+$/',
+                    ],
+                ], [
+                    'nickname.required' => 'Isi nickname kamu dulu ya.',
+                    'nickname.regex'    => 'Nickname cuma boleh huruf, angka, spasi, dan kode warna &0-&f / &k-&o / &r.',
+                ]);
 
-            if ($visibleLength < 1) {
-                return back()->withErrors(['nickname' => 'Nickname gak boleh cuma kode warna doang, isi teksnya juga.'])->withInput();
-            }
-            if ($visibleLength > 32) {
-                return back()->withErrors(['nickname' => 'Nickname (tanpa kode warna) maksimal 32 karakter.'])->withInput();
+                $nickname = trim($request->input('nickname'));
+                $visibleLength = strlen(preg_replace('/&[0-9a-fk-orA-FK-OR]/', '', $nickname));
+
+                if ($visibleLength < 1) {
+                    return back()->withErrors(['nickname' => 'Nickname gak boleh cuma kode warna doang, isi teksnya juga.'])->withInput();
+                }
+                if ($visibleLength > 32) {
+                    return back()->withErrors(['nickname' => 'Nickname (tanpa kode warna) maksimal 32 karakter.'])->withInput();
+                }
+
+                $nicknameLabel = preg_replace('/&[0-9a-fk-orA-FK-OR]/', '', $nickname);
             }
         }
 
@@ -94,6 +115,27 @@ class CheckoutController extends Controller
             'amount'              => Setting::applyPromo($duration?->price ?? $product->price),
             'status'              => 'pending',
         ]);
+
+        // Cosmetics: catat kepemilikan nickname ini di "inventory" website-nya
+        // sejak sekarang (independen dari sukses/gagalnya RCON) — command
+        // final disnapshot dari resolveCommands() biar bisa di-equip ulang
+        // kapan aja tanpa beli lagi.
+        if ($product->requires_nickname) {
+            $order->setRelation('product', $product);
+
+            PlayerNickname::create([
+                'minecraft_username' => $username,
+                'minecraft_uuid'     => session('verified_uuid'),
+                'product_id'         => $product->id,
+                'order_id'           => $order->id,
+                'gradient_id'        => $gradient?->id,
+                'type'               => $product->nickname_type,
+                'label'              => $nicknameLabel,
+                'value'              => $nickname,
+                'command_template'   => $order->resolveCommands(),
+                'is_active'          => false,
+            ]);
+        }
 
         // Mode pembayaran manual (Midtrans dimatikan sementara): skip Snap,
         // arahkan ke halaman upload bukti transfer.
@@ -259,7 +301,9 @@ class CheckoutController extends Controller
                 'delivery_log' => $results,
             ]);
 
-            if (!$allDelivered) {
+            if ($allDelivered) {
+                $order->activateLinkedNickname();
+            } else {
                 Log::warning('Delivery gagal untuk order ' . $order->order_id . ', RCON tidak reachable atau command gagal.');
             }
         }

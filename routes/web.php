@@ -7,6 +7,7 @@ use App\Http\Controllers\StoreController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\VerifyController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\NicknameController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminAuthController;
 
@@ -70,6 +71,10 @@ Route::post('/payment/notification', [CheckoutController::class, 'notification']
 Route::get('/orders', [OrderController::class, 'index'])->name('orders');
 Route::get('/orders/{order:order_id}/invoice', [OrderController::class, 'invoice'])->name('orders.invoice');
 
+// Koleksi nickname (cosmetics yang sudah dibeli) & equip/switch
+Route::get('/nicknames', [NicknameController::class, 'index'])->name('nicknames');
+Route::post('/nicknames/{nickname}/equip', [NicknameController::class, 'equip'])->name('nicknames.equip');
+
 // Admin auth
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/login', [AdminAuthController::class, 'showLogin'])->name('login');
@@ -101,4 +106,8 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::delete('/categories/{category}', [AdminController::class, 'destroyCategory'])->name('categories.destroy');
     Route::get('/settings', [AdminController::class, 'settings'])->name('settings');
     Route::post('/settings', [AdminController::class, 'updateSettings'])->name('settings.update');
+    Route::get('/gradients', [AdminController::class, 'gradients'])->name('gradients');
+    Route::post('/gradients', [AdminController::class, 'storeGradient'])->name('gradients.store');
+    Route::put('/gradients/{gradient}', [AdminController::class, 'updateGradient'])->name('gradients.update');
+    Route::delete('/gradients/{gradient}', [AdminController::class, 'destroyGradient'])->name('gradients.destroy');
 });

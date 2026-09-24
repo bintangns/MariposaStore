@@ -149,4 +149,21 @@ class Order extends Model
             default     => 'gray',
         };
     }
+
+    /**
+     * Tandai PlayerNickname yang lahir dari order ini (kalau ada) sebagai
+     * nickname aktif si player, sekalian non-aktifin nickname lain miliknya.
+     * Dipanggil tiap kali delivery order ini sukses penuh.
+     */
+    public function activateLinkedNickname(): void
+    {
+        $nickname = PlayerNickname::where('order_id', $this->id)->first();
+        if (!$nickname) {
+            return;
+        }
+
+        PlayerNickname::whereRaw('LOWER(minecraft_username) = ?', [strtolower($this->minecraft_username)])
+            ->update(['is_active' => false]);
+        $nickname->update(['is_active' => true]);
+    }
 }

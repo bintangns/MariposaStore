@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\Gradient;
 use App\Models\Order;
+use App\Models\PlayerNickname;
 use App\Models\Product;
 use App\Models\Setting;
 use App\Services\MinecraftService;
@@ -108,6 +110,7 @@ class AdminController extends Controller
             'name'        => 'required|string|max:100',
             'rank_name'   => 'nullable|string|max:50',
             'requires_nickname' => 'nullable|boolean',
+            'nickname_type'     => 'nullable|in:custom,gradient',
             'description' => 'required|string',
             'price'       => 'nullable|integer|min:1000',
             'category_id' => 'required|exists:categories,id',
@@ -190,6 +193,7 @@ class AdminController extends Controller
             'name'        => 'required|string|max:100',
             'rank_name'   => 'nullable|string|max:50',
             'requires_nickname' => 'nullable|boolean',
+            'nickname_type'     => 'nullable|in:custom,gradient',
             'description' => 'required|string',
             'price'       => 'nullable|integer|min:1000',
             'category_id' => 'required|exists:categories,id',
@@ -375,6 +379,7 @@ class AdminController extends Controller
         ]);
 
         if ($allDelivered) {
+            $order->activateLinkedNickname();
             $this->discord->notifyDelivered($order);
         }
 
@@ -417,6 +422,7 @@ class AdminController extends Controller
         ]);
 
         if ($allDelivered) {
+            $order->activateLinkedNickname();
             $this->discord->notifyDelivered($order);
             return back()->with('success', 'Semua command berhasil dikirim ulang! Order sudah lengkap.');
         }
@@ -549,6 +555,61 @@ class AdminController extends Controller
 
         $category->delete();
         return back()->with('success', 'Kategori berhasil dihapus!');
+    }
+
+    public function gradients()
+    {
+        $gradients = Gradient::ordered()->get();
+        return view('admin.gradients', compact('gradients'));
+    }
+
+    public function storeGradient(Request $request)
+    {
+        Gradient::create($this->validateGradient($request));
+        return back()->with('success', 'Gradient berhasil ditambahkan!');
+    }
+
+    public function updateGradient(Request $request, Gradient $gradient)
+    {
+        $gradient->update($this->validateGradient($request));
+        return back()->with('success', 'Gradient berhasil diupdate!');
+    }
+
+    public function destroyGradient(Gradient $gradient)
+    {
+        $gradient->delete();
+        return back()->with('success', 'Gradient berhasil dihapus!');
+    }
+
+    private function validateGradient(Request $request): array
+    {
+        $data = $request->validate([
+            'name'       => 'required|string|max:50',
+            'colors'     => 'required|string',
+            'sort_order' => 'nullable|integer',
+        ]);
+
+        $colors = array_values(array_filter(array_map('trim', explode(',', $data['colors']))));
+
+        foreach ($colors as $c) {
+            if (!preg_match('/^#[0-9a-fA-F]{6}$/', $c)) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'colors' => "Format warna gak valid: \"{$c}\". Pakai hex 6 digit (mis. #FF0000), dipisah koma.",
+                ]);
+            }
+        }
+
+        if (count($colors) < 2) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'colors' => 'Minimal 2 warna buat bikin gradient.',
+            ]);
+        }
+
+        return [
+            'name'       => $data['name'],
+            'colors'     => $colors,
+            'sort_order' => $data['sort_order'] ?? 0,
+        ];
     }
 
     public function settings()

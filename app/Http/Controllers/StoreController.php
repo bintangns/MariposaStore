@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Gradient;
 use App\Models\Product;
 use App\Services\MinecraftService;
 
@@ -26,6 +27,9 @@ class StoreController extends Controller
     {
         abort_unless($product->is_active, 404);
         $product->load('durations');
-        return view('pages.store-detail', compact('product'));
+
+        $gradients = $product->nickname_type === 'gradient' ? Gradient::ordered()->get() : collect();
+
+        return view('pages.store-detail', compact('product', 'gradients'));
     }
 }

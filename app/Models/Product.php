@@ -10,6 +10,7 @@ class Product extends Model
         'name',
         'rank_name',     // LuckPerms group name, dipakai untuk auto-generate command durasi
         'requires_nickname', // produk butuh input nickname custom (mis. cosmetics) sebelum checkout
+        'nickname_type', // 'custom' (bebas + kode warna) | 'gradient' (pilih preset gradient)
         'description',
         'price',
         'image',

@@ -109,7 +109,7 @@
                     <p style="font-size:0.7rem;color:#64748b;margin-top:0.5rem;">Menunggu verifikasi...</p>
                 </div>
 
-                @if($product->requires_nickname)
+                @if($product->requires_nickname && $product->nickname_type !== 'gradient')
                 <div style="margin-bottom:1rem;">
                     <label style="display:block;font-size:0.875rem;color:#94a3b8;margin-bottom:0.5rem;">Nickname Custom</label>
                     <input type="text" name="nickname" id="nickname-input" maxlength="64" placeholder="Contoh: &aBinghem"
@@ -141,6 +141,28 @@
                             @endforeach
                         </div>
                     </details>
+                </div>
+                @elseif($product->requires_nickname && $product->nickname_type === 'gradient')
+                <div style="margin-bottom:1rem;">
+                    <label style="display:block;font-size:0.875rem;color:#94a3b8;margin-bottom:0.5rem;">Pilih Gradient Nickname</label>
+                    @if($gradients->isEmpty())
+                    <div style="color:#f87171;font-size:0.8rem;">Belum ada preset gradient tersedia, hubungi admin.</div>
+                    @else
+                    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:0.5rem;">
+                        @foreach($gradients as $i => $g)
+                        <label class="gradient-option" style="cursor:pointer;border:1px solid rgba(255,255,255,0.1);border-radius:0.5rem;padding:0.5rem;display:block;">
+                            <input type="radio" name="gradient_id" value="{{ $g->id }}" {{ $i === 0 ? 'checked' : '' }} onchange="mpRenderGradientPreview()" style="display:none;">
+                            <div style="height:1.25rem;border-radius:0.25rem;background:linear-gradient(to right, {{ implode(',', $g->colors) }});margin-bottom:0.375rem;"></div>
+                            <div style="font-size:0.7rem;color:#cbd5e1;text-align:center;">{{ $g->name }}</div>
+                        </label>
+                        @endforeach
+                    </div>
+
+                    <div style="margin-top:0.625rem;padding:0.875rem 1rem;background:#0f0f16;border:1px solid rgba(255,255,255,0.08);border-radius:0.5rem;">
+                        <div style="font-size:0.625rem;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.5rem;">Preview (username kamu)</div>
+                        <div id="gradient-preview" style="font-family:'JetBrains Mono',monospace;font-size:1.25rem;min-height:1.6em;"><span style="color:#475569;">Isi username dulu buat lihat preview...</span></div>
+                    </div>
+                    @endif
                 </div>
                 @endif
 
@@ -211,7 +233,7 @@ function updateSubmitState() {
 
 termsCheckbox.addEventListener('change', updateSubmitState);
 
-@if($product->requires_nickname)
+@if($product->requires_nickname && $product->nickname_type !== 'gradient')
 const MC_COLORS = {
     '0':'#000000','1':'#0000AA','2':'#00AA00','3':'#00AAAA','4':'#AA0000','5':'#AA00AA',
     '6':'#FFAA00','7':'#AAAAAA','8':'#555555','9':'#5555FF','a':'#55FF55','b':'#55FFFF',
@@ -330,6 +352,75 @@ function renderNicknamePreview() {
 }
 
 nicknameInput.addEventListener('input', renderNicknamePreview);
+@elseif($product->requires_nickname && $product->nickname_type === 'gradient')
+const GRADIENTS = @js($gradients->pluck('colors', 'id'));
+
+function mpHexToRgb(hex) {
+    hex = hex.replace('#', '');
+    return [parseInt(hex.substr(0, 2), 16), parseInt(hex.substr(2, 2), 16), parseInt(hex.substr(4, 2), 16)];
+}
+
+// Interpolasi linear RGB per-karakter, sama persis kayak Gradient::apply() di backend
+// (backend tetap yang jadi sumber kebenaran final pas submit, ini cuma buat preview).
+function mpApplyGradient(stops, text) {
+    const len = text.length;
+    if (stops.length < 2 || len === 0) return [];
+    const segments = stops.length - 1;
+    const result = [];
+    for (let i = 0; i < len; i++) {
+        const pos = len === 1 ? 0 : i / (len - 1);
+        const segPos = pos * segments;
+        let segIndex = Math.floor(segPos);
+        let frac;
+        if (segIndex >= segments) { segIndex = segments - 1; frac = 1; } else { frac = segPos - segIndex; }
+        const from = mpHexToRgb(stops[segIndex]);
+        const to = mpHexToRgb(stops[segIndex + 1]);
+        const r = Math.round(from[0] + (to[0] - from[0]) * frac);
+        const g = Math.round(from[1] + (to[1] - from[1]) * frac);
+        const b = Math.round(from[2] + (to[2] - from[2]) * frac);
+        result.push({ char: text[i], color: `rgb(${r},${g},${b})` });
+    }
+    return result;
+}
+
+function mpRenderGradientPreview() {
+    const selected = document.querySelector('input[name="gradient_id"]:checked');
+    const previewEl = document.getElementById('gradient-preview');
+    if (!previewEl) return;
+
+    document.querySelectorAll('.gradient-option').forEach(el => {
+        const radio = el.querySelector('input[type=radio]');
+        el.style.borderColor = radio.checked ? '#a78bfa' : 'rgba(255,255,255,0.1)';
+        el.style.background = radio.checked ? 'rgba(139,92,246,0.08)' : 'transparent';
+    });
+
+    const text = usernameInput.value.trim();
+    previewEl.innerHTML = '';
+
+    if (!text || !selected) {
+        const span = document.createElement('span');
+        span.style.color = '#475569';
+        span.textContent = 'Isi username dulu buat lihat preview...';
+        previewEl.appendChild(span);
+        nicknameValid = false;
+        updateSubmitState();
+        return;
+    }
+
+    const stops = GRADIENTS[selected.value] || [];
+    mpApplyGradient(stops, text).forEach(seg => {
+        const span = document.createElement('span');
+        span.style.color = seg.color;
+        span.textContent = seg.char;
+        previewEl.appendChild(span);
+    });
+
+    nicknameValid = true;
+    updateSubmitState();
+}
+
+usernameInput.addEventListener('input', mpRenderGradientPreview);
+mpRenderGradientPreview();
 @endif
 
 const durationButtons = document.querySelectorAll('.duration-option');

@@ -44,6 +44,7 @@
                 <a href="{{ route('staff') }}"  style="color:#94a3b8;text-decoration:none;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#94a3b8'">Staff</a>
                 <a href="{{ route('terms') }}"  style="color:#94a3b8;text-decoration:none;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#94a3b8'">S&K</a>
                 <a href="{{ route('orders') }}" style="color:#94a3b8;text-decoration:none;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#94a3b8'">Riwayat</a>
+                <a href="{{ route('nicknames') }}" style="color:#94a3b8;text-decoration:none;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#94a3b8'">Koleksi</a>
             </div>
             <div style="display:flex;align-items:center;gap:0.75rem;">
                 <button type="button" onclick="mpCopyServerIp(this)" title="Klik untuk salin IP server"
