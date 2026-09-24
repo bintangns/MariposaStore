@@ -41,7 +41,7 @@
     <div class="main">
         <div style="max-width:44rem;">
             <h1 style="font-size:1.5rem;font-weight:700;color:white;margin-bottom:0.5rem;">Gradients</h1>
-            <p style="color:#64748b;font-size:0.8125rem;margin-bottom:1.5rem;">Preset gradient warna buat produk cosmetics tipe "Gradient" — otomatis diterapkan ke username pembeli.</p>
+            <p style="color:#64748b;font-size:0.8125rem;margin-bottom:1.5rem;">Preset warna "quick pick" buat produk cosmetics tipe Gradient — muncul di halaman checkout biar customer bisa klik buat isi otomatis 3 color picker mereka, tapi tetap bebas diubah manual. Customer selalu bisa bikin kombinasi warna sendiri walau gak klik preset ini.</p>
 
             @if(session('success'))
             <div style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);color:#4ade80;padding:0.75rem 1rem;border-radius:0.5rem;margin-bottom:1rem;font-size:0.875rem;">{{ session('success') }}</div>

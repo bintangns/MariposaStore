@@ -76,7 +76,7 @@
                                 </label>
                                 <label style="display:flex;align-items:center;gap:0.5rem;font-weight:normal;color:#e2e8f0;cursor:pointer;margin-bottom:0;">
                                     <input type="radio" name="nickname_type" value="gradient" {{ old('nickname_type', $product->nickname_type ?? 'custom') === 'gradient' ? 'checked' : '' }} style="width:auto;accent-color:#ec4899;">
-                                    Gradient (pilih preset, otomatis apply ke username customer)
+                                    Gradient (customer pilih 3 warna sendiri lewat color picker, otomatis apply ke username-nya)
                                 </label>
                             </div>
                             <div class="hint">Preset gradient dikelola di <a href="{{ route('admin.gradients') }}" style="color:#a78bfa;">Admin → Gradients</a>.</div>

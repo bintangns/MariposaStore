@@ -54,8 +54,11 @@ class CheckoutController extends Controller
         }
 
         // Produk cosmetics/custom nickname: dua mode.
-        // - "gradient": pilih dari preset gradient, warnanya di-compute SERVER-SIDE
-        //   (bukan trust input client) dari gradient->apply(username asli).
+        // - "gradient": customer pilih 3 warna sendiri (color picker, boleh
+        //   mulai dari quick-pick preset admin lalu diubah manual). Warnanya
+        //   di-compute SERVER-SIDE (bukan trust input client) dari
+        //   Gradient::apply(username asli) — gradient ini gak disimpan ke
+        //   tabel gradients, cuma dipakai sekali buat hitung nickname-nya.
         // - "custom": whitelist-only huruf, angka, spasi, kode warna/format
         //   &0-9a-f / &k-o / &r — karena string ini langsung masuk ke command
         //   RCON, karakter lain ditolak (anti command injection).
@@ -65,15 +68,17 @@ class CheckoutController extends Controller
         if ($product->requires_nickname) {
             if ($product->nickname_type === 'gradient') {
                 $request->validate([
-                    'gradient_id' => ['required', 'integer', 'exists:gradients,id'],
+                    'colors'   => ['required', 'array', 'size:3'],
+                    'colors.*' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
                 ], [
-                    'gradient_id.required' => 'Pilih gradient dulu ya.',
-                    'gradient_id.exists'   => 'Gradient yang dipilih gak valid.',
+                    'colors.required'   => 'Pilih 3 warna buat gradient nickname kamu.',
+                    'colors.size'       => 'Harus tepat 3 warna.',
+                    'colors.*.regex'    => 'Format warna gak valid.',
                 ]);
 
-                $gradient = Gradient::findOrFail($request->input('gradient_id'));
+                $gradient = new Gradient(['colors' => array_values($request->input('colors'))]);
                 $nickname = $gradient->apply($username);
-                $nicknameLabel = $gradient->name;
+                $nicknameLabel = 'Gradient Custom';
             } else {
                 $request->validate([
                     'nickname' => [
