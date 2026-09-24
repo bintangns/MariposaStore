@@ -15,8 +15,9 @@ class NicknameController extends Controller
         $nicknames = collect();
 
         if ($username) {
-            $nicknames = PlayerNickname::with('gradient')
+            $nicknames = PlayerNickname::with(['gradient', 'order'])
                 ->whereRaw('LOWER(minecraft_username) = ?', [$username])
+                ->paid()
                 ->latest()
                 ->get();
         }
@@ -35,6 +36,13 @@ class NicknameController extends Controller
             403,
             'Nickname ini bukan milik kamu.'
         );
+
+        // Jaga-jaga kalau ada yang coba POST langsung ke URL equip pakai ID
+        // nickname dari order yang belum lunas (gak lewat listing inventory
+        // yang udah difilter) — tolak juga di sini.
+        if (!$nickname->is_paid) {
+            return back()->with('error', 'Pembayaran buat nickname ini belum selesai/terverifikasi.');
+        }
 
         $commands = $nickname->resolveCommands();
         $results  = $this->minecraft->deliverProduct($commands);

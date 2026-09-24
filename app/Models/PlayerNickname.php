@@ -40,6 +40,21 @@ class PlayerNickname extends Model
     }
 
     /**
+     * Cuma nickname yang order-nya udah lunas (paid/delivered) yang boleh
+     * muncul di inventory & bisa di-equip — order yang masih pending (belum
+     * bayar / bukti belum diverifikasi admin) atau failed gak boleh kepake.
+     */
+    public function scopePaid($query)
+    {
+        return $query->whereHas('order', fn ($q) => $q->whereIn('status', ['paid', 'delivered']));
+    }
+
+    public function getIsPaidAttribute(): bool
+    {
+        return in_array($this->order?->status, ['paid', 'delivered'], true);
+    }
+
+    /**
      * Command RCON buat pasang nickname ini, sudah final (placeholder
      * {player}/{uuid}/{nickname} sudah disubstitusi & disnapshot pas dibeli
      * lewat Order::resolveCommands()) — dipakai lagi apa adanya tiap kali
