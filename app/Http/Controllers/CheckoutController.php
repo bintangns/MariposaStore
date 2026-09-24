@@ -12,6 +12,7 @@ use App\Services\MinecraftService;
 use App\Services\DiscordService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
@@ -100,42 +101,47 @@ class CheckoutController extends Controller
             }
         }
 
-        // Buat order
-        $order = Order::create([
-            'order_id'            => 'MRP-' . strtoupper(Str::random(8)),
-            'minecraft_username'  => $username,
-            'minecraft_uuid'      => session('verified_uuid'),
-            'custom_nickname'     => $nickname,
-            'terms_accepted_at'   => now(),
-            'product_id'          => $product->id,
-            'product_duration_id' => $duration?->id,
-            'duration_label'      => $duration?->label,
-            'duration_days'       => $duration?->days,
-            'duration_commands'   => $duration?->commands,
-            'amount'              => Setting::applyPromo($duration?->price ?? $product->price),
-            'status'              => 'pending',
-        ]);
-
-        // Cosmetics: catat kepemilikan nickname ini di "inventory" website-nya
-        // sejak sekarang (independen dari sukses/gagalnya RCON) — command
-        // final disnapshot dari resolveCommands() biar bisa di-equip ulang
-        // kapan aja tanpa beli lagi.
-        if ($product->requires_nickname) {
-            $order->setRelation('product', $product);
-
-            PlayerNickname::create([
-                'minecraft_username' => $username,
-                'minecraft_uuid'     => session('verified_uuid'),
-                'product_id'         => $product->id,
-                'order_id'           => $order->id,
-                'gradient_id'        => $gradient?->id,
-                'type'               => $product->nickname_type,
-                'label'              => $nicknameLabel,
-                'value'              => $nickname,
-                'command_template'   => $order->resolveCommands(),
-                'is_active'          => false,
+        // Buat order + (kalau cosmetics) catatan kepemilikan nickname di
+        // "inventory" website-nya, dibungkus 1 transaction — kalau salah satu
+        // gagal disimpan, dua-duanya rollback (gak ada order nyangkut setengah jalan).
+        $order = DB::transaction(function () use ($product, $username, $duration, $nickname, $nicknameLabel, $gradient) {
+            $order = Order::create([
+                'order_id'            => 'MRP-' . strtoupper(Str::random(8)),
+                'minecraft_username'  => $username,
+                'minecraft_uuid'      => session('verified_uuid'),
+                'custom_nickname'     => $nickname,
+                'terms_accepted_at'   => now(),
+                'product_id'          => $product->id,
+                'product_duration_id' => $duration?->id,
+                'duration_label'      => $duration?->label,
+                'duration_days'       => $duration?->days,
+                'duration_commands'   => $duration?->commands,
+                'amount'              => Setting::applyPromo($duration?->price ?? $product->price),
+                'status'              => 'pending',
             ]);
-        }
+
+            if ($product->requires_nickname) {
+                $order->setRelation('product', $product);
+
+                PlayerNickname::create([
+                    'minecraft_username' => $username,
+                    'minecraft_uuid'     => session('verified_uuid'),
+                    'product_id'         => $product->id,
+                    'order_id'           => $order->id,
+                    'gradient_id'        => $gradient?->id,
+                    // Produk lama yang belum pernah disimpan ulang lewat form
+                    // baru masih punya nickname_type null di database — treat
+                    // sebagai "custom" (behavior yang dipakai di branch validasi atas).
+                    'type'               => $product->nickname_type === 'gradient' ? 'gradient' : 'custom',
+                    'label'              => $nicknameLabel,
+                    'value'              => $nickname,
+                    'command_template'   => $order->resolveCommands(),
+                    'is_active'          => false,
+                ]);
+            }
+
+            return $order;
+        });
 
         // Mode pembayaran manual (Midtrans dimatikan sementara): skip Snap,
         // arahkan ke halaman upload bukti transfer.
