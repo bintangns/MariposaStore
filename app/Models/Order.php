@@ -14,6 +14,7 @@ class Order extends Model
         'terms_accepted_at',
         'product_id',
         'product_duration_id',
+        'upgraded_from_order_id',
         'duration_label',
         'duration_days',
         'duration_commands',
@@ -53,9 +54,97 @@ class Order extends Model
         return $this->belongsTo(Product::class);
     }
 
+    /**
+     * Order rank aktif (delivered & belum expired) milik username ini, satu
+     * per produk (yang paling baru kalau ada beberapa) — dasar buat nampilin
+     * opsi upgrade di halaman Riwayat.
+     */
+    public static function activeRankOrdersFor(string $username)
+    {
+        return static::whereRaw('LOWER(minecraft_username) = ?', [strtolower($username)])
+            ->where('status', 'delivered')
+            ->whereNotNull('product_duration_id')
+            ->with(['product.durations', 'product.category'])
+            ->latest()
+            ->get()
+            ->filter(fn (Order $order) => $order->isActiveRankOrder())
+            ->unique('product_id')
+            ->values();
+    }
+
     public function duration()
     {
         return $this->belongsTo(ProductDuration::class, 'product_duration_id');
+    }
+
+    public function upgradedFromOrder()
+    {
+        return $this->belongsTo(Order::class, 'upgraded_from_order_id');
+    }
+
+    /**
+     * True kalau order ini rank berdurasi yang masih "aktif" (permanent, atau
+     * belum lewat masa berlakunya) — dasar buat nentuin apakah order ini
+     * masih bisa di-upgrade. Murni dihitung dari riwayat order kita sendiri
+     * (delivered_at + duration_days), bukan cek live ke LuckPerms.
+     */
+    public function isActiveRankOrder(): bool
+    {
+        if ($this->status !== 'delivered' || !$this->product_duration_id) {
+            return false;
+        }
+
+        if ($this->duration_days === null) {
+            return true; // permanent, gak pernah expired
+        }
+
+        return $this->delivered_at && $this->delivered_at->copy()->addDays($this->duration_days)->isFuture();
+    }
+
+    /**
+     * Opsi upgrade yang tersedia dari order rank aktif ini: durasi lain yang
+     * lebih mahal di produk yang sama, atau produk lain di kategori yang sama
+     * dengan sort_order lebih tinggi ("rank berikutnya"). Harga upgrade =
+     * harga baru dikurangi jumlah yang udah pernah dibayar di order ini
+     * (kredit penuh, gak diprorata sisa hari), minimal Rp 0.
+     *
+     * @return array<int, array{product: Product, duration: ProductDuration, price: int, upgrade_price: int}>
+     */
+    public function eligibleUpgradeOptions(): array
+    {
+        if (!$this->isActiveRankOrder()) {
+            return [];
+        }
+
+        $product = $this->product;
+        $options = [];
+
+        foreach ($product->durations as $duration) {
+            if ($duration->id === $this->product_duration_id || $duration->price <= $this->amount) {
+                continue;
+            }
+            $options[] = ['product' => $product, 'duration' => $duration, 'price' => $duration->price];
+        }
+
+        $higherProducts = Product::where('category_id', $product->category_id)
+            ->where('id', '!=', $product->id)
+            ->where('sort_order', '>', $product->sort_order)
+            ->where('is_active', true)
+            ->with('durations')
+            ->orderBy('sort_order')
+            ->get();
+
+        foreach ($higherProducts as $p) {
+            foreach ($p->durations as $duration) {
+                $options[] = ['product' => $p, 'duration' => $duration, 'price' => $duration->price];
+            }
+        }
+
+        foreach ($options as &$opt) {
+            $opt['upgrade_price'] = max(0, $opt['price'] - $this->amount);
+        }
+
+        return $options;
     }
 
     /**
@@ -151,11 +240,21 @@ class Order extends Model
     }
 
     /**
+     * Dipanggil tiap kali delivery order ini sukses penuh (status baru pindah
+     * ke "delivered") — dari webhook Midtrans, tombol Kirim Manual admin,
+     * verifikasi pembayaran manual, maupun retry command yang gagal.
+     */
+    public function handleDeliverySuccess(): void
+    {
+        $this->activateLinkedNickname();
+        $this->grantRankRewardIfApplicable();
+    }
+
+    /**
      * Tandai PlayerNickname yang lahir dari order ini (kalau ada) sebagai
      * nickname aktif si player, sekalian non-aktifin nickname lain miliknya.
-     * Dipanggil tiap kali delivery order ini sukses penuh.
      */
-    public function activateLinkedNickname(): void
+    private function activateLinkedNickname(): void
     {
         $nickname = PlayerNickname::where('order_id', $this->id)->first();
         if (!$nickname) {
@@ -165,5 +264,25 @@ class Order extends Model
         PlayerNickname::whereRaw('LOWER(minecraft_username) = ?', [strtolower($this->minecraft_username)])
             ->update(['is_active' => false]);
         $nickname->update(['is_active' => true]);
+    }
+
+    /**
+     * Kalau produk yang dibeli order ini punya reward jatah nickname gratis
+     * (RankReward) dan player belum pernah kena kredit dari produk ini
+     * sebelumnya, kredit sekarang. Murni transaksi database — gak ada
+     * RCON/query ke server Minecraft sama sekali, dan gak bisa dobel walau
+     * order-nya di-retry berkali-kali (unique constraint per username+produk).
+     */
+    private function grantRankRewardIfApplicable(): void
+    {
+        $reward = RankReward::where('product_id', $this->product_id)->first();
+        if (!$reward) {
+            return;
+        }
+
+        PlayerRankCredit::firstOrCreate([
+            'minecraft_username' => strtolower($this->minecraft_username),
+            'product_id'         => $this->product_id,
+        ]);
     }
 }

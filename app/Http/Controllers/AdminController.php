@@ -7,6 +7,7 @@ use App\Models\Gradient;
 use App\Models\Order;
 use App\Models\PlayerNickname;
 use App\Models\Product;
+use App\Models\RankReward;
 use App\Models\Setting;
 use App\Services\MinecraftService;
 use App\Services\DiscordService;
@@ -379,7 +380,7 @@ class AdminController extends Controller
         ]);
 
         if ($allDelivered) {
-            $order->activateLinkedNickname();
+            $order->handleDeliverySuccess();
             $this->discord->notifyDelivered($order);
         }
 
@@ -422,7 +423,7 @@ class AdminController extends Controller
         ]);
 
         if ($allDelivered) {
-            $order->activateLinkedNickname();
+            $order->handleDeliverySuccess();
             $this->discord->notifyDelivered($order);
             return back()->with('success', 'Semua command berhasil dikirim ulang! Order sudah lengkap.');
         }
@@ -623,9 +624,13 @@ class AdminController extends Controller
             'promo_label'         => Setting::promoLabel(),
             'manual_payment_mode'         => Setting::isManualPaymentMode(),
             'manual_payment_instructions' => Setting::get('manual_payment_instructions', ''),
+            'free_gradient_product_id'    => Setting::freeGradientProductId(),
+            'free_custom_product_id'      => Setting::freeCustomProductId(),
         ];
 
-        return view('admin.settings', compact('settings'));
+        $nicknameProducts = Product::whereNotNull('nickname_type')->orderBy('name')->get();
+
+        return view('admin.settings', compact('settings', 'nicknameProducts'));
     }
 
     public function updateSettings(Request $request)
@@ -639,6 +644,8 @@ class AdminController extends Controller
             'promo_label'         => 'nullable|string|max:100',
             'manual_payment_mode'         => 'nullable|boolean',
             'manual_payment_instructions' => 'nullable|string|max:1000',
+            'free_gradient_product_id'    => 'nullable|integer|exists:products,id',
+            'free_custom_product_id'      => 'nullable|integer|exists:products,id',
         ]);
 
         if ($data['promo_type'] === 'percentage' && ($data['promo_value'] ?? 0) > 100) {
@@ -655,7 +662,64 @@ class AdminController extends Controller
         Setting::set('promo_label', $data['promo_label'] ?? '');
         Setting::set('manual_payment_mode', $request->boolean('manual_payment_mode') ? '1' : '0');
         Setting::set('manual_payment_instructions', $data['manual_payment_instructions'] ?? '');
+        Setting::set('free_gradient_product_id', $data['free_gradient_product_id'] ?? '');
+        Setting::set('free_custom_product_id', $data['free_custom_product_id'] ?? '');
 
         return back()->with('success', 'Pengaturan berhasil disimpan!');
+    }
+
+    public function rankRewards()
+    {
+        $rewards = RankReward::with('product')->get()->sortBy(fn ($r) => $r->product->name ?? '');
+
+        // Produk rank yang belum punya reward — biar dropdown "+ Tambah" cuma
+        // nawarin produk yang belum diatur (produk nickname sendiri gak usah
+        // muncul, gak masuk akal ngasih reward nickname dari beli nickname).
+        $availableProducts = Product::whereNull('nickname_type')
+            ->whereNotIn('id', $rewards->pluck('product_id'))
+            ->orderBy('name')
+            ->get();
+
+        return view('admin.rank-rewards', compact('rewards', 'availableProducts'));
+    }
+
+    public function storeRankReward(Request $request)
+    {
+        $data = $request->validate([
+            'product_id'     => 'required|integer|exists:products,id|unique:rank_rewards,product_id',
+            'gradient_count' => 'nullable|integer|min:0',
+            'custom_count'   => 'nullable|integer|min:0',
+        ], [
+            'product_id.unique' => 'Produk ini udah punya reward, edit langsung di tabel bawah.',
+        ]);
+
+        RankReward::create([
+            'product_id'     => $data['product_id'],
+            'gradient_count' => $data['gradient_count'] ?? 0,
+            'custom_count'   => $data['custom_count'] ?? 0,
+        ]);
+
+        return back()->with('success', 'Reward rank berhasil ditambahkan!');
+    }
+
+    public function updateRankReward(Request $request, RankReward $rankReward)
+    {
+        $data = $request->validate([
+            'gradient_count' => 'nullable|integer|min:0',
+            'custom_count'   => 'nullable|integer|min:0',
+        ]);
+
+        $rankReward->update([
+            'gradient_count' => $data['gradient_count'] ?? 0,
+            'custom_count'   => $data['custom_count'] ?? 0,
+        ]);
+
+        return back()->with('success', 'Reward rank berhasil diupdate!');
+    }
+
+    public function destroyRankReward(RankReward $rankReward)
+    {
+        $rankReward->delete();
+        return back()->with('success', 'Reward rank berhasil dihapus!');
     }
 }

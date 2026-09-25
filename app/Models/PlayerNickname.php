@@ -17,11 +17,13 @@ class PlayerNickname extends Model
         'value',
         'command_template',
         'is_active',
+        'is_free_claim',
     ];
 
     protected $casts = [
         'command_template' => 'array',
         'is_active' => 'boolean',
+        'is_free_claim' => 'boolean',
     ];
 
     public function product()
@@ -40,17 +42,25 @@ class PlayerNickname extends Model
     }
 
     /**
-     * Cuma nickname yang order-nya udah lunas (paid/delivered) yang boleh
-     * muncul di inventory & bisa di-equip — order yang masih pending (belum
-     * bayar / bukti belum diverifikasi admin) atau failed gak boleh kepake.
+     * Cuma nickname yang order-nya udah lunas (paid/delivered) ATAU klaim
+     * gratis dari rank reward yang boleh muncul di inventory & bisa
+     * di-equip — order yang masih pending (belum bayar / bukti belum
+     * diverifikasi admin) atau failed gak boleh kepake.
      */
     public function scopePaid($query)
     {
-        return $query->whereHas('order', fn ($q) => $q->whereIn('status', ['paid', 'delivered']));
+        return $query->where(function ($q) {
+            $q->where('is_free_claim', true)
+                ->orWhereHas('order', fn ($oq) => $oq->whereIn('status', ['paid', 'delivered']));
+        });
     }
 
     public function getIsPaidAttribute(): bool
     {
+        if ($this->is_free_claim) {
+            return true;
+        }
+
         return in_array($this->order?->status, ['paid', 'delivered'], true);
     }
 

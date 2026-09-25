@@ -29,6 +29,7 @@
         <a href="{{ route('admin.products') }}" class="nav-link">Produk</a>
         <a href="{{ route('admin.categories') }}" class="nav-link">Kategori</a>
         <a href="{{ route('admin.gradients') }}" class="nav-link">Gradients</a>
+        <a href="{{ route('admin.rank-rewards') }}" class="nav-link">Rank Rewards</a>
         <a href="{{ route('admin.orders') }}" class="nav-link">Orders</a>
         <a href="{{ route('admin.rcon-test') }}" class="nav-link">Test RCON</a>
         <a href="{{ route('admin.settings') }}" class="nav-link active">Pengaturan</a>
@@ -129,6 +130,35 @@
                     <div style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.3);border-radius:0.5rem;padding:0.75rem 1rem;font-size:0.8125rem;color:#fcd34d;">
                         ⚠ Mode manual lagi aktif. Cek halaman <a href="{{ route('admin.orders') }}" style="color:#fde68a;">Orders</a> buat verifikasi bukti transfer yang masuk & kirim rank-nya.
                     </div>
+                    @endif
+                </div>
+
+                <div class="card">
+                    <h2>🎁 Klaim Nickname Gratis (Rank Rewards)</h2>
+                    <div class="desc">Command RCON yang dipakai pas player klaim nickname gratis dari jatah rank-nya (dikonfigurasi di <a href="{{ route('admin.rank-rewards') }}" style="color:#a78bfa;">Admin → Rank Rewards</a>) — reuse command dari produk nickname yang udah ada, biar gak perlu bikin command baru lagi.</div>
+
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;">
+                        <div class="form-group">
+                            <label>Produk referensi — Gradient</label>
+                            <select name="free_gradient_product_id">
+                                <option value="">— Belum diatur —</option>
+                                @foreach($nicknameProducts->where('nickname_type', 'gradient') as $p)
+                                <option value="{{ $p->id }}" {{ (int) old('free_gradient_product_id', $settings['free_gradient_product_id']) === $p->id ? 'selected' : '' }}>{{ $p->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Produk referensi — Custom</label>
+                            <select name="free_custom_product_id">
+                                <option value="">— Belum diatur —</option>
+                                @foreach($nicknameProducts->where('nickname_type', 'custom') as $p)
+                                <option value="{{ $p->id }}" {{ (int) old('free_custom_product_id', $settings['free_custom_product_id']) === $p->id ? 'selected' : '' }}>{{ $p->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    @if($nicknameProducts->isEmpty())
+                    <div class="hint" style="color:#fbbf24;">Belum ada produk dengan tipe nickname. Bikin dulu produk cosmetics (Custom Nickname) di <a href="{{ route('admin.products.create') }}" style="color:#a78bfa;">Tambah Produk</a>.</div>
                     @endif
                 </div>
 

@@ -11,7 +11,7 @@ class NicknameSwitch extends Model
     /**
      * Cuma dicatat tiap kali player GANTI MANUAL dari halaman Koleksi
      * (NicknameController::equip) — auto-equip pas baru beli produk nickname
-     * (Order::activateLinkedNickname) sengaja gak lewat sini sama sekali,
+     * (Order::handleDeliverySuccess) sengaja gak lewat sini sama sekali,
      * jadi gak ikut kena/makan jatah cooldown.
      */
     public static function countRecentFor(string $username): int

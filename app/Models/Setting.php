@@ -68,6 +68,24 @@ class Setting extends Model
     }
 
     /**
+     * ID produk yang command-nya dipakai buat eksekusi RCON klaim nickname
+     * GRATIS dari rank reward (gradient/custom) — reuse command yang udah
+     * dikonfigurasi di produk itu (placeholder {player}/{uuid}/{nickname}),
+     * gak perlu bikin sistem command terpisah cuma buat klaim gratis.
+     */
+    public static function freeGradientProductId(): ?int
+    {
+        $id = static::get('free_gradient_product_id');
+        return $id ? (int) $id : null;
+    }
+
+    public static function freeCustomProductId(): ?int
+    {
+        $id = static::get('free_custom_product_id');
+        return $id ? (int) $id : null;
+    }
+
+    /**
      * Terapkan promo global ke sebuah harga. Null tetap null (produk tanpa harga
      * flat, mis. subscription-only). Hasil dibulatkan & gak pernah negatif.
      */

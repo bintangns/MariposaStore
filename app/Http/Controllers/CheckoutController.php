@@ -53,6 +53,38 @@ class CheckoutController extends Controller
             }
         }
 
+        // Upgrade dari rank aktif yang udah dimiliki: kredit sebesar yang udah
+        // pernah dibayar di order lama, dipotong dari harga target. Divalidasi
+        // ulang di sini (bukan cuma trust harga yang dikirim dari halaman
+        // upgrade) — target harus beneran salah satu opsi upgrade yang valid
+        // dari order sumbernya, dan order sumber itu belum pernah dipakai buat
+        // upgrade lain (anti double-spend kreditnya).
+        $upgradeFromOrder = null;
+        $upgradeCredit = 0;
+        if ($request->filled('upgrade_from_order_id')) {
+            $upgradeFromOrder = Order::whereRaw('LOWER(minecraft_username) = ?', [session('verified_username')])
+                ->find($request->input('upgrade_from_order_id'));
+
+            if (!$upgradeFromOrder) {
+                return back()->with('error', 'Order upgrade sumber gak ditemukan.');
+            }
+
+            $alreadyUsed = Order::where('upgraded_from_order_id', $upgradeFromOrder->id)
+                ->whereIn('status', ['pending', 'paid', 'delivered'])
+                ->exists();
+            if ($alreadyUsed) {
+                return back()->with('error', 'Order ini udah pernah dipakai buat upgrade sebelumnya.');
+            }
+
+            $isEligible = collect($upgradeFromOrder->eligibleUpgradeOptions())
+                ->contains(fn ($opt) => $opt['product']->id === $product->id && $opt['duration']->id === $duration?->id);
+            if (!$isEligible) {
+                return back()->with('error', 'Kombinasi upgrade ini gak valid.');
+            }
+
+            $upgradeCredit = $upgradeFromOrder->amount;
+        }
+
         // Produk cosmetics/custom nickname: dua mode.
         // - "gradient": customer pilih 3 warna sendiri (color picker, boleh
         //   mulai dari quick-pick preset admin lalu diubah manual). Warnanya
@@ -109,7 +141,7 @@ class CheckoutController extends Controller
         // Buat order + (kalau cosmetics) catatan kepemilikan nickname di
         // "inventory" website-nya, dibungkus 1 transaction — kalau salah satu
         // gagal disimpan, dua-duanya rollback (gak ada order nyangkut setengah jalan).
-        $order = DB::transaction(function () use ($product, $username, $duration, $nickname, $nicknameLabel, $gradient) {
+        $order = DB::transaction(function () use ($product, $username, $duration, $nickname, $nicknameLabel, $gradient, $upgradeFromOrder, $upgradeCredit) {
             $order = Order::create([
                 'order_id'            => 'MRP-' . strtoupper(Str::random(8)),
                 'minecraft_username'  => $username,
@@ -118,10 +150,11 @@ class CheckoutController extends Controller
                 'terms_accepted_at'   => now(),
                 'product_id'          => $product->id,
                 'product_duration_id' => $duration?->id,
+                'upgraded_from_order_id' => $upgradeFromOrder?->id,
                 'duration_label'      => $duration?->label,
                 'duration_days'       => $duration?->days,
                 'duration_commands'   => $duration?->commands,
-                'amount'              => Setting::applyPromo($duration?->price ?? $product->price),
+                'amount'              => max(0, Setting::applyPromo($duration?->price ?? $product->price) - $upgradeCredit),
                 'status'              => 'pending',
             ]);
 
@@ -313,7 +346,7 @@ class CheckoutController extends Controller
             ]);
 
             if ($allDelivered) {
-                $order->activateLinkedNickname();
+                $order->handleDeliverySuccess();
             } else {
                 Log::warning('Delivery gagal untuk order ' . $order->order_id . ', RCON tidak reachable atau command gagal.');
             }

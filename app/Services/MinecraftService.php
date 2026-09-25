@@ -23,6 +23,19 @@ class MinecraftService
      */
     public function getPlayerGroupLabel(string $username): ?string
     {
+        $group = $this->getPlayerRawGroup($username);
+
+        return $group ? (self::GROUP_LABELS[$group] ?? ucfirst($group)) : null;
+    }
+
+    /**
+     * Nama group LuckPerms mentah (lowercase, sebelum di-mapping ke label
+     * tampilan) — dipakai sebagai identitas rank buat sistem reward per-rank,
+     * karena beberapa raw group bisa share label yang sama (mis. adventure2 &
+     * adventure3 sama-sama "Adventurer").
+     */
+    public function getPlayerRawGroup(string $username): ?string
+    {
         try {
             $player = DB::connection('minecraft')
                 ->table('luckperms_players')
@@ -33,11 +46,9 @@ class MinecraftService
                 return null;
             }
 
-            $group = strtolower($player->primary_group);
-
-            return self::GROUP_LABELS[$group] ?? ucfirst($group);
+            return strtolower($player->primary_group);
         } catch (\Exception $e) {
-            Log::error('MinecraftService::getPlayerGroupLabel error: ' . $e->getMessage());
+            Log::error('MinecraftService::getPlayerRawGroup error: ' . $e->getMessage());
             return null;
         }
     }
@@ -75,6 +86,27 @@ class MinecraftService
             return $player?->uuid;
         } catch (\Exception $e) {
             Log::error('MinecraftService::getPlayerUUID error: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Ambil username dengan huruf besar/kecil asli sesuai yang tersimpan di
+     * server (session cuma nyimpen versi lowercase) — dipakai buat klaim
+     * nickname gratis dari Koleksi, di mana username gak diketik ulang kayak
+     * pas checkout.
+     */
+    public function getPlayerUsername(string $username): ?string
+    {
+        try {
+            $player = DB::connection('minecraft')
+                ->table('luckperms_players')
+                ->whereRaw('LOWER(username) = ?', [strtolower($username)])
+                ->first();
+
+            return $player?->username;
+        } catch (\Exception $e) {
+            Log::error('MinecraftService::getPlayerUsername error: ' . $e->getMessage());
             return null;
         }
     }

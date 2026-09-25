@@ -70,10 +70,12 @@ Route::post('/payment/notification', [CheckoutController::class, 'notification']
 // Order history
 Route::get('/orders', [OrderController::class, 'index'])->name('orders');
 Route::get('/orders/{order:order_id}/invoice', [OrderController::class, 'invoice'])->name('orders.invoice');
+Route::get('/orders/{order:order_id}/upgrade', [OrderController::class, 'upgrade'])->name('orders.upgrade');
 
 // Koleksi nickname (cosmetics yang sudah dibeli) & equip/switch
 Route::get('/nicknames', [NicknameController::class, 'index'])->name('nicknames');
 Route::post('/nicknames/{nickname}/equip', [NicknameController::class, 'equip'])->name('nicknames.equip');
+Route::post('/nicknames/claim', [NicknameController::class, 'claim'])->name('nicknames.claim');
 
 // Admin auth
 Route::prefix('admin')->name('admin.')->group(function () {
@@ -110,4 +112,8 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::post('/gradients', [AdminController::class, 'storeGradient'])->name('gradients.store');
     Route::put('/gradients/{gradient}', [AdminController::class, 'updateGradient'])->name('gradients.update');
     Route::delete('/gradients/{gradient}', [AdminController::class, 'destroyGradient'])->name('gradients.destroy');
+    Route::get('/rank-rewards', [AdminController::class, 'rankRewards'])->name('rank-rewards');
+    Route::post('/rank-rewards', [AdminController::class, 'storeRankReward'])->name('rank-rewards.store');
+    Route::put('/rank-rewards/{rankReward}', [AdminController::class, 'updateRankReward'])->name('rank-rewards.update');
+    Route::delete('/rank-rewards/{rankReward}', [AdminController::class, 'destroyRankReward'])->name('rank-rewards.destroy');
 });

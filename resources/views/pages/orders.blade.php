@@ -47,6 +47,12 @@
                     onmouseover="this.style.color='white';this.style.borderColor='rgba(255,255,255,0.2)'" onmouseout="this.style.color='#94a3b8';this.style.borderColor='rgba(255,255,255,0.1)'">
                     ⬇ Invoice
                 </a>
+                @if($order->isActiveRankOrder() && count($order->eligibleUpgradeOptions()))
+                <a href="{{ route('orders.upgrade', $order->order_id) }}"
+                    style="display:flex;align-items:center;gap:0.375rem;font-size:0.75rem;color:#a78bfa;text-decoration:none;background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.25);padding:0.375rem 0.75rem;border-radius:0.5rem;">
+                    ⬆ Upgrade
+                </a>
+                @endif
             </div>
         </div>
         @endforeach

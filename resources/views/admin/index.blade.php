@@ -40,6 +40,7 @@
         <a href="{{ route('admin.products') }}" class="nav-link">Produk</a>
         <a href="{{ route('admin.categories') }}" class="nav-link">Kategori</a>
         <a href="{{ route('admin.gradients') }}" class="nav-link">Gradients</a>
+        <a href="{{ route('admin.rank-rewards') }}" class="nav-link">Rank Rewards</a>
         <a href="{{ route('admin.orders') }}" class="nav-link">Orders</a>
         <a href="{{ route('admin.rcon-test') }}" class="nav-link">Test RCON</a>
         <a href="{{ route('admin.settings') }}" class="nav-link">Pengaturan</a>

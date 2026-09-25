@@ -18,9 +18,63 @@
         <p style="margin-bottom:1rem;">Verifikasi username Minecraft kamu dulu buat lihat koleksi nickname.</p>
         <button onclick="mpOpenVerifyModal()" class="btn-primary">Masukkan Username</button>
     </div>
-    @elseif($nicknames->isEmpty())
+    @else
+
+    @if($entitlement['gradient_left'] > 0 || $entitlement['custom_left'] > 0)
+    <div style="background:rgba(236,72,153,0.06);border:1px solid rgba(236,72,153,0.25);border-radius:0.75rem;padding:1.25rem;margin-bottom:1.5rem;">
+        <h2 style="font-size:1rem;font-weight:600;color:white;margin-bottom:0.25rem;">🎁 Klaim Nickname Gratis</h2>
+        <p style="font-size:0.8125rem;color:#94a3b8;margin-bottom:1rem;">Jatah dari rank yang pernah kamu beli. Berdasarkan username kamu: <strong style="color:#e2e8f0;font-family:'JetBrains Mono',monospace;">{{ $username }}</strong></p>
+
+        @if($entitlement['gradient_left'] > 0)
+        <div style="margin-bottom:1.25rem;padding-bottom:1.25rem;border-bottom:1px solid rgba(255,255,255,0.06);">
+            <div style="font-size:0.8125rem;color:#c4b5fd;margin-bottom:0.5rem;">Jatah Gradient tersisa: <strong>{{ $entitlement['gradient_left'] }}x</strong></div>
+            <form action="{{ route('nicknames.claim') }}" method="POST">
+                @csrf
+                <input type="hidden" name="type" value="gradient">
+                <div style="display:flex;gap:0.5rem;margin-bottom:0.75rem;">
+                    @foreach([0, 1, 2] as $i)
+                    <div style="flex:1;text-align:center;">
+                        <input type="color" name="colors[{{ $i }}]" id="claim-color-{{ $i }}" value="{{ ['#FF0000', '#FFFF00', '#00FF00'][$i] }}"
+                            oninput="mpRenderClaimGradientPreview()"
+                            style="width:100%;height:2.5rem;padding:0;border:1px solid rgba(255,255,255,0.1);border-radius:0.375rem;cursor:pointer;background:none;">
+                        <div style="font-size:0.65rem;color:#64748b;margin-top:0.25rem;">Warna {{ $i + 1 }}</div>
+                    </div>
+                    @endforeach
+                </div>
+                <div style="padding:0.75rem 1rem;background:#0f0f16;border:1px solid rgba(255,255,255,0.08);border-radius:0.5rem;margin-bottom:0.75rem;">
+                    <div id="claim-gradient-preview" style="font-family:'JetBrains Mono',monospace;font-size:1.0625rem;min-height:1.4em;"></div>
+                </div>
+                <button type="submit" class="btn-primary" style="font-size:0.8125rem;padding:0.5rem 1.25rem;">Klaim & Pasang</button>
+            </form>
+        </div>
+        @endif
+
+        @if($entitlement['custom_left'] > 0)
+        <div>
+            <div style="font-size:0.8125rem;color:#c4b5fd;margin-bottom:0.5rem;">Jatah Custom tersisa: <strong>{{ $entitlement['custom_left'] }}x</strong></div>
+            <form action="{{ route('nicknames.claim') }}" method="POST">
+                @csrf
+                <input type="hidden" name="type" value="custom">
+                <input type="text" name="nickname" id="claim-nickname-input" maxlength="64" placeholder="Contoh: &aBinghem" required
+                    oninput="mpRenderClaimCustomPreview()"
+                    style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:0.5rem;padding:0.625rem 1rem;color:white;font-size:0.875rem;outline:none;box-sizing:border-box;font-family:'JetBrains Mono',monospace;margin-bottom:0.5rem;">
+                <div style="padding:0.75rem 1rem;background:#0f0f16;border:1px solid rgba(255,255,255,0.08);border-radius:0.5rem;margin-bottom:0.75rem;">
+                    <div id="claim-custom-preview" style="font-family:'JetBrains Mono',monospace;font-size:1.0625rem;min-height:1.4em;"><span style="color:#475569;">Preview muncul di sini...</span></div>
+                </div>
+                <details style="margin-bottom:0.75rem;">
+                    <summary style="cursor:pointer;font-size:0.75rem;color:#a78bfa;">Lihat kode warna &amp; format</summary>
+                    <div style="margin-top:0.5rem;font-size:0.7rem;color:#64748b;">Kode warna <code style="color:#a78bfa;">&amp;0</code>-<code style="color:#a78bfa;">&amp;f</code>, format <code style="color:#a78bfa;">&amp;l</code> bold, <code style="color:#a78bfa;">&amp;m</code> strikethrough, <code style="color:#a78bfa;">&amp;n</code> underline, <code style="color:#a78bfa;">&amp;o</code> italic, <code style="color:#a78bfa;">&amp;k</code> obfuscated, <code style="color:#a78bfa;">&amp;r</code> reset.</div>
+                </details>
+                <button type="submit" class="btn-primary" style="font-size:0.8125rem;padding:0.5rem 1.25rem;">Klaim & Pasang</button>
+            </form>
+        </div>
+        @endif
+    </div>
+    @endif
+
+    @if($nicknames->isEmpty())
     <div style="text-align:center;padding:3rem;color:#64748b;">
-        <p style="margin-bottom:0.75rem;">Belum ada nickname yang kamu beli.</p>
+        <p style="margin-bottom:0.75rem;">Belum ada nickname yang kamu beli/klaim.</p>
         <a href="{{ route('store') }}" style="color:#a78bfa;text-decoration:none;">Lihat Store →</a>
     </div>
     @else
@@ -55,6 +109,8 @@
         </div>
         @endforeach
     </div>
+    @endif
+
     @endif
 </div>
 
@@ -106,8 +162,9 @@ function mpParseAnyNickname(raw) {
     return segments;
 }
 
-document.querySelectorAll('.mp-nick-preview').forEach(el => {
-    mpParseAnyNickname(el.dataset.value || '').forEach(seg => {
+function mpRenderNicknameSpans(raw, el) {
+    el.innerHTML = '';
+    mpParseAnyNickname(raw).forEach(seg => {
         const span = document.createElement('span');
         span.style.color = seg.color;
         if (seg.bold) span.style.fontWeight = '700';
@@ -119,7 +176,71 @@ document.querySelectorAll('.mp-nick-preview').forEach(el => {
         span.textContent = seg.text;
         el.appendChild(span);
     });
+}
+
+document.querySelectorAll('.mp-nick-preview').forEach(el => {
+    mpRenderNicknameSpans(el.dataset.value || '', el);
 });
+
+// --- Klaim gratis: custom nickname ---
+const claimNicknameInput = document.getElementById('claim-nickname-input');
+if (claimNicknameInput) {
+    function mpRenderClaimCustomPreview() {
+        const raw = claimNicknameInput.value;
+        const previewEl = document.getElementById('claim-custom-preview');
+        if (!raw.trim()) {
+            previewEl.innerHTML = '<span style="color:#475569;">Preview muncul di sini...</span>';
+            return;
+        }
+        mpRenderNicknameSpans(raw, previewEl);
+    }
+    window.mpRenderClaimCustomPreview = mpRenderClaimCustomPreview;
+}
+
+// --- Klaim gratis: gradient (dihitung dari username kamu sendiri) ---
+if (document.getElementById('claim-color-0')) {
+    const CLAIM_USERNAME = @js($username);
+
+    function mpHexToRgbClaim(hex) {
+        hex = hex.replace('#', '');
+        return [parseInt(hex.substr(0, 2), 16), parseInt(hex.substr(2, 2), 16), parseInt(hex.substr(4, 2), 16)];
+    }
+
+    function mpApplyGradientClaim(stops, text) {
+        const len = text.length;
+        if (stops.length < 2 || len === 0) return [];
+        const segments = stops.length - 1;
+        const result = [];
+        for (let i = 0; i < len; i++) {
+            const pos = len === 1 ? 0 : i / (len - 1);
+            const segPos = pos * segments;
+            let segIndex = Math.floor(segPos);
+            let frac;
+            if (segIndex >= segments) { segIndex = segments - 1; frac = 1; } else { frac = segPos - segIndex; }
+            const from = mpHexToRgbClaim(stops[segIndex]);
+            const to = mpHexToRgbClaim(stops[segIndex + 1]);
+            const r = Math.round(from[0] + (to[0] - from[0]) * frac);
+            const g = Math.round(from[1] + (to[1] - from[1]) * frac);
+            const b = Math.round(from[2] + (to[2] - from[2]) * frac);
+            result.push({ char: text[i], color: `rgb(${r},${g},${b})` });
+        }
+        return result;
+    }
+
+    function mpRenderClaimGradientPreview() {
+        const stops = [0, 1, 2].map(i => document.getElementById('claim-color-' + i).value);
+        const previewEl = document.getElementById('claim-gradient-preview');
+        previewEl.innerHTML = '';
+        mpApplyGradientClaim(stops, CLAIM_USERNAME).forEach(seg => {
+            const span = document.createElement('span');
+            span.style.color = seg.color;
+            span.textContent = seg.char;
+            previewEl.appendChild(span);
+        });
+    }
+    window.mpRenderClaimGradientPreview = mpRenderClaimGradientPreview;
+    mpRenderClaimGradientPreview();
+}
 </script>
 @endpush
 @endsection
