@@ -104,29 +104,24 @@
                 <input type="hidden" name="upgrade_from_order_id" id="upgrade-from-input" value="{{ $firstUpgrade['from_order_id'] ?? '' }}">
                 <div style="margin-bottom:1rem;">
                     <label style="display:block;font-size:0.875rem;color:#94a3b8;margin-bottom:0.5rem;">Username Minecraft</label>
-                    <div id="checkout-platform-toggle" class="mp-platform-toggle">
-                        <button type="button" class="mp-platform-btn active" data-platform="java">🖥️ Java</button>
-                        <button type="button" class="mp-platform-btn" data-platform="bedrock">📱 Bedrock</button>
+                    @if(session('verified_username'))
+                    <div style="display:flex;align-items:center;gap:0.625rem;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:0.5rem;padding:0.625rem 1rem;">
+                        <img src="https://mc-heads.net/avatar/{{ urlencode(session('verified_username')) }}/32" alt=""
+                            width="24" height="24" style="border-radius:0.25rem;image-rendering:pixelated;flex-shrink:0;">
+                        <span style="color:white;font-family:'JetBrains Mono',monospace;font-size:0.875rem;flex:1;">{{ session('verified_username') }}</span>
+                        <span style="color:#4ade80;font-size:0.7rem;">✓ Login</span>
                     </div>
-                    <div id="checkout-skin-preview" class="mp-skin-preview" style="display:none;margin-bottom:0.625rem;">
-                        <div class="mp-skin-box">
-                            <div class="mp-skin-spinner"><div></div></div>
-                            <img class="mp-skin-img" alt="Skin preview">
-                            <div class="mp-skin-bedrock-badge">📱</div>
-                        </div>
-                        <span class="mp-skin-username"></span>
+                    <div style="font-size:0.75rem;color:#64748b;margin-top:0.375rem;">
+                        Barang dikirim ke akun ini. Bukan akun kamu?
+                        <button type="button" onclick="mpOpenVerifyModal()" style="background:none;border:none;color:#a78bfa;text-decoration:underline;cursor:pointer;font-family:inherit;padding:0;font-size:inherit;">Ganti akun</button>
                     </div>
-                    <input type="text" id="username-field" placeholder="Masukkan username kamu"
-                        style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:0.5rem;padding:0.625rem 1rem;color:white;font-size:0.875rem;outline:none;box-sizing:border-box;font-family:inherit;"
-                        required>
-                    <input type="hidden" name="username" id="username-hidden">
-                    <div id="username-check-result" style="margin-top:0.5rem;font-size:0.8rem;"></div>
-                </div>
-
-                <div id="verify-section" style="display:none;margin-bottom:1rem;padding:0.75rem;background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.2);border-radius:0.5rem;">
-                    <p style="font-size:0.8rem;color:#c4b5fd;margin-bottom:0.5rem;">Ketik command ini di server:</p>
-                    <div id="verify-cmd" style="font-family:'JetBrains Mono',monospace;color:#a78bfa;font-size:0.8rem;background:rgba(0,0,0,0.2);padding:0.5rem;border-radius:0.25rem;"></div>
-                    <p style="font-size:0.7rem;color:#64748b;margin-top:0.5rem;">Menunggu verifikasi...</p>
+                    <input type="hidden" name="username" value="{{ session('verified_username') }}">
+                    @else
+                    <div style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.25);border-radius:0.5rem;padding:0.875rem 1rem;text-align:center;">
+                        <p style="color:#fcd34d;font-size:0.8125rem;margin-bottom:0.625rem;">Login dulu sebelum checkout.</p>
+                        <button type="button" onclick="mpOpenVerifyModal()" class="btn-primary" style="font-size:0.8125rem;">Login Sekarang</button>
+                    </div>
+                    @endif
                 </div>
 
                 @if($product->requires_nickname && $product->nickname_type !== 'gradient')
@@ -238,13 +233,14 @@
 @unless($maintenanceMode)
 @push('scripts')
 <script>
-let isVerified = false;
-let pollInterval = null;
+// Identitas username SEKARANG cuma dari session login global (navbar), gak
+// ada lagi verifikasi username terpisah di form checkout — supaya orang gak
+// bisa login pakai akun A (misal yang udah punya diskon upgrade) terus diam-diam
+// ganti username pengiriman ke akun B di sini.
+const verifiedUsername = @json(session('verified_username') ?? '');
+let isVerified = verifiedUsername !== '';
 
-const usernameInput = document.getElementById('username-field');
-const usernameHidden = document.getElementById('username-hidden');
 const submitBtn = document.getElementById('submit-btn');
-const checkResult = document.getElementById('username-check-result');
 const termsCheckbox = document.getElementById('terms-checkbox');
 let nicknameValid = {{ $product->requires_nickname ? 'false' : 'true' }};
 
@@ -254,7 +250,7 @@ function updateSubmitState() {
     submitBtn.style.opacity = canSubmit ? '1' : '0.5';
     submitBtn.style.cursor = canSubmit ? 'pointer' : 'not-allowed';
     submitBtn.textContent = !isVerified
-        ? 'Verifikasi dulu untuk lanjut'
+        ? 'Login dulu untuk lanjut'
         : (!nicknameValid
             ? 'Isi nickname yang valid dulu'
             : (termsCheckbox.checked ? 'Beli Sekarang →' : 'Setujui Syarat & Ketentuan dulu'));
@@ -423,13 +419,13 @@ function mpRenderGradientPreview() {
     if (!previewEl) return;
 
     const stops = [0, 1, 2].map(i => document.getElementById('color-input-' + i).value);
-    const text = usernameInput.value.trim();
+    const text = verifiedUsername;
     previewEl.innerHTML = '';
 
     if (!text) {
         const span = document.createElement('span');
         span.style.color = '#475569';
-        span.textContent = 'Isi username dulu buat lihat preview...';
+        span.textContent = 'Login dulu buat lihat preview...';
         previewEl.appendChild(span);
         nicknameValid = false;
         updateSubmitState();
@@ -447,7 +443,6 @@ function mpRenderGradientPreview() {
     updateSubmitState();
 }
 
-usernameInput.addEventListener('input', mpRenderGradientPreview);
 mpRenderGradientPreview();
 @endif
 
@@ -477,101 +472,7 @@ durationButtons.forEach(btn => {
     });
 });
 
-const platformToggle = mpAttachPlatformToggle(document.getElementById('checkout-platform-toggle'));
-const renderSkinPreview = mpAttachSkinPreview(usernameInput, document.getElementById('checkout-skin-preview'), () => platformToggle.isBedrock());
-
-function composedUsername() {
-    return (platformToggle.isBedrock() ? '.' : '') + usernameInput.value.trim();
-}
-
-function syncHiddenUsername() {
-    usernameHidden.value = usernameInput.value.trim() ? composedUsername() : '';
-}
-
-document.getElementById('checkout-platform-toggle').addEventListener('mp:platformchange', () => {
-    renderSkinPreview();
-    syncHiddenUsername();
-    // Platform berubah -> username efektif berubah, minta verifikasi ulang
-    isVerified = false;
-    updateSubmitState();
-    checkResult.innerHTML = '';
-    document.getElementById('verify-section').style.display = 'none';
-    if (pollInterval) clearInterval(pollInterval);
-});
-
-// Restore from session
-const savedUsername = sessionStorage.getItem('mc_username');
-if (savedUsername) {
-    const isBedrockSaved = savedUsername.startsWith('.');
-    usernameInput.value = isBedrockSaved ? savedUsername.slice(1) : savedUsername;
-    if (isBedrockSaved) platformToggle.select('bedrock');
-    syncHiddenUsername();
-    renderSkinPreview();
-    verifyUsername(savedUsername);
-}
-
-usernameInput.addEventListener('input', syncHiddenUsername);
-usernameInput.addEventListener('blur', () => {
-    syncHiddenUsername();
-    if (usernameInput.value.trim().length >= 3) {
-        verifyUsername(composedUsername());
-    }
-});
-
-async function verifyUsername(username) {
-    checkResult.innerHTML = '<span style="color:#94a3b8;">Mengecek...</span>';
-
-    const res = await fetch('/verify/check', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content},
-        body: JSON.stringify({username})
-    });
-    const data = await res.json();
-
-    if (!data.exists) {
-        checkResult.innerHTML = `<span style="color:#f87171;">✗ ${data.message}</span>`;
-        return;
-    }
-
-    if (data.verified) {
-        showVerified(username);
-        return;
-    }
-
-    checkResult.innerHTML = '<span style="color:#4ade80;">✓ Username ditemukan, perlu verifikasi</span>';
-
-    const genRes = await fetch('/verify/generate', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content},
-        body: JSON.stringify({username})
-    });
-    const genData = await genRes.json();
-
-    document.getElementById('verify-section').style.display = 'block';
-    document.getElementById('verify-cmd').textContent = `/verify ${genData.token}`;
-    startPolling(username);
-}
-
-function startPolling(username) {
-    if (pollInterval) clearInterval(pollInterval);
-    pollInterval = setInterval(async () => {
-        const res = await fetch(`/verify/status?username=${username}`);
-        const data = await res.json();
-        if (data.verified) {
-            clearInterval(pollInterval);
-            showVerified(username);
-        }
-    }, 3000);
-}
-
-function showVerified(username) {
-    isVerified = true;
-    checkResult.innerHTML = '<span style="color:#4ade80;">✓ Terverifikasi!</span>';
-    document.getElementById('verify-section').style.display = 'none';
-    updateSubmitState();
-    usernameHidden.value = username;
-    sessionStorage.setItem('mc_username', username);
-}
+updateSubmitState();
 </script>
 @endpush
 @endunless
