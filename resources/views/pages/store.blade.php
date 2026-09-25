@@ -7,8 +7,8 @@
 <div style="max-width:72rem;margin:0 auto;padding:3rem 1.5rem;">
 
     <div style="margin-bottom:3rem;">
-        <h1 style="font-size:2.5rem;font-weight:700;color:white;margin-bottom:0.5rem;">Store Donasi</h1>
-        <p style="color:#94a3b8;">Dukung server dan dapatkan keuntungan eksklusif!</p>
+        <h1 style="font-size:2.5rem;font-weight:700;color:white;margin-bottom:0.5rem;">Store Dukungan</h1>
+        <p style="color:#94a3b8;">Berikan dukungan terhadap server ini dan dapatkan keuntungan eksklusif!</p>
     </div>
 
     @if(Setting::isMaintenanceMode())

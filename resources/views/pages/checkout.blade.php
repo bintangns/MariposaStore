@@ -21,31 +21,20 @@
         </div>
     </div>
 
-    <button id="pay-btn" class="btn-primary" style="width:100%;padding:1rem;font-size:1rem;">
+    <a id="pay-btn" href="{{ $paymentUrl }}" class="btn-primary" style="display:block;width:100%;padding:1rem;font-size:1rem;text-decoration:none;box-sizing:border-box;">
         Bayar Sekarang
-    </button>
+    </a>
     <p style="color:#64748b;font-size:0.75rem;margin-top:1rem;">QRIS · Transfer Bank · GoPay · OVO · ShopeePay</p>
 </div>
 
-@push('head')
-<script src="https://app{{ $isProduction ? '' : '.sandbox' }}.midtrans.com/snap/snap.js"
-    data-client-key="{{ $clientKey }}"></script>
-@endpush
-
 @push('scripts')
 <script>
+// Duitku POP: paymentUrl adalah halaman pembayaran hosted milik Duitku,
+// gak perlu JS SDK/popup — klik tombol langsung navigasi ke sana. Sesudah
+// selesai, Duitku redirect balik ke returnUrl (checkout.success) yang sudah
+// diset server-side pas createInvoice.
 document.getElementById('pay-btn').addEventListener('click', function() {
-    this.disabled = true;
-    this.textContent = 'Memproses...';
-    snap.pay('{{ $snapToken }}', {
-        onSuccess: function(result) { window.location = '{{ route('checkout.success') }}?order={{ $order->order_id }}'; },
-        onPending: function(result) { window.location = '{{ route('checkout.pending') }}?order={{ $order->order_id }}'; },
-        onError:   function(result) { window.location = '{{ route('checkout.failed') }}?order={{ $order->order_id }}'; },
-        onClose:   function() {
-            document.getElementById('pay-btn').disabled = false;
-            document.getElementById('pay-btn').textContent = 'Bayar Sekarang';
-        }
-    });
+    this.textContent = 'Mengarahkan ke halaman pembayaran...';
 });
 </script>
 @endpush

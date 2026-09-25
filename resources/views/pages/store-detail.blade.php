@@ -206,7 +206,7 @@
 
             <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid rgba(255,255,255,0.06);">
                 <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.75rem;color:#64748b;margin-bottom:0.375rem;">
-                    <span>🔒</span> Pembayaran aman via Midtrans
+                    <span>🔒</span> Pembayaran aman via Duitku
                 </div>
                 <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.75rem;color:#64748b;margin-bottom:0.375rem;">
                     <span>⚡</span> Rank langsung aktif setelah pembayaran

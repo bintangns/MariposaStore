@@ -675,12 +675,18 @@ class AdminController extends Controller
         // Produk rank yang belum punya reward — biar dropdown "+ Tambah" cuma
         // nawarin produk yang belum diatur (produk nickname sendiri gak usah
         // muncul, gak masuk akal ngasih reward nickname dari beli nickname).
+        // Category di-load biar UI bisa filter per kategori dulu (mis. biar
+        // gak ketuker produk "Mariposa Points" yang kebetulan juga gak punya
+        // nickname_type, padahal bukan produk rank).
         $availableProducts = Product::whereNull('nickname_type')
             ->whereNotIn('id', $rewards->pluck('product_id'))
+            ->with('category')
             ->orderBy('name')
             ->get();
 
-        return view('admin.rank-rewards', compact('rewards', 'availableProducts'));
+        $categories = Category::ordered()->get();
+
+        return view('admin.rank-rewards', compact('rewards', 'availableProducts', 'categories'));
     }
 
     public function storeRankReward(Request $request)

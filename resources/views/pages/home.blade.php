@@ -81,9 +81,9 @@
 <section style="max-width:72rem;margin:0 auto;padding:0 1.5rem 5rem;">
     <div style="background:linear-gradient(135deg,rgba(109,40,217,0.2),rgba(79,70,229,0.1));border:1px solid rgba(139,92,246,0.3);border-radius:1.5rem;padding:3rem;text-align:center;">
         <h2 style="font-size:2rem;font-weight:700;color:white;margin-bottom:1rem;">Siap bergabung?</h2>
-        <p style="color:#94a3b8;margin-bottom:2rem;">Dukung server dengan donasi dan dapatkan keuntungan eksklusif!</p>
+        <p style="color:#94a3b8;margin-bottom:2rem;">Berikan dukungan terhadap server ini dan dapatkan keuntungan eksklusif!</p>
         <a href="{{ route('store') }}" class="btn-primary" style="display:inline-block;text-decoration:none;padding:0.875rem 2.5rem;font-size:1rem;">
-            Lihat Paket Donasi
+            Lihat Paket Dukungan
         </a>
     </div>
 </section>

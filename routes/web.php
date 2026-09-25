@@ -58,13 +58,12 @@ Route::get('/checkout/success', [CheckoutController::class, 'success'])->name('c
 Route::get('/checkout/pending', [CheckoutController::class, 'pending'])->name('checkout.pending');
 Route::get('/checkout/failed', [CheckoutController::class, 'failed'])->name('checkout.failed');
 
-// Checkout - mode pembayaran manual (upload bukti transfer, sementara pengganti Midtrans)
+// Checkout - mode pembayaran manual (upload bukti transfer, sementara pengganti Duitku)
 Route::get('/checkout/{order:order_id}/manual', [CheckoutController::class, 'manualPayment'])->name('checkout.manual');
 Route::post('/checkout/{order:order_id}/manual', [CheckoutController::class, 'uploadProof'])->name('checkout.manual.upload');
 Route::get('/checkout/{order:order_id}/manual/uploaded', [CheckoutController::class, 'manualUploaded'])->name('checkout.manual.uploaded');
 
-// Midtrans callback
-Route::post('/payment/callback', [CheckoutController::class, 'callback'])->name('payment.callback');
+// Duitku callback
 Route::post('/payment/notification', [CheckoutController::class, 'notification'])->name('payment.notification');
 
 // Order history

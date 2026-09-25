@@ -33,8 +33,8 @@ return [
     ],
 
     'plugin_secret' => env('MINECRAFT_PLUGIN_SECRET', 'change-this-secret'),
-    'midtrans_server_key'    => env('MIDTRANS_SERVER_KEY'),
-    'midtrans_client_key'    => env('MIDTRANS_CLIENT_KEY'),
-    'midtrans_is_production' => env('MIDTRANS_IS_PRODUCTION', false),
+    'duitku_merchant_code' => env('DUITKU_MERCHANT_CODE'),
+    'duitku_api_key'       => env('DUITKU_API_KEY'),
+    'duitku_is_production' => env('DUITKU_IS_PRODUCTION', false),
     'discord_webhook_url' => env('DISCORD_WEBHOOK_URL'),
 ];

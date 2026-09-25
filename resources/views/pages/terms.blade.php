@@ -16,21 +16,21 @@
 </style>
 
 <div style="max-width:48rem;margin:0 auto;padding:3rem 1.5rem;">
-    <h1 style="font-size:2.5rem;font-weight:700;color:white;margin-bottom:0.5rem;">Syarat & Ketentuan Donasi & Layanan Mariposa</h1>
+    <h1 style="font-size:2.5rem;font-weight:700;color:white;margin-bottom:0.5rem;">Syarat & Ketentuan Kontribusi & Layanan Mariposa</h1>
     <p style="color:#64748b;font-size:0.8125rem;margin-bottom:0.25rem;">Berlaku sejak: 15 September 2026 &nbsp;·&nbsp; Versi: 1.0</p>
-    <p style="color:#94a3b8;margin-bottom:2.5rem;line-height:1.7;">Selamat datang di Mariposa. Terima kasih atas dukungan kamu terhadap server kami — kontribusi kamu sangat berarti bagi pengembangan dan pemeliharaan server. Dengan melakukan kontribusi (donasi/pembelian) dan/atau menggunakan layanan kami, kamu menyatakan telah membaca, memahami, dan menyetujui seluruh Syarat dan Ketentuan ("S&K") berikut.</p>
+    <p style="color:#94a3b8;margin-bottom:2.5rem;line-height:1.7;">Selamat datang di Mariposa. Terima kasih atas dukungan kamu terhadap server kami — kontribusi kamu sangat berarti bagi pengembangan dan pemeliharaan server. Dengan melakukan kontribusi (pembayaran/pembelian) dan/atau menggunakan layanan kami, kamu menyatakan telah membaca, memahami, dan menyetujui seluruh Syarat dan Ketentuan ("S&K") berikut.</p>
 
     <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:0.75rem;padding:1.25rem 1.5rem;margin-bottom:2.5rem;">
-        <h3 style="color:#f87171;font-weight:600;margin:0 0 0.5rem;">⚠ Ringkasan: Donasi Bersifat Final</h3>
+        <h3 style="color:#f87171;font-weight:600;margin:0 0 0.5rem;">⚠ Ringkasan: Kontribusi Bersifat Final</h3>
         <p style="color:#fca5a5;font-size:0.875rem;line-height:1.7;margin:0;">Semua kontribusi pada dasarnya <strong style="color:#fca5a5;">tidak dapat dikembalikan (non-refundable)</strong> karena manfaat virtual (rank, koin, item) diberikan dan dinikmati secara langsung. Pengecualian terbatas cuma berlaku kalau manfaatnya <strong style="color:#fca5a5;">gagal terkirim karena kesalahan sistem kami</strong> atau terjadi <strong style="color:#fca5a5;">pembayaran ganda</strong> — lihat Bagian 9. Ini cuma ringkasan; baca dokumen lengkap di bawah sebelum membeli.</p>
     </div>
 
     <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:0.75rem;padding:1.25rem 1.5rem;margin-bottom:2.5rem;" class="toc">
         <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.05em;color:#64748b;margin-bottom:0.5rem;">Daftar Isi</div>
         <a href="#s1">1. Definisi</a>
-        <a href="#s2">2. Manfaat yang Kamu Dapatkan dari Donasi</a>
+        <a href="#s2">2. Manfaat yang Kamu Dapatkan dari Kontribusi</a>
         <a href="#s3">3. Hak dan Perlindungan Kamu sebagai Pengguna</a>
-        <a href="#s4">4. Donasi: Pengisian Data dan Koreksi</a>
+        <a href="#s4">4. Kontribusi: Pengisian Data dan Koreksi</a>
         <a href="#s5">5. Pembayaran</a>
         <a href="#s6">6. Privasi Data Kamu</a>
         <a href="#s7">7. Kontak</a>
@@ -56,7 +56,7 @@
         </section>
 
         <section id="s2">
-            <h2>2. Manfaat yang Kamu Dapatkan dari Donasi</h2>
+            <h2>2. Manfaat yang Kamu Dapatkan dari Kontribusi</h2>
 
             <h3>2.1. Kontribusi</h3>
             <p>Kontribusi kamu bersifat sukarela dan ditujukan untuk mendukung operasional, pengembangan, dan pemeliharaan server. Sebagai apresiasi, kamu menerima Manfaat Virtual sesuai paket yang dipilih di Store (termasuk durasi rank kalau produknya berupa langganan 7 Hari / 30 Hari / Permanent).</p>
@@ -77,10 +77,10 @@
             <h2>3. Hak dan Perlindungan Kamu sebagai Pengguna</h2>
 
             <h3>3.1. Non-Diskriminasi</h3>
-            <p>Kami memperlakukan seluruh Pengguna secara setara dalam penerapan aturan server, penegakan sanksi, proses donasi, dan penanganan komplain — tanpa membedakan berdasarkan suku, agama, ras, antargolongan, gender, kebangsaan, kondisi fisik, atau latar belakang pribadi lainnya. Ketentuan ini tidak mengurangi perbedaan akses terhadap Manfaat Virtual yang memang merupakan bagian dari sistem donasi sebagaimana diatur pada Bagian 2, karena perbedaan tersebut bersifat sukarela dan terbuka bagi siapa pun yang memilih untuk berkontribusi.</p>
+            <p>Kami memperlakukan seluruh Pengguna secara setara dalam penerapan aturan server, penegakan sanksi, proses kontribusi, dan penanganan komplain — tanpa membedakan berdasarkan suku, agama, ras, antargolongan, gender, kebangsaan, kondisi fisik, atau latar belakang pribadi lainnya. Ketentuan ini tidak mengurangi perbedaan akses terhadap Manfaat Virtual yang memang merupakan bagian dari sistem kontribusi sebagaimana diatur pada Bagian 2, karena perbedaan tersebut bersifat sukarela dan terbuka bagi siapa pun yang memilih untuk berkontribusi.</p>
 
             <h3>3.2. Hak Mengajukan Keberatan</h3>
-            <p>Setiap Pengguna — baik donatur maupun bukan — berhak mengajukan keberatan, klarifikasi, atau komplain atas keputusan moderasi, kendala teknis, atau hal lain terkait layanan Mariposa, melalui Discord resmi kami (Bagian 7). Setiap keberatan yang diajukan akan Kami tanggapi secara wajar. Pengajuan keberatan merupakan bagian dari proses peninjauan dan tidak menjamin pembatalan suatu keputusan; keputusan akhir tetap berada pada kewenangan tim moderasi sebagaimana diatur pada poin 8.1.</p>
+            <p>Setiap Pengguna — baik kontributor maupun bukan — berhak mengajukan keberatan, klarifikasi, atau komplain atas keputusan moderasi, kendala teknis, atau hal lain terkait layanan Mariposa, melalui Discord resmi kami (Bagian 7). Setiap keberatan yang diajukan akan Kami tanggapi secara wajar. Pengajuan keberatan merupakan bagian dari proses peninjauan dan tidak menjamin pembatalan suatu keputusan; keputusan akhir tetap berada pada kewenangan tim moderasi sebagaimana diatur pada poin 8.1.</p>
 
             <h3>3.3. Ketidaksesuaian Manfaat yang Diterima</h3>
             <p>Apabila Manfaat Virtual yang kamu terima tidak sesuai dengan deskripsi paket yang berlaku pada saat transaksi — misalnya akibat informasi di Store yang belum diperbarui, fitur yang belum diberikan, atau jumlah koin yang kurang dari seharusnya — kamu dapat mengajukan komplain melalui Discord resmi kami (Bagian 7) disertai bukti transaksi (Order ID), paling lambat 14 (empat belas) hari sejak transaksi dilakukan. Kami wajib menindaklanjuti dan melengkapi atau menyesuaikan Manfaat Virtual agar sesuai dengan yang seharusnya kamu terima. Pelengkapan/penyesuaian ini merupakan bentuk penyelesaian utama untuk ketidaksesuaian semacam ini dan diprioritaskan dibanding pengembalian dana sebagaimana diatur pada Bagian 9.</p>
@@ -95,7 +95,7 @@
         </section>
 
         <section id="s4">
-            <h2>4. Donasi: Pengisian Data dan Koreksi</h2>
+            <h2>4. Kontribusi: Pengisian Data dan Koreksi</h2>
 
             <h3>4.1. Format Pengisian Data Akun</h3>
             <p>Saat checkout, kamu wajib memilih platform yang sesuai (Java atau Bedrock) dan mengisi username Minecraft dengan benar. Khusus pemain Bedrock, sistem kami otomatis menambahkan tanda titik (<code style="color:#a78bfa;">.</code>) di depan username (contoh: <code style="color:#a78bfa;">.NamaKamu</code>) sesuai format yang berlaku di server. Kamu bertanggung jawab memeriksa dan memastikan platform serta username sudah benar sebelum menyelesaikan pembayaran, karena Manfaat Virtual dikirim otomatis ke username yang terverifikasi pada transaksi tersebut.</p>
@@ -114,7 +114,7 @@
             <h2>5. Pembayaran</h2>
 
             <h3>5.1. Metode Pembayaran</h3>
-            <p>Kontribusi hanya boleh dilakukan melalui metode pembayaran resmi yang Kami sediakan di Store (diproses lewat Midtrans — QRIS, Transfer Bank, GoPay, OVO, dan metode lain yang tersedia). Kami tidak bertanggung jawab atas pembayaran melalui pihak ketiga tidak resmi atau di luar sistem Store.</p>
+            <p>Kontribusi hanya boleh dilakukan melalui metode pembayaran resmi yang Kami sediakan di Store (diproses lewat Duitku — QRIS, Transfer Bank, GoPay, OVO, dan metode lain yang tersedia). Kami tidak bertanggung jawab atas pembayaran melalui pihak ketiga tidak resmi atau di luar sistem Store.</p>
 
             <h3>5.2. Biaya Tambahan</h3>
             <p>Biaya transaksi, biaya admin, atau selisih konversi mata uang menjadi tanggung jawab kamu.</p>
@@ -127,7 +127,7 @@
             <h2>6. Privasi Data Kamu</h2>
 
             <h3>6.1. Pengumpulan Data</h3>
-            <p>Untuk memproses kontribusi, Kami dapat mengumpulkan data tertentu seperti username Minecraft, riwayat transaksi, dan informasi yang diperlukan oleh penyedia pembayaran (Midtrans). Kalau kamu menghubungi kami lewat Discord untuk dukungan, kami juga dapat menerima informasi dari interaksi tersebut.</p>
+            <p>Untuk memproses kontribusi, Kami dapat mengumpulkan data tertentu seperti username Minecraft, riwayat transaksi, dan informasi yang diperlukan oleh penyedia pembayaran (Duitku). Kalau kamu menghubungi kami lewat Discord untuk dukungan, kami juga dapat menerima informasi dari interaksi tersebut.</p>
 
             <h3>6.2. Penggunaan Data</h3>
             <p>Data digunakan semata-mata untuk memproses kontribusi, pemberian Manfaat Virtual, dan dukungan layanan. Kami tidak menjual data kamu kepada pihak ketiga.</p>
@@ -146,12 +146,12 @@
             <h2>8. Ketentuan Penggunaan dan Sanksi</h2>
             <p>Dengan berkontribusi, kamu setuju untuk:</p>
 
-            <h3>8.1. Mematuhi aturan server — status donatur tidak memberikan kekebalan</h3>
+            <h3>8.1. Mematuhi aturan server — status kontributor tidak memberikan kekebalan</h3>
             <ul>
-                <li>Donasi yang kamu berikan adalah bentuk dukungan terhadap layanan, bukan pembelian hak istimewa untuk melanggar aturan, dan bukan "asuransi" atas pelanggaran yang kamu lakukan.</li>
-                <li>Kamu tetap wajib mematuhi seluruh <a href="{{ route('rules') }}">peraturan server</a>, kebijakan, dan keputusan tim moderasi Mariposa, baik di dalam server, Discord, maupun platform resmi lain — tanpa terkecuali, terlepas dari rank, koin, jumlah donasi, atau status lain yang kamu miliki.</li>
-                <li>Tindakan disipliner (peringatan, mute, kick, ban sementara, hingga ban permanen) tetap berlaku secara penuh terhadap donatur sebagaimana berlaku terhadap pengguna lain. Rank atau koin tidak: membebaskan kamu dari sanksi atas pelanggaran yang dilakukan sebelum maupun setelah berdonasi; menjadi alasan untuk peninjauan ulang, keringanan, atau pembatalan sanksi yang sudah dijatuhkan; atau menjadi bahan negosiasi ("saya sudah donasi, masa di-ban") terhadap keputusan tim moderasi.</li>
-                <li><strong>Akibat terhadap donasi jika terkena sanksi.</strong> Apabila akun kamu dikenai sanksi karena melanggar aturan — termasuk namun tidak terbatas pada cheating, eksploitasi bug, toxic behavior, penipuan terhadap pengguna lain, atau pelanggaran lain — maka: donasi yang telah kamu berikan tetap dianggap sah dan final sebagaimana diatur dalam Bagian 9; tidak ada pengembalian dana dalam bentuk apa pun atas dasar akun terkena sanksi; dan Manfaat Virtual yang melekat pada akun tersebut dapat dicabut, dibekukan, atau dihapus sesuai berat pelanggaran, tanpa kompensasi. Ketentuan ini berlaku terlepas dari kapan donasi dilakukan — baik sebelum, bersamaan, maupun setelah pelanggaran terjadi.</li>
+                <li>Kontribusi yang kamu berikan adalah bentuk dukungan terhadap layanan, bukan pembelian hak istimewa untuk melanggar aturan, dan bukan "asuransi" atas pelanggaran yang kamu lakukan.</li>
+                <li>Kamu tetap wajib mematuhi seluruh <a href="{{ route('rules') }}">peraturan server</a>, kebijakan, dan keputusan tim moderasi Mariposa, baik di dalam server, Discord, maupun platform resmi lain — tanpa terkecuali, terlepas dari rank, koin, jumlah kontribusi, atau status lain yang kamu miliki.</li>
+                <li>Tindakan disipliner (peringatan, mute, kick, ban sementara, hingga ban permanen) tetap berlaku secara penuh terhadap kontributor sebagaimana berlaku terhadap pengguna lain. Rank atau koin tidak: membebaskan kamu dari sanksi atas pelanggaran yang dilakukan sebelum maupun setelah berkontribusi; menjadi alasan untuk peninjauan ulang, keringanan, atau pembatalan sanksi yang sudah dijatuhkan; atau menjadi bahan negosiasi ("saya sudah berkontribusi, masa di-ban") terhadap keputusan tim moderasi.</li>
+                <li><strong>Akibat terhadap kontribusi jika terkena sanksi.</strong> Apabila akun kamu dikenai sanksi karena melanggar aturan — termasuk namun tidak terbatas pada cheating, eksploitasi bug, toxic behavior, penipuan terhadap pengguna lain, atau pelanggaran lain — maka: kontribusi yang telah kamu berikan tetap dianggap sah dan final sebagaimana diatur dalam Bagian 9; tidak ada pengembalian dana dalam bentuk apa pun atas dasar akun terkena sanksi; dan Manfaat Virtual yang melekat pada akun tersebut dapat dicabut, dibekukan, atau dihapus sesuai berat pelanggaran, tanpa kompensasi. Ketentuan ini berlaku terlepas dari kapan kontribusi dilakukan — baik sebelum, bersamaan, maupun setelah pelanggaran terjadi.</li>
             </ul>
 
             <h3>8.2. Tidak menyalahgunakan Manfaat Virtual</h3>

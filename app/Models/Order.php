@@ -22,8 +22,8 @@ class Order extends Model
         'status',           // pending, paid, delivered, failed
         'payment_type',
         'payment_proof',
-        'midtrans_transaction_id',
-        'midtrans_status',
+        'payment_reference',
+        'payment_status',
         'delivered_at',
         'delivery_log',
     ];
@@ -285,7 +285,7 @@ class Order extends Model
 
     /**
      * Dipanggil tiap kali delivery order ini sukses penuh (status baru pindah
-     * ke "delivered") — dari webhook Midtrans, tombol Kirim Manual admin,
+     * ke "delivered") — dari webhook Duitku, tombol Kirim Manual admin,
      * verifikasi pembayaran manual, maupun retry command yang gagal.
      */
     public function handleDeliverySuccess(): void

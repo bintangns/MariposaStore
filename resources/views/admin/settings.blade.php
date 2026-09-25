@@ -111,14 +111,14 @@
 
                 <div class="card">
                     <h2>💳 Mode Pembayaran Manual</h2>
-                    <div class="desc">Sementara matiin Midtrans — customer upload bukti transfer manual, kamu verifikasi & kirim rank dari sini.</div>
+                    <div class="desc">Sementara matiin Duitku — customer upload bukti transfer manual, kamu verifikasi & kirim rank dari sini.</div>
 
                     <div class="form-group" style="display:flex;align-items:center;gap:0.75rem;">
                         <input type="hidden" name="manual_payment_mode" value="0">
                         <input type="checkbox" name="manual_payment_mode" value="1" id="manual_payment_mode"
                             {{ old('manual_payment_mode', $settings['manual_payment_mode']) ? 'checked' : '' }}
                             style="width:auto;accent-color:#7c3aed;">
-                        <label for="manual_payment_mode" style="margin-bottom:0;cursor:pointer;">Aktifkan Mode Pembayaran Manual (matikan Midtrans)</label>
+                        <label for="manual_payment_mode" style="margin-bottom:0;cursor:pointer;">Aktifkan Mode Pembayaran Manual (matikan Duitku)</label>
                     </div>
 
                     <div class="form-group">

@@ -7,7 +7,7 @@ use App\Models\Order;
 use App\Models\PlayerNickname;
 use App\Models\Product;
 use App\Models\Setting;
-use App\Services\MidtransService;
+use App\Services\DuitkuService;
 use App\Services\MinecraftService;
 use App\Services\DiscordService;
 use Illuminate\Http\Request;
@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Storage;
 class CheckoutController extends Controller
 {
     public function __construct(
-        private MidtransService  $midtrans,
+        private DuitkuService     $duitku,
         private MinecraftService $minecraft,
         private DiscordService   $discord,
     ) {}
@@ -181,22 +181,20 @@ class CheckoutController extends Controller
             return $order;
         });
 
-        // Mode pembayaran manual (Midtrans dimatikan sementara): skip Snap,
+        // Mode pembayaran manual (Duitku dimatikan sementara): skip gateway,
         // arahkan ke halaman upload bukti transfer.
         if (Setting::isManualPaymentMode()) {
             return redirect()->route('checkout.manual', $order->order_id);
         }
 
-        // Buat transaksi Midtrans
-        $snap = $this->midtrans->createTransaction($order);
-        $order->update(['midtrans_transaction_id' => $snap['token'] ?? null]);
+        // Buat invoice Duitku
+        $invoice = $this->duitku->createInvoice($order);
+        $order->update(['payment_reference' => $invoice['reference'] ?? null]);
 
         return view('pages.checkout', [
             'order'      => $order,
             'product'    => $product,
-            'snapToken'  => $snap['token'],
-            'clientKey'  => $this->midtrans->getClientKey(),
-            'isProduction' => $this->midtrans->isProduction(),
+            'paymentUrl' => $invoice['paymentUrl'],
         ]);
     }
 
@@ -260,50 +258,30 @@ class CheckoutController extends Controller
     public function notification(Request $request)
     {
         $payload = $request->all();
-        Log::info('Midtrans notification: ', $payload);
+        Log::info('Duitku callback: ', $payload);
 
-        // Verifikasi signature
-        $valid = $this->midtrans->verifySignature(
-            $payload['order_id'],
-            $payload['status_code'],
-            $payload['gross_amount'],
-            $payload['signature_key']
-        );
-
-        if (!$valid) {
-            Log::warning('Invalid Midtrans signature for order: ' . $payload['order_id']);
+        if (!$this->duitku->verifyCallbackSignature($payload)) {
+            Log::warning('Invalid Duitku signature for order: ' . ($payload['merchantOrderId'] ?? '?'));
             return response('Invalid signature', 400);
         }
 
-        $order = Order::where('order_id', $payload['order_id'])->first();
+        $order = Order::where('order_id', $payload['merchantOrderId'] ?? null)->first();
         if (!$order) return response('Order not found', 404);
 
-        $this->applyTransactionStatus($order, $payload);
+        // Callback cuma dipakai sebagai "sinyal untuk cek ulang" — statusnya
+        // sendiri diambil dari transactionStatus API (statusCode 00/01/lainnya
+        // punya arti yang jelas & konsisten), bukan dari field resultCode di
+        // body callback yang di dokumentasi Duitku artinya ambigu/berubah-ubah.
+        $this->reconcileOrder($order);
 
         return response('OK', 200);
     }
 
     /**
-     * Terapkan status transaksi Midtrans ke order. Dipakai oleh notification()
-     * dan reconcileOrder() (fallback saat webhook belum/tidak sampai).
-     */
-    private function applyTransactionStatus(Order $order, array $payload): void
-    {
-        $transactionStatus = $payload['transaction_status'];
-        $fraudStatus       = $payload['fraud_status'] ?? 'accept';
-
-        if (in_array($transactionStatus, ['capture', 'settlement']) && $fraudStatus === 'accept') {
-            $this->handleSuccessfulPayment($order, $payload);
-        } elseif (in_array($transactionStatus, ['cancel', 'deny', 'expire'])) {
-            $order->update(['status' => 'failed', 'midtrans_status' => $transactionStatus]);
-        } elseif ($transactionStatus === 'pending') {
-            $order->update(['midtrans_status' => 'pending']);
-        }
-    }
-
-    /**
-     * Cek ulang status ke Midtrans jika order masih pending. Jaring pengaman
-     * untuk kasus webhook notification tidak/belum sampai (mis. dev di localhost).
+     * Cek ulang status transaksi ke Duitku (transactionStatus API) dan
+     * terapkan ke order. Dipakai baik oleh notification() (webhook) maupun
+     * halaman success/pending (fallback kalau webhook belum/tidak sampai,
+     * mis. dev di localhost).
      */
     private function reconcileOrder(Order $order): Order
     {
@@ -312,9 +290,15 @@ class CheckoutController extends Controller
         }
 
         try {
-            $payload = $this->midtrans->getTransactionStatus($order->order_id);
-            if (isset($payload['transaction_status'])) {
-                $this->applyTransactionStatus($order, $payload);
+            $payload = $this->duitku->getTransactionStatus($order->order_id);
+            $statusCode = $payload['statusCode'] ?? null;
+
+            if ($statusCode === '00') {
+                $this->handleSuccessfulPayment($order, $payload);
+            } elseif ($statusCode === '01' || $statusCode === null) {
+                $order->update(['payment_status' => 'pending']);
+            } else {
+                $order->update(['status' => 'failed', 'payment_status' => $payload['statusMessage'] ?? $statusCode]);
             }
         } catch (\Throwable $e) {
             Log::warning('Gagal reconcile order ' . $order->order_id . ': ' . $e->getMessage());
@@ -329,8 +313,8 @@ class CheckoutController extends Controller
 
         $order->update([
             'status'         => 'paid',
-            'payment_type'   => $payload['payment_type'] ?? null,
-            'midtrans_status' => $payload['transaction_status'],
+            'payment_type'   => $payload['paymentMethod'] ?? $payload['paymentCode'] ?? null,
+            'payment_status' => 'success',
         ]);
 
         // Deliver produk via RCON

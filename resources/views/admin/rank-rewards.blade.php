@@ -59,10 +59,16 @@
 
             <form action="{{ route('admin.rank-rewards.store') }}" method="POST" style="display:flex;gap:0.625rem;margin-bottom:1.5rem;flex-wrap:wrap;">
                 @csrf
-                <select name="product_id" required style="flex:1;min-width:12rem;">
-                    <option value="" disabled selected>Pilih produk rank</option>
+                <select id="rr-category-select" required style="flex:1;min-width:10rem;">
+                    <option value="" disabled selected>Pilih kategori dulu</option>
+                    @foreach($categories as $cat)
+                    <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                    @endforeach
+                </select>
+                <select name="product_id" id="rr-product-select" required disabled style="flex:1;min-width:12rem;">
+                    <option value="" selected>— Pilih kategori dulu —</option>
                     @foreach($availableProducts as $p)
-                    <option value="{{ $p->id }}">{{ $p->name }}</option>
+                    <option value="{{ $p->id }}" data-category="{{ $p->category_id }}" hidden disabled>{{ $p->name }}</option>
                     @endforeach
                 </select>
                 <input type="number" name="gradient_count" placeholder="Jatah Gradient" min="0" value="0" style="width:9rem;">
@@ -104,5 +110,35 @@
             @endforeach
         </div>
     </div>
+
+    <script>
+        // Produk cuma dimunculin sesuai kategori yang dipilih, biar admin gak
+        // ketuker misal milih produk dari kategori "Mariposa Points" pas
+        // niatnya mau ngasih reward buat produk rank.
+        const rrCategorySelect = document.getElementById('rr-category-select');
+        const rrProductSelect = document.getElementById('rr-product-select');
+        const rrProductOptions = [...rrProductSelect.querySelectorAll('option[data-category]')];
+        const rrPlaceholder = rrProductSelect.querySelector('option:not([data-category])');
+
+        function rrFilterProducts() {
+            const categoryId = rrCategorySelect.value;
+            let visibleCount = 0;
+            rrProductOptions.forEach(opt => {
+                const match = opt.dataset.category === categoryId;
+                opt.hidden = !match;
+                opt.disabled = !match;
+                if (match) visibleCount++;
+            });
+
+            rrProductSelect.disabled = !categoryId;
+            rrPlaceholder.textContent = !categoryId
+                ? '— Pilih kategori dulu —'
+                : (visibleCount ? 'Pilih produk rank' : '— Gak ada produk tersedia di kategori ini —');
+            rrProductSelect.value = '';
+        }
+
+        rrCategorySelect.addEventListener('change', rrFilterProducts);
+        rrFilterProducts();
+    </script>
 </body>
 </html>
