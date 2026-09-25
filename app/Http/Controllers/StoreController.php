@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Gradient;
+use App\Models\Order;
 use App\Models\Product;
 use App\Services\MinecraftService;
 
@@ -16,11 +17,13 @@ class StoreController extends Controller
             ->groupBy(fn (Product $product) => $product->category->name ?? 'Lainnya');
 
         $groupLabel = null;
+        $upgradeCredits = [];
         if ($username = session('verified_username')) {
             $groupLabel = $this->minecraft->getPlayerGroupLabel($username);
+            $upgradeCredits = Order::allEligibleUpgradeCreditsFor($username);
         }
 
-        return view('pages.store', compact('products', 'groupLabel'));
+        return view('pages.store', compact('products', 'groupLabel', 'upgradeCredits'));
     }
 
     public function show(Product $product)
@@ -30,6 +33,11 @@ class StoreController extends Controller
 
         $gradients = $product->nickname_type === 'gradient' ? Gradient::ordered()->get() : collect();
 
-        return view('pages.store-detail', compact('product', 'gradients'));
+        $upgradeCredits = [];
+        if ($username = session('verified_username')) {
+            $upgradeCredits = Order::allEligibleUpgradeCreditsFor($username);
+        }
+
+        return view('pages.store-detail', compact('product', 'gradients', 'upgradeCredits'));
     }
 }

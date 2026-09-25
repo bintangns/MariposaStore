@@ -15,6 +15,19 @@
         'c' => ['Red', '#FF5555'], 'd' => ['Light Purple', '#FF55FF'], 'e' => ['Yellow', '#FFFF55'], 'f' => ['White', '#FFFFFF'],
     ];
     $mcFormats = ['k' => 'Obfuscated', 'l' => 'Bold', 'm' => 'Strikethrough', 'n' => 'Underline', 'o' => 'Italic', 'r' => 'Reset'];
+
+    // Kalau ada rank aktif yang bisa upgrade ke durasi ini, harga upgrade
+    // (dikurangi kredit) MENANG dibanding promo biasa — gak ditumpuk.
+    $upgradeInfoFor = function ($duration) use ($upgradeCredits, $product) {
+        $key = "{$product->id}-{$duration->id}";
+        if (!isset($upgradeCredits[$key])) {
+            return null;
+        }
+        return [
+            'price' => max(0, $duration->price - $upgradeCredits[$key]['credit']),
+            'from_order_id' => $upgradeCredits[$key]['from_order_id'],
+        ];
+    };
 @endphp
 
 @section('content')
@@ -47,19 +60,25 @@
         {{-- Checkout form --}}
         <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:1rem;padding:1.75rem;position:sticky;top:5rem;">
             @php
-                $firstPrice = $product->durations->first()->price ?? $product->price;
-                $firstHasDiscount = Setting::isPromoActive() && Setting::applyPromo($firstPrice) < $firstPrice;
+                $firstDuration = $product->durations->first();
+                $firstPrice = $firstDuration->price ?? $product->price;
+                $firstUpgrade = $firstDuration ? $upgradeInfoFor($firstDuration) : null;
+                $firstHasDiscount = $firstUpgrade ? true : (Setting::isPromoActive() && Setting::applyPromo($firstPrice) < $firstPrice);
             @endphp
             @if($product->durations->isNotEmpty())
-            <div id="detail-price-original" style="font-size:1rem;color:#64748b;text-decoration:line-through;{{ $firstHasDiscount ? '' : 'display:none;' }}">{{ $product->durations->first()->formatted_price }}</div>
-            <div id="detail-price" style="font-size:2rem;font-weight:700;color:{{ $firstHasDiscount ? '#4ade80' : 'white' }};margin-bottom:0.25rem;">{{ $promoFormatted($firstPrice) }}</div>
+            <div id="detail-upgrade-label" style="font-size:0.8125rem;color:#a78bfa;font-weight:600;margin-bottom:0.25rem;{{ $firstUpgrade ? '' : 'display:none;' }}">⬆ Upgrade dari rank kamu</div>
+            <div id="detail-price-original" style="font-size:1rem;color:#64748b;text-decoration:line-through;{{ $firstHasDiscount ? '' : 'display:none;' }}">{{ $firstDuration->formatted_price }}</div>
+            <div id="detail-price" style="font-size:2rem;font-weight:700;color:{{ $firstHasDiscount ? '#4ade80' : 'white' }};margin-bottom:0.25rem;">{{ $firstUpgrade ? 'Rp '.number_format($firstUpgrade['price'], 0, ',', '.') : $promoFormatted($firstPrice) }}</div>
             <div style="font-size:0.875rem;color:#64748b;margin-bottom:1rem;">Pilih durasi rank</div>
             <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:1.5rem;">
                 @foreach($product->durations as $i => $duration)
+                @php $upg = $upgradeInfoFor($duration); @endphp
                 <button type="button" class="duration-option{{ $i === 0 ? ' active' : '' }}"
-                    data-id="{{ $duration->id }}" data-formatted="{{ $promoFormatted($duration->price) }}"
+                    data-id="{{ $duration->id }}"
+                    data-formatted="{{ $upg ? 'Rp '.number_format($upg['price'], 0, ',', '.') : $promoFormatted($duration->price) }}"
                     data-original="{{ $duration->formatted_price }}"
-                    data-discounted="{{ Setting::isPromoActive() && Setting::applyPromo($duration->price) < $duration->price ? '1' : '0' }}">
+                    data-discounted="{{ $upg || (Setting::isPromoActive() && Setting::applyPromo($duration->price) < $duration->price) ? '1' : '0' }}"
+                    data-upgrade-from="{{ $upg['from_order_id'] ?? '' }}">
                     {{ $duration->label }}
                 </button>
                 @endforeach
@@ -82,6 +101,7 @@
             <form action="{{ route('checkout.create', $product) }}" method="POST" id="checkout-form">
                 @csrf
                 <input type="hidden" name="duration_id" id="duration-id-input" value="{{ $product->durations->first()->id ?? '' }}">
+                <input type="hidden" name="upgrade_from_order_id" id="upgrade-from-input" value="{{ $firstUpgrade['from_order_id'] ?? '' }}">
                 <div style="margin-bottom:1rem;">
                     <label style="display:block;font-size:0.875rem;color:#94a3b8;margin-bottom:0.5rem;">Username Minecraft</label>
                     <div id="checkout-platform-toggle" class="mp-platform-toggle">
@@ -435,12 +455,17 @@ const durationButtons = document.querySelectorAll('.duration-option');
 const durationIdInput = document.getElementById('duration-id-input');
 const priceDisplay = document.getElementById('detail-price');
 const priceOriginalDisplay = document.getElementById('detail-price-original');
+const upgradeFromInput = document.getElementById('upgrade-from-input');
+const upgradeLabel = document.getElementById('detail-upgrade-label');
 durationButtons.forEach(btn => {
     btn.addEventListener('click', () => {
         durationButtons.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         durationIdInput.value = btn.dataset.id;
         const discounted = btn.dataset.discounted === '1';
+        const upgradeFrom = btn.dataset.upgradeFrom || '';
+        if (upgradeFromInput) upgradeFromInput.value = upgradeFrom;
+        if (upgradeLabel) upgradeLabel.style.display = upgradeFrom ? 'block' : 'none';
         if (priceDisplay) {
             priceDisplay.textContent = btn.dataset.formatted;
             priceDisplay.style.color = discounted ? '#4ade80' : 'white';

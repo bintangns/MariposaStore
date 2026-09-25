@@ -722,4 +722,15 @@ class AdminController extends Controller
         $rankReward->delete();
         return back()->with('success', 'Reward rank berhasil dihapus!');
     }
+
+    /**
+     * List semua pemain yang punya rank aktif (dari riwayat order kita
+     * sendiri, bukan live cek LuckPerms) — status permanent atau sisa waktu
+     * subscription-nya kelihatan di sini.
+     */
+    public function playerRanks()
+    {
+        $playerRanks = Order::allActiveRankOrders();
+        return view('admin.player-ranks', compact('playerRanks'));
+    }
 }

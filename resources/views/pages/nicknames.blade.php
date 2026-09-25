@@ -1,10 +1,10 @@
 @extends('layouts.app')
-@section('title', 'Koleksi Nickname')
+@section('title', 'Koleksi')
 
 @section('content')
 <div style="max-width:48rem;margin:0 auto;padding:3rem 1.5rem;">
-    <h1 style="font-size:2rem;font-weight:700;color:white;margin-bottom:0.5rem;">Koleksi Nickname</h1>
-    <p style="color:#94a3b8;margin-bottom:2rem;">Semua nickname cosmetics yang pernah kamu beli tersimpan di sini. Ganti-ganti kapan aja, gratis, gak perlu beli ulang.</p>
+    <h1 style="font-size:2rem;font-weight:700;color:white;margin-bottom:0.5rem;">Koleksi</h1>
+    <p style="color:#94a3b8;margin-bottom:2rem;">Rank aktif dan semua nickname cosmetics yang pernah kamu beli/klaim.</p>
 
     @if(session('success'))
     <div style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);color:#4ade80;padding:0.75rem 1rem;border-radius:0.5rem;margin-bottom:1.5rem;font-size:0.875rem;">{{ session('success') }}</div>
@@ -19,6 +19,36 @@
         <button onclick="mpOpenVerifyModal()" class="btn-primary">Masukkan Username</button>
     </div>
     @else
+
+    <div style="margin-bottom:1.5rem;">
+        <h2 style="font-size:1rem;font-weight:600;color:white;margin-bottom:0.75rem;">Rank Kamu</h2>
+        @if($activeRanks->isEmpty())
+        <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:0.75rem;padding:1.25rem;color:#64748b;font-size:0.875rem;">
+            Belum ada rank aktif. <a href="{{ route('store') }}" style="color:#a78bfa;text-decoration:none;">Lihat Store →</a>
+        </div>
+        @else
+        <div style="display:flex;flex-direction:column;gap:0.625rem;">
+            @foreach($activeRanks as $rankOrder)
+            <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:0.75rem;padding:1.125rem 1.25rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.875rem;">
+                <div>
+                    <div style="font-weight:600;color:{{ $rankOrder->product->color ?? '#a78bfa' }};font-size:1.0625rem;">{{ $rankOrder->product->name }}</div>
+                    <div style="font-size:0.75rem;color:#64748b;margin-top:0.25rem;">
+                        @if($rankOrder->duration_days === null)
+                        <span style="color:#4ade80;">Permanent</span>
+                        @else
+                        Berakhir {{ $rankOrder->delivered_at->copy()->addDays($rankOrder->duration_days)->format('d M Y') }}
+                        ({{ $rankOrder->delivered_at->copy()->addDays($rankOrder->duration_days)->diffForHumans(['parts' => 1]) }})
+                        @endif
+                    </div>
+                </div>
+                @if(count($rankOrder->eligibleUpgradeOptions()))
+                <a href="{{ route('orders.upgrade', $rankOrder->order_id) }}" class="btn-primary" style="text-decoration:none;font-size:0.8125rem;padding:0.5rem 1.25rem;">⬆ Upgrade</a>
+                @endif
+            </div>
+            @endforeach
+        </div>
+        @endif
+    </div>
 
     @if($entitlement['gradient_left'] > 0 || $entitlement['custom_left'] > 0)
     <div style="background:rgba(236,72,153,0.06);border:1px solid rgba(236,72,153,0.25);border-radius:0.75rem;padding:1.25rem;margin-bottom:1.5rem;">

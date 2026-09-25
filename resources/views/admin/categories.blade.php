@@ -29,6 +29,7 @@
         <a href="{{ route('admin.gradients') }}" class="nav-link">Gradients</a>
         <a href="{{ route('admin.rank-rewards') }}" class="nav-link">Rank Rewards</a>
         <a href="{{ route('admin.orders') }}" class="nav-link">Orders</a>
+        <a href="{{ route('admin.player-ranks') }}" class="nav-link">Rank Pemain</a>
         <a href="{{ route('admin.rcon-test') }}" class="nav-link">Test RCON</a>
         <a href="{{ route('admin.settings') }}" class="nav-link">Pengaturan</a>
         <a href="{{ route('home') }}" class="nav-link" style="margin-top:1rem;">← Ke Website</a>

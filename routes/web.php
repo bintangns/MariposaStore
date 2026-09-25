@@ -116,4 +116,5 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::post('/rank-rewards', [AdminController::class, 'storeRankReward'])->name('rank-rewards.store');
     Route::put('/rank-rewards/{rankReward}', [AdminController::class, 'updateRankReward'])->name('rank-rewards.update');
     Route::delete('/rank-rewards/{rankReward}', [AdminController::class, 'destroyRankReward'])->name('rank-rewards.destroy');
+    Route::get('/player-ranks', [AdminController::class, 'playerRanks'])->name('player-ranks');
 });

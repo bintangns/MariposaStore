@@ -94,13 +94,31 @@
                     $cheapestPrice = $product->durations->isNotEmpty()
                         ? $product->durations->sortBy('price')->first()->price
                         : $product->price;
+
+                    // Cek kredit upgrade dari rank aktif yang lagi dipunya (kalau ada,
+                    // ambil durasi dengan harga upgrade paling murah).
+                    $bestUpgrade = null;
+                    foreach ($product->durations as $d) {
+                        $key = "{$product->id}-{$d->id}";
+                        if (!isset($upgradeCredits[$key])) continue;
+                        $upPrice = max(0, $d->price - $upgradeCredits[$key]['credit']);
+                        if (!$bestUpgrade || $upPrice < $bestUpgrade['price']) {
+                            $bestUpgrade = ['price' => $upPrice, 'original' => $d->price];
+                        }
+                    }
+
                     $promoPrice = Setting::applyPromo($cheapestPrice);
                     $hasDiscount = Setting::isPromoActive() && $promoPrice !== null && $promoPrice < $cheapestPrice;
                 @endphp
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-top:auto;">
                     <div>
-                        <div style="font-size:0.75rem;color:#64748b;">{{ $product->durations->isNotEmpty() ? 'Mulai dari' : 'Harga' }}</div>
-                        @if($hasDiscount)
+                        <div style="font-size:0.75rem;color:{{ $bestUpgrade ? '#a78bfa' : '#64748b' }};">
+                            {{ $bestUpgrade ? '⬆ Upgrade dari rank kamu' : ($product->durations->isNotEmpty() ? 'Mulai dari' : 'Harga') }}
+                        </div>
+                        @if($bestUpgrade)
+                        <div style="font-size:0.75rem;color:#64748b;text-decoration:line-through;">Rp {{ number_format($bestUpgrade['original'], 0, ',', '.') }}</div>
+                        <div style="font-size:1.25rem;font-weight:700;color:#4ade80;">Rp {{ number_format($bestUpgrade['price'], 0, ',', '.') }}</div>
+                        @elseif($hasDiscount)
                         <div style="font-size:0.75rem;color:#64748b;text-decoration:line-through;">Rp {{ number_format($cheapestPrice, 0, ',', '.') }}</div>
                         <div style="font-size:1.25rem;font-weight:700;color:#4ade80;">Rp {{ number_format($promoPrice, 0, ',', '.') }}</div>
                         @else

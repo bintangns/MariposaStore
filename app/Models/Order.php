@@ -72,9 +72,53 @@ class Order extends Model
             ->values();
     }
 
+    /**
+     * Gabungan semua kredit upgrade yang berlaku buat username ini, dari
+     * SEMUA rank aktif yang dia punya — dipakai buat auto-diskon harga di
+     * Store (bukan cuma pas buka halaman Upgrade khusus). Key-nya
+     * "{product_id}-{duration_id}", value-nya kredit + order sumbernya.
+     * Kalau beberapa rank aktif sama-sama bisa upgrade ke kombinasi yang
+     * sama, dipilih kredit paling gede.
+     *
+     * @return array<string, array{credit: int, from_order_id: int}>
+     */
+    public static function allEligibleUpgradeCreditsFor(string $username): array
+    {
+        $credits = [];
+
+        foreach (static::activeRankOrdersFor($username) as $order) {
+            foreach ($order->eligibleUpgradeOptions() as $opt) {
+                $key = "{$opt['product']->id}-{$opt['duration']->id}";
+                if (!isset($credits[$key]) || $order->amount > $credits[$key]['credit']) {
+                    $credits[$key] = ['credit' => $order->amount, 'from_order_id' => $order->id];
+                }
+            }
+        }
+
+        return $credits;
+    }
+
     public function duration()
     {
         return $this->belongsTo(ProductDuration::class, 'product_duration_id');
+    }
+
+    /**
+     * Semua order rank aktif dari SEMUA pemain (bukan cuma satu username),
+     * satu baris per (pemain, produk) — dasar buat halaman admin "Rank
+     * Pemain": siapa yang punya rank apa, permanen atau masih berapa lama.
+     */
+    public static function allActiveRankOrders()
+    {
+        return static::where('status', 'delivered')
+            ->whereNotNull('product_duration_id')
+            ->with(['product.category', 'duration'])
+            ->latest()
+            ->get()
+            ->filter(fn (Order $order) => $order->isActiveRankOrder())
+            ->unique(fn (Order $order) => strtolower($order->minecraft_username) . '-' . $order->product_id)
+            ->sortBy(fn (Order $order) => strtolower($order->minecraft_username))
+            ->values();
     }
 
     public function upgradedFromOrder()

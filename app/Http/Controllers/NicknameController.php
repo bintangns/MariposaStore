@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Gradient;
 use App\Models\NicknameSwitch;
+use App\Models\Order;
 use App\Models\PlayerNickname;
 use App\Models\PlayerRankCredit;
 use App\Models\Product;
@@ -27,6 +28,7 @@ class NicknameController extends Controller
     {
         $username = session('verified_username');
         $nicknames = collect();
+        $activeRanks = collect();
         $switchesUsed = 0;
         $entitlement = ['gradient_left' => 0, 'custom_left' => 0];
 
@@ -37,13 +39,14 @@ class NicknameController extends Controller
                 ->latest()
                 ->get();
 
+            $activeRanks = Order::activeRankOrdersFor($username);
             $switchesUsed = NicknameSwitch::countRecentFor($username);
             $entitlement  = $this->calculateFreeEntitlement($username);
         }
 
         $switchesLeft = max(0, self::DAILY_SWITCH_LIMIT - $switchesUsed);
 
-        return view('pages.nicknames', compact('nicknames', 'username', 'switchesLeft', 'entitlement'));
+        return view('pages.nicknames', compact('nicknames', 'username', 'switchesLeft', 'entitlement', 'activeRanks'));
     }
 
     /**
