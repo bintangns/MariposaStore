@@ -14,19 +14,32 @@ use Illuminate\Support\Facades\Log;
  */
 class DuitkuService
 {
-    private string $merchantCode;
-    private string $apiKey;
+    private ?string $merchantCode;
+    private ?string $apiKey;
     private bool $isProduction;
     private string $baseUrl;
 
     public function __construct()
     {
+        // Nullable: service ini di-construct otomatis lewat dependency
+        // injection tiap kali CheckoutController dipanggil — termasuk pas
+        // Mode Pembayaran Manual aktif, di mana Duitku sama sekali gak
+        // dipakai. Jangan crash di sini kalau kredensialnya belum diisi;
+        // validasinya baru dilakukan pas method yang beneran manggil API
+        // Duitku (createInvoice/getTransactionStatus) dipanggil.
         $this->merchantCode = config('minecraft.duitku_merchant_code');
         $this->apiKey       = config('minecraft.duitku_api_key');
-        $this->isProduction = config('minecraft.duitku_is_production', false);
+        $this->isProduction = (bool) config('minecraft.duitku_is_production', false);
         $this->baseUrl      = $this->isProduction
             ? 'https://api-prod.duitku.com'
             : 'https://api-sandbox.duitku.com';
+    }
+
+    private function ensureConfigured(): void
+    {
+        if (!$this->merchantCode || !$this->apiKey) {
+            throw new \Exception('Duitku belum dikonfigurasi — isi DUITKU_MERCHANT_CODE dan DUITKU_API_KEY di .env.');
+        }
     }
 
     /**
@@ -36,6 +49,8 @@ class DuitkuService
      */
     public function createInvoice(Order $order): array
     {
+        $this->ensureConfigured();
+
         $timestamp = (string) round(microtime(true) * 1000);
         $signature = hash('sha256', $this->merchantCode . $timestamp . $this->apiKey);
 
@@ -85,6 +100,8 @@ class DuitkuService
      */
     public function getTransactionStatus(string $merchantOrderId): array
     {
+        $this->ensureConfigured();
+
         $signature = md5($this->merchantCode . $merchantOrderId . $this->apiKey);
 
         $response = Http::post($this->baseUrl . '/api/merchant/transactionStatus', [
