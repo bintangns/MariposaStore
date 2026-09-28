@@ -110,11 +110,16 @@
                     $promoPrice = Setting::applyPromo($cheapestPrice);
                     $hasDiscount = Setting::isPromoActive() && $promoPrice !== null && $promoPrice < $cheapestPrice;
 
-                    // Udah punya rank lebih tinggi di kategori yang sama? Kalau
-                    // iya, rank yang lebih rendah ini gak boleh dibeli lagi
-                    // (downgrade gak masuk akal) — tombol Beli di-nonaktifkan.
+                    // Blokir tombol Beli kalau produk ini sort_order-nya <=
+                    // rank tertinggi yang udah dipunya DAN emang udah gak ada
+                    // durasi/opsi upgrade yang lebih tinggi buat produk ini
+                    // ($bestUpgrade null). Jadi: rank yang lebih rendah selalu
+                    // diblokir; rank yang SAMA diblokir kalau durasi
+                    // termahalnya udah dipunya (gak ada apa-apa lagi yang bisa
+                    // dibeli); rank yang lebih tinggi/masih ada opsi upgrade
+                    // tetap bisa dibeli seperti biasa.
                     $ownedTier = $ownedRankTiers[$product->category_id] ?? null;
-                    $isLowerRank = $ownedTier && $product->sort_order < $ownedTier['sort_order'];
+                    $isBlocked = $ownedTier && $product->sort_order <= $ownedTier['sort_order'] && !$bestUpgrade;
                 @endphp
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-top:auto;">
                     <div>
@@ -135,8 +140,8 @@
                     <span title="{{ Setting::maintenanceMessage() }}" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#64748b;font-size:0.875rem;padding:0.5rem 1.25rem;border-radius:0.5rem;cursor:not-allowed;">
                         Maintenance
                     </span>
-                    @elseif($isLowerRank)
-                    <span title="Kamu udah punya {{ $ownedTier['product_name'] }}, gak bisa beli rank yang lebih rendah dari itu." style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#64748b;font-size:0.875rem;padding:0.5rem 1.25rem;border-radius:0.5rem;cursor:not-allowed;">
+                    @elseif($isBlocked)
+                    <span title="Kamu udah punya {{ $ownedTier['product_name'] }}, gak ada yang bisa dibeli lagi dari produk ini." style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#64748b;font-size:0.875rem;padding:0.5rem 1.25rem;border-radius:0.5rem;cursor:not-allowed;">
                         Beli
                     </span>
                     @else

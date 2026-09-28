@@ -29,11 +29,16 @@
         ];
     };
 
-    // Udah punya rank lebih tinggi di kategori yang sama? Kalau iya, produk
-    // ini gak boleh dibeli (downgrade gak masuk akal) — form checkout diganti
-    // notice, mirip perlakuan buat maintenance mode.
+    // Blokir form checkout kalau produk ini sort_order-nya <= rank tertinggi
+    // yang udah dipunya DAN emang udah gak ada durasi/opsi upgrade yang lebih
+    // tinggi buat produk ini. Jadi: rank yang lebih rendah selalu diblokir;
+    // rank yang SAMA diblokir kalau durasi termahalnya udah dipunya (gak ada
+    // apa-apa lagi yang bisa dibeli); rank yang lebih tinggi/masih ada opsi
+    // upgrade tetap bisa dibeli seperti biasa — diganti notice, mirip
+    // perlakuan buat maintenance mode.
     $ownedTier = $ownedRankTiers[$product->category_id] ?? null;
-    $isLowerRank = $ownedTier && $product->sort_order < $ownedTier['sort_order'];
+    $anyUpgradeAvailable = $product->durations->contains(fn ($d) => $upgradeInfoFor($d) !== null);
+    $isBlocked = $ownedTier && $product->sort_order <= $ownedTier['sort_order'] && !$anyUpgradeAvailable;
 @endphp
 
 @section('content')
@@ -102,10 +107,10 @@
                 <div style="color:#fbbf24;font-size:1.25rem;margin-bottom:0.5rem;">🛠</div>
                 <div style="color:#fcd34d;font-size:0.8125rem;">{{ Setting::maintenanceMessage() }}</div>
             </div>
-            @elseif($isLowerRank)
+            @elseif($isBlocked)
             <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:0.5rem;padding:1rem;text-align:center;">
                 <div style="color:#64748b;font-size:1.25rem;margin-bottom:0.5rem;">🔒</div>
-                <div style="color:#94a3b8;font-size:0.8125rem;">Kamu udah punya <strong style="color:#cbd5e1;">{{ $ownedTier['product_name'] }}</strong>, gak bisa beli rank yang lebih rendah dari itu.</div>
+                <div style="color:#94a3b8;font-size:0.8125rem;">Kamu udah punya <strong style="color:#cbd5e1;">{{ $ownedTier['product_name'] }}</strong>, gak ada yang bisa dibeli lagi dari produk ini.</div>
             </div>
             @else
 
@@ -241,7 +246,7 @@
 .duration-option.active { background: rgba(139,92,246,0.18); border-color: rgba(139,92,246,0.5); color: #c4b5fd; }
 </style>
 
-@unless($maintenanceMode || $isLowerRank)
+@unless($maintenanceMode || $isBlocked)
 @push('scripts')
 <script>
 // Identitas username SEKARANG cuma dari session login global (navbar), gak

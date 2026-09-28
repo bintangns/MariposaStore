@@ -33,6 +33,7 @@ class Order extends Model
         'payment_status',
         'delivered_at',
         'expires_at',
+        'rank_reset_at',
         'delivery_log',
     ];
 
@@ -40,6 +41,7 @@ class Order extends Model
         'delivered_at' => 'datetime',
         'terms_accepted_at' => 'datetime',
         'expires_at' => 'datetime',
+        'rank_reset_at' => 'datetime',
         'amount' => 'integer',
         'duration_days' => 'integer',
         'duration_commands' => 'array',
@@ -191,7 +193,7 @@ class Order extends Model
      */
     public function isActiveRankOrder(): bool
     {
-        if ($this->status !== 'delivered' || !$this->product_duration_id) {
+        if ($this->status !== 'delivered' || !$this->product_duration_id || $this->rank_reset_at) {
             return false;
         }
 

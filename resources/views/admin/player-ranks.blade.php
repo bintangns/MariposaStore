@@ -54,10 +54,12 @@
                             <th>Rank</th>
                             <th>Status</th>
                             <th>Order</th>
+                            <th>Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($playerRanks as $rankOrder)
+                        @php $historyId = 'history-' . $rankOrder->id; @endphp
                         <tr>
                             <td style="font-family:'JetBrains Mono',monospace;color:white;display:flex;align-items:center;gap:0.625rem;">
                                 <img src="https://mc-heads.net/avatar/{{ urlencode($rankOrder->minecraft_username) }}/32"
@@ -84,10 +86,64 @@
                             <td>
                                 <a href="{{ route('admin.orders') }}" style="color:#a78bfa;text-decoration:none;font-family:'JetBrains Mono',monospace;font-size:0.8rem;">{{ $rankOrder->order_id }}</a>
                             </td>
+                            <td>
+                                <div style="display:flex;gap:0.5rem;">
+                                    <button type="button" class="btn" onclick="toggleHistory('{{ $historyId }}')" style="background:rgba(255,255,255,0.06);color:#94a3b8;">
+                                        Riwayat ▾
+                                    </button>
+                                    <form action="{{ route('admin.player-ranks.reset', $rankOrder) }}" method="POST"
+                                        onsubmit="return confirm('Reset rank \'{{ $rankOrder->product->name ?? '' }}\' milik {{ $rankOrder->minecraft_username }}? Pemain bisa beli produk ini lagi setelahnya. Ini CUMA koreksi data di website, TIDAK ngirim command RCON apapun ke server (rank di game gak ikut kecabut).')">
+                                        @csrf
+                                        <button type="submit" class="btn" style="background:rgba(239,68,68,0.15);color:#f87171;">Reset</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr id="{{ $historyId }}" hidden>
+                            <td colspan="5" style="background:rgba(255,255,255,0.015);padding:0;">
+                                <div style="padding:1rem 1.5rem;">
+                                    <div style="font-size:0.7rem;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.625rem;">
+                                        Semua Order — {{ $rankOrder->minecraft_username }}
+                                    </div>
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th style="padding:0.5rem 0.75rem;">Order ID</th>
+                                                <th style="padding:0.5rem 0.75rem;">Produk</th>
+                                                <th style="padding:0.5rem 0.75rem;">Status</th>
+                                                <th style="padding:0.5rem 0.75rem;">Jumlah</th>
+                                                <th style="padding:0.5rem 0.75rem;">Tanggal</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @forelse(($orderHistoryByUsername[strtolower($rankOrder->minecraft_username)] ?? []) as $histOrder)
+                                            <tr>
+                                                <td style="padding:0.5rem 0.75rem;font-family:'JetBrains Mono',monospace;font-size:0.75rem;">
+                                                    <a href="{{ route('admin.orders') }}" style="color:#a78bfa;text-decoration:none;">{{ $histOrder->order_id }}</a>
+                                                </td>
+                                                <td style="padding:0.5rem 0.75rem;font-size:0.8125rem;">
+                                                    {{ $histOrder->product->name ?? '(produk dihapus)' }}{{ $histOrder->duration_label ? ' - '.$histOrder->duration_label : '' }}
+                                                </td>
+                                                <td style="padding:0.5rem 0.75rem;font-size:0.8125rem;">
+                                                    {{ $histOrder->status_label }}
+                                                    @if($histOrder->rank_reset_at)
+                                                    <span style="color:#64748b;">(direset {{ $histOrder->rank_reset_at->format('d M Y') }})</span>
+                                                    @endif
+                                                </td>
+                                                <td style="padding:0.5rem 0.75rem;font-size:0.8125rem;">{{ $histOrder->formatted_amount }}</td>
+                                                <td style="padding:0.5rem 0.75rem;font-size:0.8125rem;color:#64748b;">{{ $histOrder->created_at->format('d M Y H:i') }}</td>
+                                            </tr>
+                                            @empty
+                                            <tr><td colspan="5" style="padding:0.75rem;text-align:center;color:#64748b;">Gak ada order lain.</td></tr>
+                                            @endforelse
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="4" style="text-align:center;color:#64748b;padding:2rem;">Belum ada pemain dengan rank aktif.</td>
+                            <td colspan="5" style="text-align:center;color:#64748b;padding:2rem;">Belum ada pemain dengan rank aktif.</td>
                         </tr>
                         @endforelse
                     </tbody>
@@ -95,5 +151,12 @@
             </div>
         </div>
     </div>
+
+    <script>
+        function toggleHistory(id) {
+            const row = document.getElementById(id);
+            if (row) row.hidden = !row.hidden;
+        }
+    </script>
 </body>
 </html>

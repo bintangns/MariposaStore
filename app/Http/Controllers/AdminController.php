@@ -12,6 +12,7 @@ use App\Models\Setting;
 use App\Services\MinecraftService;
 use App\Services\DiscordService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class AdminController extends Controller
@@ -737,6 +738,32 @@ class AdminController extends Controller
     public function playerRanks()
     {
         $playerRanks = Order::allActiveRankOrders();
-        return view('admin.player-ranks', compact('playerRanks'));
+
+        // Riwayat LENGKAP (semua produk, semua status) per username yang
+        // muncul di atas — buat expand "Riwayat" tiap baris di UI, biar admin
+        // bisa lihat konteks penuh sebelum mutusin reset.
+        $usernames = $playerRanks->pluck('minecraft_username')->map(fn ($u) => strtolower($u))->unique();
+        $orderHistoryByUsername = Order::query()
+            ->whereIn(DB::raw('LOWER(minecraft_username)'), $usernames)
+            ->with('product')
+            ->latest()
+            ->get()
+            ->groupBy(fn (Order $order) => strtolower($order->minecraft_username));
+
+        return view('admin.player-ranks', compact('playerRanks', 'orderHistoryByUsername'));
+    }
+
+    /**
+     * "Reset" kepemilikan satu rank order — order-nya TETAP tercatat delivered
+     * apa adanya (riwayat/pembayaran gak diubah), cuma ditandai rank_reset_at
+     * biar isActiveRankOrder() gak lagi menganggapnya aktif, jadi produk itu
+     * kebuka lagi buat dibeli pemainnya. Murni koreksi data di website —
+     * TIDAK ngirim command RCON apapun ke server Minecraft.
+     */
+    public function resetPlayerRank(Order $order)
+    {
+        $order->update(['rank_reset_at' => now()]);
+
+        return back()->with('success', "Rank \"{$order->product->name}\" milik {$order->minecraft_username} berhasil direset. Pemain bisa beli produk ini lagi dari Store.");
     }
 }

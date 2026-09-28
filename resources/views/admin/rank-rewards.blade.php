@@ -59,7 +59,7 @@
 
             <form action="{{ route('admin.rank-rewards.store') }}" method="POST" style="display:flex;gap:0.625rem;margin-bottom:1.5rem;flex-wrap:wrap;">
                 @csrf
-                <select id="rr-category-select" required style="flex:1;min-width:10rem;">
+                <select id="rr-category-select" required autocomplete="off" style="flex:1;min-width:10rem;">
                     <option value="" disabled selected>Pilih kategori dulu</option>
                     @foreach($categories as $cat)
                     <option value="{{ $cat->id }}">{{ $cat->name }}</option>
@@ -139,6 +139,13 @@
 
         rrCategorySelect.addEventListener('change', rrFilterProducts);
         rrFilterProducts();
+
+        // Beberapa browser (khususnya Firefox) restore value <select> pas
+        // reload tanpa nembak event 'change' — jadi kategori kelihatan
+        // "Rank" lagi padahal filter produknya masih nyangkut di state
+        // kosong sebelumnya. 'pageshow' nembak lagi setelah restore selesai
+        // (termasuk pas balik dari bfcache), jadi kita re-sync di situ.
+        window.addEventListener('pageshow', rrFilterProducts);
     </script>
 </body>
 </html>
