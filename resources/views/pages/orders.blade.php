@@ -22,12 +22,14 @@
                 'delivered' => '34,197,94',
                 'paid'      => '56,189,248',
                 'pending'   => '251,191,36',
+                'cancelled' => '148,163,184',
                 default     => '239,68,68',
             };
             $statusColor = $awaitingConfirmation ? '#a78bfa' : match($order->status) {
                 'delivered' => '#4ade80',
                 'paid'      => '#38bdf8',
                 'pending'   => '#fbbf24',
+                'cancelled' => '#94a3b8',
                 default     => '#f87171',
             };
         @endphp

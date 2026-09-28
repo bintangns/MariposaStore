@@ -58,7 +58,7 @@
                         <td>{{ $order->product->name }}{{ $order->duration_label ? ' - '.$order->duration_label : '' }}</td>
                         <td>{{ $order->formatted_amount }}</td>
                         <td>
-                            <span style="color:{{ $order->status === 'delivered' ? '#4ade80' : ($order->status === 'pending' && $order->payment_proof ? '#a78bfa' : ($order->status === 'pending' ? '#fbbf24' : '#f87171')) }};">{{ $order->status_label }}</span>
+                            <span style="color:{{ $order->status === 'delivered' ? '#4ade80' : ($order->status === 'pending' && $order->payment_proof ? '#a78bfa' : ($order->status === 'pending' ? '#fbbf24' : ($order->status === 'cancelled' ? '#94a3b8' : '#f87171'))) }};">{{ $order->status_label }}</span>
                             @if($order->status === 'pending' && $order->payment_proof)
                             <div style="color:#a78bfa;font-size:0.7rem;margin-top:0.25rem;">📎 Bukti transfer masuk</div>
                             @endif

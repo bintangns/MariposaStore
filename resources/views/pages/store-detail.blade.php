@@ -28,6 +28,12 @@
             'from_order_id' => $upgradeCredits[$key]['from_order_id'],
         ];
     };
+
+    // Udah punya rank lebih tinggi di kategori yang sama? Kalau iya, produk
+    // ini gak boleh dibeli (downgrade gak masuk akal) — form checkout diganti
+    // notice, mirip perlakuan buat maintenance mode.
+    $ownedTier = $ownedRankTiers[$product->category_id] ?? null;
+    $isLowerRank = $ownedTier && $product->sort_order < $ownedTier['sort_order'];
 @endphp
 
 @section('content')
@@ -95,6 +101,11 @@
             <div style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.3);border-radius:0.5rem;padding:1rem;text-align:center;">
                 <div style="color:#fbbf24;font-size:1.25rem;margin-bottom:0.5rem;">🛠</div>
                 <div style="color:#fcd34d;font-size:0.8125rem;">{{ Setting::maintenanceMessage() }}</div>
+            </div>
+            @elseif($isLowerRank)
+            <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:0.5rem;padding:1rem;text-align:center;">
+                <div style="color:#64748b;font-size:1.25rem;margin-bottom:0.5rem;">🔒</div>
+                <div style="color:#94a3b8;font-size:0.8125rem;">Kamu udah punya <strong style="color:#cbd5e1;">{{ $ownedTier['product_name'] }}</strong>, gak bisa beli rank yang lebih rendah dari itu.</div>
             </div>
             @else
 
@@ -230,7 +241,7 @@
 .duration-option.active { background: rgba(139,92,246,0.18); border-color: rgba(139,92,246,0.5); color: #c4b5fd; }
 </style>
 
-@unless($maintenanceMode)
+@unless($maintenanceMode || $isLowerRank)
 @push('scripts')
 <script>
 // Identitas username SEKARANG cuma dari session login global (navbar), gak

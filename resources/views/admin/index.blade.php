@@ -133,7 +133,7 @@
                             <td>{{ $order->minecraft_username }}</td>
                             <td>{{ $order->product->name }}{{ $order->duration_label ? ' - '.$order->duration_label : '' }}</td>
                             <td>{{ $order->formatted_amount }}</td>
-                            <td><span style="color:{{ $order->status === 'delivered' ? '#4ade80' : ($order->status === 'pending' && $order->payment_proof ? '#a78bfa' : ($order->status === 'pending' ? '#fbbf24' : '#f87171')) }};">{{ $order->status_label }}</span></td>
+                            <td><span style="color:{{ $order->status === 'delivered' ? '#4ade80' : ($order->status === 'pending' && $order->payment_proof ? '#a78bfa' : ($order->status === 'pending' ? '#fbbf24' : ($order->status === 'cancelled' ? '#94a3b8' : '#f87171'))) }};">{{ $order->status_label }}</span></td>
                             <td>{{ $order->created_at->format('d/m/Y H:i') }}</td>
                         </tr>
                         @empty
@@ -160,7 +160,7 @@
                         <td>{{ $order->minecraft_username }}</td>
                         <td>{{ $order->product->name }}{{ $order->duration_label ? ' - '.$order->duration_label : '' }}</td>
                         <td>{{ $order->formatted_amount }}</td>
-                        <td><span style="color:{{ $order->status === 'delivered' ? '#4ade80' : ($order->status === 'pending' && $order->payment_proof ? '#a78bfa' : ($order->status === 'pending' ? '#fbbf24' : '#f87171')) }};">{{ $order->status_label }}</span></td>
+                        <td><span style="color:{{ $order->status === 'delivered' ? '#4ade80' : ($order->status === 'pending' && $order->payment_proof ? '#a78bfa' : ($order->status === 'pending' ? '#fbbf24' : ($order->status === 'cancelled' ? '#94a3b8' : '#f87171'))) }};">{{ $order->status_label }}</span></td>
                         <td>
                             @if($order->status === 'pending' && $order->payment_proof)
                             <a href="{{ route('admin.orders.proof', $order) }}" target="_blank" style="color:#a78bfa;font-size:0.75rem;margin-right:0.5rem;">🖼 Bukti</a>

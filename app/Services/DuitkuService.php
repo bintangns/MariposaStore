@@ -62,7 +62,10 @@ class DuitkuService
             'customerVaName'  => $order->minecraft_username,
             'callbackUrl'     => route('payment.notification'),
             'returnUrl'       => route('checkout.success') . '?order=' . $order->order_id,
-            'expiryPeriod'    => 60,
+            // Samain sama Order::PAYMENT_EXPIRY_MINUTES biar invoice di sisi
+            // Duitku juga expired barengan sama order kita (Duitku cuma
+            // nerima 5, 10, atau 60 menit).
+            'expiryPeriod'    => Order::PAYMENT_EXPIRY_MINUTES,
         ];
 
         $response = Http::withHeaders([

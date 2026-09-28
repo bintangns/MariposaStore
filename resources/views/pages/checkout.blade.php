@@ -21,10 +21,21 @@
         </div>
     </div>
 
+    <div id="expiry-countdown" style="color:#fbbf24;font-size:0.8125rem;margin-bottom:1rem;">
+        Selesaikan dalam <span id="countdown-time" style="font-family:'JetBrains Mono',monospace;font-weight:600;"></span>
+    </div>
+
     <a id="pay-btn" href="{{ $paymentUrl }}" class="btn-primary" style="display:block;width:100%;padding:1rem;font-size:1rem;text-decoration:none;box-sizing:border-box;">
         Bayar Sekarang
     </a>
-    <p style="color:#64748b;font-size:0.75rem;margin-top:1rem;">QRIS · Transfer Bank · GoPay · OVO · ShopeePay</p>
+    <p style="color:#64748b;font-size:0.75rem;margin:1rem 0;">QRIS · Transfer Bank · GoPay · OVO · ShopeePay</p>
+
+    <form id="cancel-form" action="{{ route('checkout.cancel', $order->order_id) }}" method="POST" onsubmit="return confirm('Batalkan pembayaran ini?')">
+        @csrf
+        <button type="submit" style="background:none;border:none;color:#64748b;font-size:0.8125rem;text-decoration:underline;cursor:pointer;font-family:inherit;">
+            Batalkan Pembayaran
+        </button>
+    </form>
 </div>
 
 @push('scripts')
@@ -36,6 +47,27 @@
 document.getElementById('pay-btn').addEventListener('click', function() {
     this.textContent = 'Mengarahkan ke halaman pembayaran...';
 });
+
+// Order otomatis dibatalkan server-side kalau expired (Order::expireIfNeeded)
+// -- timer ini cuma buat kasih tau customer & auto-submit form batal begitu
+// waktunya habis, biar order gak nyangkut nunggu selamanya kalau dia diem aja.
+const expiresAt = new Date('{{ $order->expires_at->toIso8601String() }}').getTime();
+const countdownEl = document.getElementById('countdown-time');
+const cancelForm = document.getElementById('cancel-form');
+
+const countdownTimer = setInterval(() => {
+    const remaining = Math.max(0, Math.floor((expiresAt - Date.now()) / 1000));
+    const minutes = String(Math.floor(remaining / 60)).padStart(2, '0');
+    const seconds = String(remaining % 60).padStart(2, '0');
+    countdownEl.textContent = `${minutes}:${seconds}`;
+
+    if (remaining <= 0) {
+        clearInterval(countdownTimer);
+        document.getElementById('expiry-countdown').textContent = 'Waktu habis, membatalkan order...';
+        cancelForm.removeAttribute('onsubmit');
+        cancelForm.submit();
+    }
+}, 1000);
 </script>
 @endpush
 @endsection

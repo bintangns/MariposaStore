@@ -34,6 +34,12 @@
     </div>
     @endif
 
+    @if($order->expires_at)
+    <div id="expiry-countdown" style="color:#fbbf24;font-size:0.8125rem;margin-bottom:1rem;text-align:center;">
+        Upload bukti dalam <span id="countdown-time" style="font-family:'JetBrains Mono',monospace;font-weight:600;"></span>
+    </div>
+    @endif
+
     <form action="{{ route('checkout.manual.upload', $order->order_id) }}" method="POST" enctype="multipart/form-data">
         @csrf
         <div style="margin-bottom:1.25rem;">
@@ -47,5 +53,39 @@
             Kirim Bukti Pembayaran
         </button>
     </form>
+
+    <form id="cancel-form" action="{{ route('checkout.cancel', $order->order_id) }}" method="POST" onsubmit="return confirm('Batalkan pembayaran ini?')" style="text-align:center;margin-top:1rem;">
+        @csrf
+        <button type="submit" style="background:none;border:none;color:#64748b;font-size:0.8125rem;text-decoration:underline;cursor:pointer;font-family:inherit;">
+            Batalkan Pembayaran
+        </button>
+    </form>
 </div>
+
+@if($order->expires_at)
+@push('scripts')
+<script>
+// Sama kayak halaman checkout Duitku: order otomatis kebatalin server-side
+// begitu lewat Order::PAYMENT_EXPIRY_MINUTES (Order::expireIfNeeded), timer
+// ini cuma kasih tau customer & auto-submit form batal pas waktunya habis.
+const expiresAt = new Date('{{ $order->expires_at->toIso8601String() }}').getTime();
+const countdownEl = document.getElementById('countdown-time');
+const cancelForm = document.getElementById('cancel-form');
+
+const countdownTimer = setInterval(() => {
+    const remaining = Math.max(0, Math.floor((expiresAt - Date.now()) / 1000));
+    const minutes = String(Math.floor(remaining / 60)).padStart(2, '0');
+    const seconds = String(remaining % 60).padStart(2, '0');
+    countdownEl.textContent = `${minutes}:${seconds}`;
+
+    if (remaining <= 0) {
+        clearInterval(countdownTimer);
+        document.getElementById('expiry-countdown').textContent = 'Waktu habis, membatalkan order...';
+        cancelForm.removeAttribute('onsubmit');
+        cancelForm.submit();
+    }
+}, 1000);
+</script>
+@endpush
+@endif
 @endsection

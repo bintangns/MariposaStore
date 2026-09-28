@@ -6,6 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class Order extends Model
 {
+    /**
+     * Berapa lama order "pending" (belum ada payment_proof/belum dibayar)
+     * boleh menggantung sebelum otomatis dianggap dibatalkan/expired, biar
+     * gak numpuk jadi sampah di daftar order admin.
+     */
+    public const PAYMENT_EXPIRY_MINUTES = 5;
+
     protected $fillable = [
         'order_id',
         'minecraft_username',
@@ -19,23 +26,47 @@ class Order extends Model
         'duration_days',
         'duration_commands',
         'amount',
-        'status',           // pending, paid, delivered, failed
+        'status',           // pending, paid, delivered, failed, cancelled
         'payment_type',
         'payment_proof',
         'payment_reference',
         'payment_status',
         'delivered_at',
+        'expires_at',
         'delivery_log',
     ];
 
     protected $casts = [
         'delivered_at' => 'datetime',
         'terms_accepted_at' => 'datetime',
+        'expires_at' => 'datetime',
         'amount' => 'integer',
         'duration_days' => 'integer',
         'duration_commands' => 'array',
         'delivery_log' => 'array',
     ];
+
+    /**
+     * Kalau order ini masih "pending" murni (belum ada bukti pembayaran
+     * manual yang diupload, belum ada callback sukses dari Duitku) dan udah
+     * lewat batas waktu — otomatis tandai "cancelled" biar gak nyampah di
+     * daftar order admin. Order yang udah upload bukti transfer TIDAK
+     * di-auto-cancel meski lewat waktu, karena udah nunggu verifikasi admin.
+     */
+    public function expireIfNeeded(): bool
+    {
+        if (
+            $this->status === 'pending'
+            && !$this->payment_proof
+            && $this->expires_at
+            && $this->expires_at->isPast()
+        ) {
+            $this->update(['status' => 'cancelled', 'payment_status' => 'expired']);
+            return true;
+        }
+
+        return false;
+    }
 
     /**
      * Command yang gagal terkirim pada percobaan delivery terakhir (dari
@@ -96,6 +127,32 @@ class Order extends Model
         }
 
         return $credits;
+    }
+
+    /**
+     * Rank tertinggi (berdasar sort_order) yang lagi aktif dimiliki pemain
+     * ini, per kategori — dipakai buat nge-block pembelian rank yang lebih
+     * RENDAH dari yang udah dipunya di Store (downgrade gak masuk akal).
+     * Rank yang sama atau lebih tinggi di kategori itu tetap boleh dibeli
+     * (renew durasi / upgrade).
+     *
+     * @return array<int, array{sort_order: int, product_name: string}> category_id => rank tertinggi
+     */
+    public static function highestOwnedRankTierFor(string $username): array
+    {
+        $highest = [];
+
+        foreach (static::activeRankOrdersFor($username) as $order) {
+            $product = $order->product;
+            $categoryId = $product->category_id;
+            if ($categoryId === null) continue;
+
+            if (!isset($highest[$categoryId]) || $product->sort_order > $highest[$categoryId]['sort_order']) {
+                $highest[$categoryId] = ['sort_order' => $product->sort_order, 'product_name' => $product->name];
+            }
+        }
+
+        return $highest;
     }
 
     public function duration()
@@ -264,6 +321,7 @@ class Order extends Model
             'paid'      => 'Dibayar',
             'delivered' => 'Selesai',
             'failed'    => 'Gagal',
+            'cancelled' => 'Dibatalkan',
             default     => $this->status,
         };
     }

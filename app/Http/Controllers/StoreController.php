@@ -18,12 +18,14 @@ class StoreController extends Controller
 
         $groupLabel = null;
         $upgradeCredits = [];
+        $ownedRankTiers = [];
         if ($username = session('verified_username')) {
             $groupLabel = $this->minecraft->getPlayerGroupLabel($username);
             $upgradeCredits = Order::allEligibleUpgradeCreditsFor($username);
+            $ownedRankTiers = Order::highestOwnedRankTierFor($username);
         }
 
-        return view('pages.store', compact('products', 'groupLabel', 'upgradeCredits'));
+        return view('pages.store', compact('products', 'groupLabel', 'upgradeCredits', 'ownedRankTiers'));
     }
 
     public function show(Product $product)
@@ -34,10 +36,12 @@ class StoreController extends Controller
         $gradients = $product->nickname_type === 'gradient' ? Gradient::ordered()->get() : collect();
 
         $upgradeCredits = [];
+        $ownedRankTiers = [];
         if ($username = session('verified_username')) {
             $upgradeCredits = Order::allEligibleUpgradeCreditsFor($username);
+            $ownedRankTiers = Order::highestOwnedRankTierFor($username);
         }
 
-        return view('pages.store-detail', compact('product', 'gradients', 'upgradeCredits'));
+        return view('pages.store-detail', compact('product', 'gradients', 'upgradeCredits', 'ownedRankTiers'));
     }
 }

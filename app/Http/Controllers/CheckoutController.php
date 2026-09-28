@@ -156,6 +156,7 @@ class CheckoutController extends Controller
                 'duration_commands'   => $duration?->commands,
                 'amount'              => max(0, Setting::applyPromo($duration?->price ?? $product->price) - $upgradeCredit),
                 'status'              => 'pending',
+                'expires_at'          => now()->addMinutes(Order::PAYMENT_EXPIRY_MINUTES),
             ]);
 
             if ($product->requires_nickname) {
@@ -205,6 +206,8 @@ class CheckoutController extends Controller
     {
         abort_unless(strtolower($order->minecraft_username) === session('verified_username'), 403);
 
+        $order->expireIfNeeded();
+
         if ($order->status !== 'pending') {
             return redirect()->route('orders.invoice', $order->order_id);
         }
@@ -220,8 +223,11 @@ class CheckoutController extends Controller
     {
         abort_unless(strtolower($order->minecraft_username) === session('verified_username'), 403);
 
+        $order->expireIfNeeded();
+
         if ($order->status !== 'pending') {
-            return redirect()->route('orders.invoice', $order->order_id);
+            return redirect()->route('orders.invoice', $order->order_id)
+                ->with('error', 'Waktu pembayaran buat order ini udah habis dan otomatis dibatalkan.');
         }
 
         $request->validate([
@@ -255,6 +261,25 @@ class CheckoutController extends Controller
         return view('pages.checkout-result', ['status' => 'manual_pending', 'order' => $order]);
     }
 
+    /**
+     * Dibatalkan sendiri oleh customer (tombol "Batalkan Pembayaran" atau
+     * timer habis di halaman checkout/checkout-manual) — biar order yang
+     * ditinggal gak nyangkut selamanya sebagai "pending" di daftar admin.
+     * Cuma bisa dipakai selama belum ada bukti transfer yang diupload;
+     * kalau udah upload, artinya udah nunggu verifikasi admin dan gak boleh
+     * dibatalkan sepihak dari sini.
+     */
+    public function cancel(Order $order)
+    {
+        abort_unless(strtolower($order->minecraft_username) === session('verified_username'), 403);
+
+        if ($order->status === 'pending' && !$order->payment_proof) {
+            $order->update(['status' => 'cancelled', 'payment_status' => 'cancelled_by_user']);
+        }
+
+        return view('pages.checkout-result', ['status' => 'cancelled', 'order' => $order->fresh()]);
+    }
+
     public function notification(Request $request)
     {
         $payload = $request->all();
@@ -285,8 +310,12 @@ class CheckoutController extends Controller
      */
     private function reconcileOrder(Order $order): Order
     {
-        if (in_array($order->status, ['delivered', 'failed'])) {
+        if (in_array($order->status, ['delivered', 'failed', 'cancelled'])) {
             return $order;
+        }
+
+        if ($order->expireIfNeeded()) {
+            return $order->fresh();
         }
 
         try {

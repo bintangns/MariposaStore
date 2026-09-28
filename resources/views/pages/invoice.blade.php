@@ -18,6 +18,7 @@
     .status-paid { background: #dbeafe; color: #1d4ed8; }
     .status-pending { background: #fef9c3; color: #a16207; }
     .status-failed { background: #fee2e2; color: #b91c1c; }
+    .status-cancelled { background: #e5e7eb; color: #374151; }
 
     .info-table { margin-top: 20px; }
     .info-table td { padding: 3px 0; font-size: 11px; }

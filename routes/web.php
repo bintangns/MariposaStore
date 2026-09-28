@@ -57,6 +57,7 @@ Route::post('/checkout/{product}', [CheckoutController::class, 'create'])->name(
 Route::get('/checkout/success', [CheckoutController::class, 'success'])->name('checkout.success');
 Route::get('/checkout/pending', [CheckoutController::class, 'pending'])->name('checkout.pending');
 Route::get('/checkout/failed', [CheckoutController::class, 'failed'])->name('checkout.failed');
+Route::post('/checkout/{order:order_id}/cancel', [CheckoutController::class, 'cancel'])->name('checkout.cancel');
 
 // Checkout - mode pembayaran manual (upload bukti transfer, sementara pengganti Duitku)
 Route::get('/checkout/{order:order_id}/manual', [CheckoutController::class, 'manualPayment'])->name('checkout.manual');
