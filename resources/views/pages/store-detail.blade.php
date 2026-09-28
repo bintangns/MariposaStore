@@ -29,16 +29,32 @@
         ];
     };
 
+    // Kalau kredit upgrade dari rank yang udah dipunya KEBESARAN sampai
+    // ngurangin harga duration ini jadi persis Rp0, itu dianggap BUKAN opsi
+    // yang valid buat dibeli (bukan berarti gratis) — duration itu di-disable
+    // di pemilihan durasi, pemain harus pilih durasi lain yang harganya masih
+    // di atas Rp0.
+    $isDurationBuyable = function ($duration) use ($upgradeInfoFor) {
+        $info = $upgradeInfoFor($duration);
+        return !($info && $info['price'] === 0);
+    };
+
     // Blokir form checkout kalau produk ini sort_order-nya <= rank tertinggi
     // yang udah dipunya DAN emang udah gak ada durasi/opsi upgrade yang lebih
-    // tinggi buat produk ini. Jadi: rank yang lebih rendah selalu diblokir;
-    // rank yang SAMA diblokir kalau durasi termahalnya udah dipunya (gak ada
-    // apa-apa lagi yang bisa dibeli); rank yang lebih tinggi/masih ada opsi
-    // upgrade tetap bisa dibeli seperti biasa — diganti notice, mirip
-    // perlakuan buat maintenance mode.
+    // tinggi buat produk ini (gratis/Rp0 gak dihitung sebagai opsi valid).
+    // Jadi: rank yang lebih rendah selalu diblokir; rank yang SAMA diblokir
+    // kalau durasi termahalnya udah dipunya (gak ada apa-apa lagi yang bisa
+    // dibeli); rank yang lebih tinggi/masih ada opsi upgrade tetap bisa
+    // dibeli seperti biasa. Kalau SEMUA durasi produk ini kebetulan gratis
+    // dari kredit (walau produknya sendiri rank yang lebih tinggi), tetap
+    // diblokir juga karena gak ada satu pun opsi yang bisa dipilih.
     $ownedTier = $ownedRankTiers[$product->category_id] ?? null;
-    $anyUpgradeAvailable = $product->durations->contains(fn ($d) => $upgradeInfoFor($d) !== null);
-    $isBlocked = $ownedTier && $product->sort_order <= $ownedTier['sort_order'] && !$anyUpgradeAvailable;
+    $anyUpgradeAvailable = $product->durations->contains(function ($d) use ($upgradeInfoFor) {
+        $info = $upgradeInfoFor($d);
+        return $info !== null && $info['price'] > 0;
+    });
+    $allDurationsBlocked = $product->durations->isNotEmpty() && $product->durations->every(fn ($d) => !$isDurationBuyable($d));
+    $isBlocked = ($ownedTier && $product->sort_order <= $ownedTier['sort_order'] && !$anyUpgradeAvailable) || $allDurationsBlocked;
 @endphp
 
 @section('content')
@@ -71,7 +87,11 @@
         {{-- Checkout form --}}
         <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:1rem;padding:1.75rem;position:sticky;top:5rem;">
             @php
-                $firstDuration = $product->durations->first();
+                // Default-nya pilih durasi pertama yang BENERAN bisa dibeli
+                // (bukan yang otomatis gratis dari kredit upgrade), biar
+                // customer gak ke-submit form dengan durasi yang harusnya
+                // gak bisa dipilih.
+                $firstDuration = $product->durations->first($isDurationBuyable) ?? $product->durations->first();
                 $firstPrice = $firstDuration->price ?? $product->price;
                 $firstUpgrade = $firstDuration ? $upgradeInfoFor($firstDuration) : null;
                 $firstHasDiscount = $firstUpgrade ? true : (Setting::isPromoActive() && Setting::applyPromo($firstPrice) < $firstPrice);
@@ -83,13 +103,17 @@
             <div style="font-size:0.875rem;color:#64748b;margin-bottom:1rem;">Pilih durasi rank</div>
             <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:1.5rem;">
                 @foreach($product->durations as $i => $duration)
-                @php $upg = $upgradeInfoFor($duration); @endphp
-                <button type="button" class="duration-option{{ $i === 0 ? ' active' : '' }}"
+                @php
+                    $upg = $upgradeInfoFor($duration);
+                    $durationBuyable = $isDurationBuyable($duration);
+                @endphp
+                <button type="button" class="duration-option{{ $duration->id === $firstDuration->id ? ' active' : '' }}"
                     data-id="{{ $duration->id }}"
                     data-formatted="{{ $upg ? 'Rp '.number_format($upg['price'], 0, ',', '.') : $promoFormatted($duration->price) }}"
                     data-original="{{ $duration->formatted_price }}"
                     data-discounted="{{ $upg || (Setting::isPromoActive() && Setting::applyPromo($duration->price) < $duration->price) ? '1' : '0' }}"
-                    data-upgrade-from="{{ $upg['from_order_id'] ?? '' }}">
+                    data-upgrade-from="{{ $upg['from_order_id'] ?? '' }}"
+                    @if(!$durationBuyable) disabled title="Udah otomatis gratis dari kredit upgrade kamu, gak bisa dipilih. Pilih durasi lain." @endif>
                     {{ $duration->label }}
                 </button>
                 @endforeach
@@ -116,7 +140,7 @@
 
             <form action="{{ route('checkout.create', $product) }}" method="POST" id="checkout-form">
                 @csrf
-                <input type="hidden" name="duration_id" id="duration-id-input" value="{{ $product->durations->first()->id ?? '' }}">
+                <input type="hidden" name="duration_id" id="duration-id-input" value="{{ $firstDuration->id ?? '' }}">
                 <input type="hidden" name="upgrade_from_order_id" id="upgrade-from-input" value="{{ $firstUpgrade['from_order_id'] ?? '' }}">
                 <div style="margin-bottom:1rem;">
                     <label style="display:block;font-size:0.875rem;color:#94a3b8;margin-bottom:0.5rem;">Username Minecraft</label>
@@ -244,6 +268,7 @@
     color: #e2e8f0; padding: 0.5rem 0.75rem; border-radius: 0.5rem; font-size: 0.8125rem; cursor: pointer; font-family: inherit;
 }
 .duration-option.active { background: rgba(139,92,246,0.18); border-color: rgba(139,92,246,0.5); color: #c4b5fd; }
+.duration-option:disabled { opacity: 0.4; cursor: not-allowed; }
 </style>
 
 @unless($maintenanceMode || $isBlocked)

@@ -83,6 +83,15 @@ class CheckoutController extends Controller
             }
 
             $upgradeCredit = $upgradeFromOrder->amount;
+
+            // Kredit dari rank lama kebesaran sampai harga target-nya kepotong
+            // pas Rp0 -> jangan diloloskan (bukan berarti gratis). Tombolnya
+            // udah di-disable di halaman Store buat opsi kayak gini, ini
+            // jaring pengaman kalau ada yang coba submit langsung.
+            $targetPrice = $duration?->price ?? $product->price;
+            if (max(0, $targetPrice - $upgradeCredit) === 0) {
+                return back()->with('error', 'Opsi ini otomatis jadi gratis dari kredit upgrade kamu, jadi gak bisa dipilih. Pilih durasi/produk lain.');
+            }
         }
 
         // Produk cosmetics/custom nickname: dua mode.

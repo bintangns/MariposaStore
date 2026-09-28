@@ -96,12 +96,21 @@
                         : $product->price;
 
                     // Cek kredit upgrade dari rank aktif yang lagi dipunya (kalau ada,
-                    // ambil durasi dengan harga upgrade paling murah).
+                    // ambil durasi dengan harga upgrade paling murah). Kredit
+                    // yang KEBESARAN sampai motong harga jadi persis Rp0 gak
+                    // dihitung sebagai opsi valid (bukan berarti gratis) —
+                    // sama kayak logic di halaman detail produk.
                     $bestUpgrade = null;
+                    $isDurationBuyable = function ($d) use ($upgradeCredits, $product) {
+                        $key = "{$product->id}-{$d->id}";
+                        if (!isset($upgradeCredits[$key])) return true;
+                        return max(0, $d->price - $upgradeCredits[$key]['credit']) > 0;
+                    };
                     foreach ($product->durations as $d) {
                         $key = "{$product->id}-{$d->id}";
                         if (!isset($upgradeCredits[$key])) continue;
                         $upPrice = max(0, $d->price - $upgradeCredits[$key]['credit']);
+                        if ($upPrice === 0) continue;
                         if (!$bestUpgrade || $upPrice < $bestUpgrade['price']) {
                             $bestUpgrade = ['price' => $upPrice, 'original' => $d->price];
                         }
@@ -117,9 +126,12 @@
                     // diblokir; rank yang SAMA diblokir kalau durasi
                     // termahalnya udah dipunya (gak ada apa-apa lagi yang bisa
                     // dibeli); rank yang lebih tinggi/masih ada opsi upgrade
-                    // tetap bisa dibeli seperti biasa.
+                    // tetap bisa dibeli seperti biasa. Kalau SEMUA durasi
+                    // produk ini kebetulan gratis dari kredit, tetap diblokir
+                    // juga walau produknya sendiri rank yang lebih tinggi.
                     $ownedTier = $ownedRankTiers[$product->category_id] ?? null;
-                    $isBlocked = $ownedTier && $product->sort_order <= $ownedTier['sort_order'] && !$bestUpgrade;
+                    $allDurationsBlocked = $product->durations->isNotEmpty() && $product->durations->every(fn ($d) => !$isDurationBuyable($d));
+                    $isBlocked = ($ownedTier && $product->sort_order <= $ownedTier['sort_order'] && !$bestUpgrade) || $allDurationsBlocked;
                 @endphp
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-top:auto;">
                     <div>
