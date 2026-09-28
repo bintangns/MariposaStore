@@ -137,15 +137,22 @@
             rrProductSelect.value = '';
         }
 
-        rrCategorySelect.addEventListener('change', rrFilterProducts);
-        rrFilterProducts();
+        // Beberapa browser (khususnya Firefox, kadang Chrome) restore value
+        // <select> pas reload/kembali ke halaman ini TANPA nembak event
+        // 'change' — jadi kategori kelihatan "Rank" lagi padahal filter
+        // produknya masih nyangkut di state kosong sebelumnya (autocomplete
+        // "off" + listen 'change' aja ternyata gak selalu cukup). Paksa balik
+        // ke placeholder tiap kali halaman ini ditampilkan (load awal ATAU
+        // pageshow, termasuk balik dari bfcache), biar gak ada state
+        // "nyangkut" sama sekali — admin tinggal pilih ulang kategorinya.
+        function rrResetAndFilter() {
+            rrCategorySelect.value = '';
+            rrFilterProducts();
+        }
 
-        // Beberapa browser (khususnya Firefox) restore value <select> pas
-        // reload tanpa nembak event 'change' — jadi kategori kelihatan
-        // "Rank" lagi padahal filter produknya masih nyangkut di state
-        // kosong sebelumnya. 'pageshow' nembak lagi setelah restore selesai
-        // (termasuk pas balik dari bfcache), jadi kita re-sync di situ.
-        window.addEventListener('pageshow', rrFilterProducts);
+        rrCategorySelect.addEventListener('change', rrFilterProducts);
+        rrResetAndFilter();
+        window.addEventListener('pageshow', rrResetAndFilter);
     </script>
 </body>
 </html>
