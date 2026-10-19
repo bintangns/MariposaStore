@@ -4,17 +4,38 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Project Mariposa') - Minecraft Server</title>
+    <title>@yield('title', 'Beranda') - Mariposa Indonesia</title>
     <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
     <style>
-        body { background: #0a0a0f; color: #e2e8f0; font-family: 'Inter', sans-serif; }
+        body { background: radial-gradient(circle at 50% -18rem,rgba(125,173,91,.065),transparent 42rem),#10130f; color: #e7ebdf; font-family: 'Inter', sans-serif; }
         .glass { background: rgba(255,255,255,0.04); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.08); }
-        .gradient-text { background: linear-gradient(135deg, #c4b5fd, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-        .btn-primary { background: linear-gradient(135deg, #7c3aed, #6d28d9); color: white; padding: 0.625rem 1.5rem; border-radius: 0.5rem; font-weight: 500; font-size: 0.875rem; transition: all 0.2s; cursor: pointer; border: none; }
-        .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+        .gradient-text { background: linear-gradient(135deg, #ffe39a, #f1b74e); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .btn-primary { background: linear-gradient(#f7d990, #dfa94a); color: #22200f; padding: 0.625rem 1.5rem; border-radius: 0; font-family:'JetBrains Mono',monospace; font-weight: 700; font-size: 0.875rem; transition: all 0.2s; cursor: pointer; border: 2px solid #ffe9ad; box-shadow:4px 4px 0 #614b25; }
+        .btn-primary:hover { background:#ffe39c; transform: translate(-2px,-2px); box-shadow:6px 6px 0 #614b25; }
+        .mp-site-nav { position:fixed; top:0; left:0; width:100%; z-index:50; background:rgba(15,20,14,.95); backdrop-filter:blur(14px); border-bottom:2px solid #506644; }
+        .mp-site-nav__inner { max-width:76rem; height:4.5rem; margin:auto; padding:0 1.5rem; display:flex; align-items:center; justify-content:space-between; gap:1.25rem; }
+        .mp-site-nav__brand { display:flex; align-items:center; gap:.5rem; flex:none; color:#fff; font-family:'JetBrains Mono',monospace; font-size:.95rem; font-weight:800; letter-spacing:.08em; text-decoration:none; text-shadow:2px 2px 0 #3c512f; }
+        .mp-site-nav__brand img { width:3.4rem; height:3rem; object-fit:contain; }
+        .mp-site-nav__links { display:flex; align-items:center; gap:1.25rem; }
+        .mp-site-nav__links a,.mp-site-nav__mobile a { color:#a6a6b4; text-decoration:none; font-size:.82rem; font-weight:550; transition:color .2s; }
+        .mp-site-nav__links a:hover,.mp-site-nav__links a[aria-current="page"],.mp-site-nav__mobile a:hover,.mp-site-nav__mobile a[aria-current="page"] { color:#f7cc78; }
+        .mp-site-nav__actions { display:flex; align-items:center; gap:.65rem; flex:none; }
+        .mp-site-nav__ip { border:1px solid #688459; border-radius:0; background:#243322; color:#cfe9bb; padding:.48rem .7rem; font-family:'JetBrains Mono',monospace; font-size:.68rem; cursor:pointer; }
+        .mp-site-nav__login { border:1px solid #668055; border-radius:0; background:#263521; color:#e6f0db; padding:.48rem .8rem; font-family:'JetBrains Mono',monospace; font-size:.75rem; cursor:pointer; }
+        .mp-site-nav__menu-button { display:none; width:2.5rem; height:2.5rem; border:1px solid #668055; border-radius:0; background:#263521; color:#fff; font-size:1.25rem; cursor:pointer; }
+        .mp-site-nav__mobile { display:none; padding:.35rem 1.5rem 1.15rem; border-top:1px solid #506644; background:#172016; }
+        .mp-site-nav__mobile.is-open { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.2rem .8rem; }
+        .mp-site-nav__mobile a { padding:.65rem .25rem; }
+        .mp-site-footer { border-top:2px solid #506644; padding:2.5rem 0; margin-top:5rem; background:#0c100c; }
+        .mp-site-footer__inner { max-width:76rem; margin:auto; padding:0 1.5rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; color:#898999; font-size:.8rem; }
+        .mp-site-footer__inner strong { color:#f5d28d; letter-spacing:.08em; }
+        @media(max-width:1050px) { .mp-site-nav__links { gap:.7rem; } .mp-site-nav__ip { display:none; } }
+        @media(max-width:850px) { .mp-site-nav__links { display:none; } .mp-site-nav__menu-button { display:block; } }
+        @media(min-width:851px) { .mp-site-nav__mobile.is-open { display:none; } }
+        @media(max-width:560px) { .mp-site-nav__inner { padding:0 1rem; } .mp-site-nav__brand span { display:none; } .mp-site-footer__inner { flex-direction:column; text-align:center; } }
         @keyframes mp-spin { to { transform: rotate(360deg); } }
         .mp-skin-preview { align-items: center; gap: 0.625rem; }
         .mp-skin-preview .mp-skin-box { position: relative; width: 48px; height: 48px; border-radius: 0.5rem; overflow: hidden; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); flex-shrink: 0; }
@@ -25,35 +46,32 @@
         .mp-skin-preview .mp-skin-bedrock-badge { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; font-size: 1.375rem; background: rgba(139,92,246,0.12); }
         .mp-platform-toggle { display: flex; gap: 0.5rem; margin-bottom: 0.875rem; }
         .mp-platform-btn { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #94a3b8; padding: 0.5rem 0.75rem; border-radius: 0.5rem; font-size: 0.8125rem; cursor: pointer; font-family: inherit; transition: all 0.15s; }
-        .mp-platform-btn.active { background: rgba(139,92,246,0.15); border-color: rgba(139,92,246,0.4); color: #c4b5fd; }
+        .mp-platform-btn.active { background: rgba(119,177,96,0.16); border-color: #638752; color: #c8e8b5; }
+        #mp-verify-modal > div { border-radius:0 !important; border:2px solid #638752 !important; background:#172016 !important; box-shadow:7px 7px 0 #080c07; }
     </style>
     @stack('head')
 </head>
 <body class="min-h-screen antialiased">
 
-    <nav style="position:fixed;top:0;width:100%;z-index:50;background:rgba(10,10,15,0.8);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,0.05);">
-        <div style="max-width:72rem;margin:0 auto;padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:4rem;">
-            <a href="{{ route('home') }}" style="display:flex;align-items:center;gap:0.625rem;text-decoration:none;">
-                <img src="{{ asset('images/logo.png') }}" alt="Mariposa ID" style="height:2.5rem;width:auto;border-radius:0.375rem;">
-                <span style="font-weight:600;color:white;font-size:1.0625rem;">Mariposa ID</span>
+    <nav class="mp-site-nav" aria-label="Navigasi utama">
+        <div class="mp-site-nav__inner">
+            <a href="{{ route('home') }}" class="mp-site-nav__brand" aria-label="Mariposa Indonesia - Beranda">
+                <img src="{{ asset('images/logo.png') }}" alt="" width="54" height="48">
+                <span>MARIPOSA INDONESIA</span>
             </a>
-            <div style="display:flex;align-items:center;gap:2rem;font-size:0.875rem;color:#94a3b8;">
-                <a href="{{ route('home') }}"   style="color:#94a3b8;text-decoration:none;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#94a3b8'">Beranda</a>
-                <a href="{{ route('store') }}"  style="color:#94a3b8;text-decoration:none;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#94a3b8'">Store</a>
-                <a href="{{ route('rules') }}"  style="color:#94a3b8;text-decoration:none;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#94a3b8'">Peraturan</a>
-                <a href="{{ route('staff') }}"  style="color:#94a3b8;text-decoration:none;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#94a3b8'">Staff</a>
-                <a href="{{ route('terms') }}"  style="color:#94a3b8;text-decoration:none;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#94a3b8'">S&K</a>
-                <a href="{{ route('orders') }}" style="color:#94a3b8;text-decoration:none;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#94a3b8'">Riwayat</a>
-                <a href="{{ route('nicknames') }}" style="color:#94a3b8;text-decoration:none;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#94a3b8'">Koleksi</a>
+            <div class="mp-site-nav__links">
+                @foreach(['home' => 'Beranda', 'store' => 'Store', 'rules' => 'Peraturan', 'staff' => 'Staff', 'terms' => 'S&K', 'orders' => 'Riwayat', 'nicknames' => 'Koleksi'] as $routeName => $label)
+                <a href="{{ route($routeName) }}" @if(request()->routeIs($routeName, $routeName.'.*')) aria-current="page" @endif>{{ $label }}</a>
+                @endforeach
             </div>
-            <div style="display:flex;align-items:center;gap:0.75rem;">
+            <div class="mp-site-nav__actions">
                 <button type="button" onclick="mpCopyServerIp(this)" title="Klik untuk salin IP server"
-                    style="font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:#a78bfa;background:rgba(139,92,246,0.1);padding:0.25rem 0.75rem;border-radius:9999px;border:1px solid rgba(139,92,246,0.2);cursor:pointer;">play.mariposa.id</button>
+                    class="mp-site-nav__ip"><span class="mp-ip-text">play.mariposa.id</span></button>
 
                 @if(session('verified_username'))
                 <div style="position:relative;">
                     <button id="mp-user-menu-btn" onclick="mpToggleUserMenu()" type="button"
-                        style="display:flex;align-items:center;gap:0.375rem;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.25);color:#4ade80;padding:0.25rem 0.75rem;border-radius:9999px;font-size:0.75rem;font-family:'JetBrains Mono',monospace;cursor:pointer;">
+                        style="display:flex;align-items:center;gap:0.375rem;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.25);color:#4ade80;padding:0.45rem 0.75rem;border-radius:0.6rem;font-size:0.75rem;font-family:'JetBrains Mono',monospace;cursor:pointer;">
                         <span style="font-size:0.5rem;">●</span> {{ session('verified_username') }}
                     </button>
                     <div id="mp-user-menu" style="display:none;position:absolute;top:calc(100% + 0.5rem);right:0;background:#13131a;border:1px solid rgba(255,255,255,0.1);border-radius:0.5rem;padding:0.375rem;min-width:8rem;box-shadow:0 10px 30px rgba(0,0,0,0.4);z-index:60;">
@@ -64,10 +82,15 @@
                     </div>
                 </div>
                 @else
-                <button onclick="mpOpenVerifyModal()" type="button"
-                    style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#94a3b8;padding:0.25rem 0.75rem;border-radius:9999px;font-size:0.75rem;cursor:pointer;font-family:inherit;">Login</button>
+                <button onclick="mpOpenVerifyModal()" type="button" class="mp-site-nav__login">Login</button>
                 @endif
+                <button type="button" id="mp-site-menu-button" class="mp-site-nav__menu-button" aria-label="Buka menu" aria-controls="mp-site-mobile-menu" aria-expanded="false" onclick="mpToggleSiteMenu()">☰</button>
             </div>
+        </div>
+        <div id="mp-site-mobile-menu" class="mp-site-nav__mobile">
+            @foreach(['home' => 'Beranda', 'store' => 'Store', 'rules' => 'Peraturan', 'staff' => 'Staff', 'terms' => 'S&K', 'orders' => 'Riwayat', 'nicknames' => 'Koleksi'] as $routeName => $label)
+            <a href="{{ route($routeName) }}" @if(request()->routeIs($routeName, $routeName.'.*')) aria-current="page" @endif>{{ $label }}</a>
+            @endforeach
         </div>
     </nav>
 
@@ -98,7 +121,7 @@
         </div>
     </div>
 
-    <main style="padding-top:4rem;">
+    <main style="padding-top:4.5rem;">
         @if(session('success'))
         <div style="position:fixed;top:5rem;right:1.5rem;z-index:50;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);color:#4ade80;padding:0.75rem 1rem;border-radius:0.5rem;font-size:0.875rem;max-width:20rem;">
             {{ session('success') }}
@@ -112,11 +135,11 @@
         @yield('content')
     </main>
 
-    <footer style="border-top:1px solid rgba(255,255,255,0.05);padding:3rem 0;margin-top:5rem;">
-        <div style="max-width:72rem;margin:0 auto;padding:0 1.5rem;text-align:center;color:#64748b;font-size:0.875rem;">
-            <p style="font-weight:600;color:#94a3b8;margin-bottom:0.5rem;">Project Mariposa</p>
-            <p>Minecraft Survival Server Indonesia</p>
-            <p style="margin-top:1rem;font-size:0.75rem;font-family:'JetBrains Mono',monospace;">play.mariposa.id</p>
+    <footer class="mp-site-footer">
+        <div class="mp-site-footer__inner">
+            <strong>MARIPOSA INDONESIA</strong>
+            <span>Minecraft Survival RPG</span>
+            <span style="font-family:'JetBrains Mono',monospace;">play.mariposa.id</span>
         </div>
     </footer>
 
@@ -236,6 +259,14 @@
         function mpToggleUserMenu() {
             const menu = document.getElementById('mp-user-menu');
             if (menu) menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function mpToggleSiteMenu() {
+            const menu = document.getElementById('mp-site-mobile-menu');
+            const button = document.getElementById('mp-site-menu-button');
+            const isOpen = menu.classList.toggle('is-open');
+            button.setAttribute('aria-expanded', String(isOpen));
+            button.setAttribute('aria-label', isOpen ? 'Tutup menu' : 'Buka menu');
         }
 
         document.addEventListener('click', (e) => {

@@ -45,7 +45,7 @@
     <table class="header-table">
         <tr>
             <td width="50%">
-                <div class="brand">Project Mariposa</div>
+                <div class="brand">Mariposa Indonesia</div>
                 <div class="brand-sub">Minecraft Survival Server Indonesia</div>
                 <div class="brand-sub">play.mariposa.id</div>
             </td>
@@ -118,7 +118,7 @@
     @endif
 
     <div class="footer">
-        Invoice ini dibuat otomatis oleh sistem Project Mariposa &middot; {{ now()->format('d M Y H:i') }} WIB
+        Invoice ini dibuat otomatis oleh sistem Mariposa Indonesia &middot; {{ now()->format('d M Y H:i') }} WIB
     </div>
 
 </body>

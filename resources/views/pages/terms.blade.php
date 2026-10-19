@@ -16,9 +16,9 @@
 </style>
 
 <div style="max-width:48rem;margin:0 auto;padding:3rem 1.5rem;">
-    <h1 style="font-size:2.5rem;font-weight:700;color:white;margin-bottom:0.5rem;">Syarat & Ketentuan Kontribusi & Layanan Mariposa</h1>
+    <h1 style="font-size:2.5rem;font-weight:700;color:white;margin-bottom:0.5rem;">Syarat & Ketentuan Kontribusi & Layanan Mariposa Indonesia</h1>
     <p style="color:#64748b;font-size:0.8125rem;margin-bottom:0.25rem;">Berlaku sejak: 15 September 2026 &nbsp;·&nbsp; Versi: 1.0</p>
-    <p style="color:#94a3b8;margin-bottom:2.5rem;line-height:1.7;">Selamat datang di Mariposa. Terima kasih atas dukungan kamu terhadap server kami — kontribusi kamu sangat berarti bagi pengembangan dan pemeliharaan server. Dengan melakukan kontribusi (pembayaran/pembelian) dan/atau menggunakan layanan kami, kamu menyatakan telah membaca, memahami, dan menyetujui seluruh Syarat dan Ketentuan ("S&K") berikut.</p>
+    <p style="color:#94a3b8;margin-bottom:2.5rem;line-height:1.7;">Selamat datang di Mariposa Indonesia. Terima kasih atas dukungan kamu terhadap server kami — kontribusi kamu sangat berarti bagi pengembangan dan pemeliharaan server. Dengan melakukan kontribusi (pembayaran/pembelian) dan/atau menggunakan layanan kami, kamu menyatakan telah membaca, memahami, dan menyetujui seluruh Syarat dan Ketentuan ("S&K") berikut.</p>
 
     <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:0.75rem;padding:1.25rem 1.5rem;margin-bottom:2.5rem;">
         <h3 style="color:#f87171;font-weight:600;margin:0 0 0.5rem;">⚠ Ringkasan: Kontribusi Bersifat Final</h3>
@@ -47,11 +47,11 @@
         <section id="s1">
             <h2>1. Definisi</h2>
             <ul>
-                <li><strong>Mariposa</strong> — layanan server Minecraft (termasuk seluruh mode permainan di dalamnya, mis. Survival, ChunkSMP, Anarchy) yang kami kelola dan operasikan di <code style="color:#a78bfa;">play.mariposa.id</code>.</li>
+                <li><strong>Mariposa Indonesia</strong> — layanan server Minecraft Survival RPG yang kami kelola dan operasikan di <code style="color:#a78bfa;">play.mariposa.id</code>.</li>
                 <li><strong>Kontribusi</strong> — pembayaran sukarela dari Pengguna melalui Store untuk mendukung operasional server, yang diiringi pemberian Manfaat Virtual sebagai bentuk apresiasi.</li>
-                <li><strong>Manfaat Virtual</strong> — rank, koin, item, crate key, dan/atau fitur lain yang diberikan kepada Pengguna sebagai apresiasi atas kontribusinya. Manfaat Virtual hanya berlaku di dalam server Mariposa.</li>
+                <li><strong>Manfaat Virtual</strong> — rank, koin, item, crate key, dan/atau fitur lain yang diberikan kepada Pengguna sebagai apresiasi atas kontribusinya. Manfaat Virtual hanya berlaku di dalam server Mariposa Indonesia.</li>
                 <li><strong>Pengguna / Kamu</strong> — individu yang menggunakan layanan kami dan/atau memberikan kontribusi.</li>
-                <li><strong>Pengelola / Kami</strong> — pihak yang menjalankan dan bertanggung jawab atas server Mariposa.</li>
+                <li><strong>Pengelola / Kami</strong> — pihak yang menjalankan dan bertanggung jawab atas server Mariposa Indonesia.</li>
             </ul>
         </section>
 
@@ -63,7 +63,7 @@
 
             <h3>2.2. Manfaat Virtual</h3>
             <ul>
-                <li>Hanya berlaku di server Mariposa dan tidak dapat digunakan di server atau platform lain.</li>
+                <li>Hanya berlaku di server Mariposa Indonesia dan tidak dapat digunakan di server atau platform lain.</li>
                 <li>Tidak dapat dipindahtangankan, dijual, atau ditukar antar akun.</li>
                 <li>Bukan merupakan uang, mata uang, aset digital, properti, atau barang yang dapat diuangkan kembali.</li>
                 <li>Bersifat lisensi penggunaan terbatas yang Kami berikan kepada kamu, dan bukan kepemilikan. Lisensi ini dapat dicabut sesuai S&K ini.</li>
@@ -80,7 +80,7 @@
             <p>Kami memperlakukan seluruh Pengguna secara setara dalam penerapan aturan server, penegakan sanksi, proses kontribusi, dan penanganan komplain — tanpa membedakan berdasarkan suku, agama, ras, antargolongan, gender, kebangsaan, kondisi fisik, atau latar belakang pribadi lainnya. Ketentuan ini tidak mengurangi perbedaan akses terhadap Manfaat Virtual yang memang merupakan bagian dari sistem kontribusi sebagaimana diatur pada Bagian 2, karena perbedaan tersebut bersifat sukarela dan terbuka bagi siapa pun yang memilih untuk berkontribusi.</p>
 
             <h3>3.2. Hak Mengajukan Keberatan</h3>
-            <p>Setiap Pengguna — baik kontributor maupun bukan — berhak mengajukan keberatan, klarifikasi, atau komplain atas keputusan moderasi, kendala teknis, atau hal lain terkait layanan Mariposa, melalui Discord resmi kami (Bagian 7). Setiap keberatan yang diajukan akan Kami tanggapi secara wajar. Pengajuan keberatan merupakan bagian dari proses peninjauan dan tidak menjamin pembatalan suatu keputusan; keputusan akhir tetap berada pada kewenangan tim moderasi sebagaimana diatur pada poin 8.1.</p>
+            <p>Setiap Pengguna — baik kontributor maupun bukan — berhak mengajukan keberatan, klarifikasi, atau komplain atas keputusan moderasi, kendala teknis, atau hal lain terkait layanan Mariposa Indonesia, melalui Discord resmi kami (Bagian 7). Setiap keberatan yang diajukan akan Kami tanggapi secara wajar. Pengajuan keberatan merupakan bagian dari proses peninjauan dan tidak menjamin pembatalan suatu keputusan; keputusan akhir tetap berada pada kewenangan tim moderasi sebagaimana diatur pada poin 8.1.</p>
 
             <h3>3.3. Ketidaksesuaian Manfaat yang Diterima</h3>
             <p>Apabila Manfaat Virtual yang kamu terima tidak sesuai dengan deskripsi paket yang berlaku pada saat transaksi — misalnya akibat informasi di Store yang belum diperbarui, fitur yang belum diberikan, atau jumlah koin yang kurang dari seharusnya — kamu dapat mengajukan komplain melalui Discord resmi kami (Bagian 7) disertai bukti transaksi (Order ID), paling lambat 14 (empat belas) hari sejak transaksi dilakukan. Kami wajib menindaklanjuti dan melengkapi atau menyesuaikan Manfaat Virtual agar sesuai dengan yang seharusnya kamu terima. Pelengkapan/penyesuaian ini merupakan bentuk penyelesaian utama untuk ketidaksesuaian semacam ini dan diprioritaskan dibanding pengembalian dana sebagaimana diatur pada Bagian 9.</p>
@@ -149,7 +149,7 @@
             <h3>8.1. Mematuhi aturan server — status kontributor tidak memberikan kekebalan</h3>
             <ul>
                 <li>Kontribusi yang kamu berikan adalah bentuk dukungan terhadap layanan, bukan pembelian hak istimewa untuk melanggar aturan, dan bukan "asuransi" atas pelanggaran yang kamu lakukan.</li>
-                <li>Kamu tetap wajib mematuhi seluruh <a href="{{ route('rules') }}">peraturan server</a>, kebijakan, dan keputusan tim moderasi Mariposa, baik di dalam server, Discord, maupun platform resmi lain — tanpa terkecuali, terlepas dari rank, koin, jumlah kontribusi, atau status lain yang kamu miliki.</li>
+                <li>Kamu tetap wajib mematuhi seluruh <a href="{{ route('rules') }}">peraturan server</a>, kebijakan, dan keputusan tim moderasi Mariposa Indonesia, baik di dalam server, Discord, maupun platform resmi lain — tanpa terkecuali, terlepas dari rank, koin, jumlah kontribusi, atau status lain yang kamu miliki.</li>
                 <li>Tindakan disipliner (peringatan, mute, kick, ban sementara, hingga ban permanen) tetap berlaku secara penuh terhadap kontributor sebagaimana berlaku terhadap pengguna lain. Rank atau koin tidak: membebaskan kamu dari sanksi atas pelanggaran yang dilakukan sebelum maupun setelah berkontribusi; menjadi alasan untuk peninjauan ulang, keringanan, atau pembatalan sanksi yang sudah dijatuhkan; atau menjadi bahan negosiasi ("saya sudah berkontribusi, masa di-ban") terhadap keputusan tim moderasi.</li>
                 <li><strong>Akibat terhadap kontribusi jika terkena sanksi.</strong> Apabila akun kamu dikenai sanksi karena melanggar aturan — termasuk namun tidak terbatas pada cheating, eksploitasi bug, toxic behavior, penipuan terhadap pengguna lain, atau pelanggaran lain — maka: kontribusi yang telah kamu berikan tetap dianggap sah dan final sebagaimana diatur dalam Bagian 9; tidak ada pengembalian dana dalam bentuk apa pun atas dasar akun terkena sanksi; dan Manfaat Virtual yang melekat pada akun tersebut dapat dicabut, dibekukan, atau dihapus sesuai berat pelanggaran, tanpa kompensasi. Ketentuan ini berlaku terlepas dari kapan kontribusi dilakukan — baik sebelum, bersamaan, maupun setelah pelanggaran terjadi.</li>
             </ul>
@@ -161,7 +161,7 @@
             <p>Kami berupaya maksimal menjaga server tetap online, namun tidak dapat menjamin layanan selalu tersedia tanpa gangguan. Jika terjadi peristiwa di luar kendali (force majeure), penutupan, atau gangguan serius yang menyebabkan Manfaat Virtual tidak lagi dapat digunakan, Kami tidak berkewajiban memberikan kompensasi, kecuali diatur lain dalam Bagian 9.</p>
 
             <h3>8.4. Transaksi di Luar Sistem Resmi (Jual-Beli Antar Pemain)</h3>
-            <p>Segala bentuk jual-beli, tukar-menukar, titip-beli, atau transaksi lain antar Pengguna yang dilakukan <strong>di luar Store resmi Mariposa</strong> — termasuk namun tidak terbatas pada jual-beli akun, rank, item, koin secara pribadi/player-to-player, real-money trading (RMT), atau kesepakatan lain di luar platform kami (baik dilakukan di dalam server, Discord, maupun platform pihak ketiga) — sepenuhnya merupakan tanggung jawab dan risiko masing-masing pihak yang terlibat. Kami tidak terlibat, tidak memfasilitasi, tidak menjamin, dan tidak bertanggung jawab atas kerugian, penipuan, atau perselisihan dalam bentuk apa pun yang timbul dari transaksi semacam itu.</p>
+            <p>Segala bentuk jual-beli, tukar-menukar, titip-beli, atau transaksi lain antar Pengguna yang dilakukan <strong>di luar Store resmi Mariposa Indonesia</strong> — termasuk namun tidak terbatas pada jual-beli akun, rank, item, koin secara pribadi/player-to-player, real-money trading (RMT), atau kesepakatan lain di luar platform kami (baik dilakukan di dalam server, Discord, maupun platform pihak ketiga) — sepenuhnya merupakan tanggung jawab dan risiko masing-masing pihak yang terlibat. Kami tidak terlibat, tidak memfasilitasi, tidak menjamin, dan tidak bertanggung jawab atas kerugian, penipuan, atau perselisihan dalam bentuk apa pun yang timbul dari transaksi semacam itu.</p>
             <p>Pengguna yang terbukti melakukan penipuan dalam transaksi tersebut tetap dapat dikenai sanksi sesuai peraturan server, namun penjatuhan sanksi tersebut tidak menimbulkan kewajiban ganti rugi atau pengembalian dana dari Kami kepada pihak yang dirugikan.</p>
         </section>
 

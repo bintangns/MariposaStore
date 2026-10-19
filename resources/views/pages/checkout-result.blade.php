@@ -6,7 +6,7 @@
     @if($status === 'success')
         <div style="font-size:4rem;margin-bottom:1.5rem;">🎉</div>
         <h1 style="font-size:2rem;font-weight:700;color:#4ade80;margin-bottom:1rem;">Pembayaran Berhasil!</h1>
-        <p style="color:#94a3b8;margin-bottom:2rem;">Rank kamu sudah aktif. Selamat bermain di Project Mariposa!</p>
+        <p style="color:#94a3b8;margin-bottom:2rem;">Rank kamu sudah aktif. Selamat bermain di Mariposa Indonesia!</p>
     @elseif($status === 'pending')
         <div style="font-size:4rem;margin-bottom:1.5rem;">⏳</div>
         <h1 style="font-size:2rem;font-weight:700;color:#fbbf24;margin-bottom:1rem;">Menunggu Pembayaran</h1>

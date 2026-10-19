@@ -4,7 +4,7 @@
 @section('content')
 <div style="max-width:56rem;margin:0 auto;padding:3rem 1.5rem;">
     <h1 style="font-size:2.5rem;font-weight:700;color:white;margin-bottom:0.5rem;">Tim Staff</h1>
-    <p style="color:#94a3b8;margin-bottom:3rem;">Orang-orang di balik Project Mariposa.</p>
+    <p style="color:#94a3b8;margin-bottom:3rem;">Orang-orang di balik Mariposa Indonesia.</p>
 
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1.25rem;">
         @foreach([
