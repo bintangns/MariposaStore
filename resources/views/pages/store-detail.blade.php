@@ -70,11 +70,17 @@
             <h1 style="font-size:2rem;font-weight:700;color:{{ $product->color ?? '#a78bfa' }};margin-bottom:1rem;">{{ $product->name }}</h1>
             <p style="color:#94a3b8;line-height:1.75;margin-bottom:1.5rem;">{{ $product->description }}</p>
 
-            @if($product->features)
+            @php
+                $visibleFeatures = collect($product->features ?? [])
+                    ->filter(fn ($feature) => is_string($feature) && trim($feature) !== '')
+                    ->map(fn ($feature) => trim($feature))
+                    ->values();
+            @endphp
+            @if($visibleFeatures->isNotEmpty())
             <div style="margin-bottom:1.5rem;">
                 <h3 style="font-size:0.875rem;text-transform:uppercase;letter-spacing:0.05em;color:#64748b;margin-bottom:0.75rem;">Yang kamu dapatkan</h3>
                 <ul style="display:flex;flex-direction:column;gap:0.625rem;">
-                    @foreach($product->features as $feature)
+                    @foreach($visibleFeatures as $feature)
                     <li style="display:flex;align-items:center;gap:0.75rem;color:#e2e8f0;font-size:0.875rem;">
                         <span style="color:{{ $product->color ?? '#a78bfa' }};font-size:1rem;">✦</span> {{ $feature }}
                     </li>

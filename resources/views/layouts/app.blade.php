@@ -23,16 +23,17 @@
         .mp-site-nav__links a,.mp-site-nav__mobile a { color:#a6a6b4; text-decoration:none; font-size:.82rem; font-weight:550; transition:color .2s; }
         .mp-site-nav__links a:hover,.mp-site-nav__links a[aria-current="page"],.mp-site-nav__mobile a:hover,.mp-site-nav__mobile a[aria-current="page"] { color:#f7cc78; }
         .mp-site-nav__actions { display:flex; align-items:center; gap:.65rem; flex:none; }
-        .mp-site-nav__ip { border:1px solid #688459; border-radius:0; background:#243322; color:#cfe9bb; padding:.48rem .7rem; font-family:'JetBrains Mono',monospace; font-size:.68rem; cursor:pointer; }
+        .mp-site-nav__ip { border:1px solid #688459; border-radius:0; background:#243322; color:#cfe9bb; padding:.48rem .7rem; font-family:'JetBrains Mono',monospace; font-size:.68rem; cursor:pointer; white-space:nowrap; }
+        .mp-site-nav__ip-label { color:#f3cf86; margin-right:.3rem; }
         .mp-site-nav__login { border:1px solid #668055; border-radius:0; background:#263521; color:#e6f0db; padding:.48rem .8rem; font-family:'JetBrains Mono',monospace; font-size:.75rem; cursor:pointer; }
         .mp-site-nav__menu-button { display:none; width:2.5rem; height:2.5rem; border:1px solid #668055; border-radius:0; background:#263521; color:#fff; font-size:1.25rem; cursor:pointer; }
         .mp-site-nav__mobile { display:none; padding:.35rem 1.5rem 1.15rem; border-top:1px solid #506644; background:#172016; }
         .mp-site-nav__mobile.is-open { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.2rem .8rem; }
         .mp-site-nav__mobile a { padding:.65rem .25rem; }
         .mp-site-footer { border-top:2px solid #506644; padding:2.5rem 0; margin-top:5rem; background:#0c100c; }
-        .mp-site-footer__inner { max-width:76rem; margin:auto; padding:0 1.5rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; color:#898999; font-size:.8rem; }
+        .mp-site-footer__inner { max-width:76rem; margin:auto; padding:0 1.5rem; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:1rem; color:#898999; font-size:.8rem; }
         .mp-site-footer__inner strong { color:#f5d28d; letter-spacing:.08em; }
-        @media(max-width:1050px) { .mp-site-nav__links { gap:.7rem; } .mp-site-nav__ip { display:none; } }
+        @media(max-width:1120px) { .mp-site-nav__links { gap:.7rem; } .mp-site-nav__ip { display:none; } }
         @media(max-width:850px) { .mp-site-nav__links { display:none; } .mp-site-nav__menu-button { display:block; } }
         @media(min-width:851px) { .mp-site-nav__mobile.is-open { display:none; } }
         @media(max-width:560px) { .mp-site-nav__inner { padding:0 1rem; } .mp-site-nav__brand span { display:none; } .mp-site-footer__inner { flex-direction:column; text-align:center; } }
@@ -65,8 +66,10 @@
                 @endforeach
             </div>
             <div class="mp-site-nav__actions">
-                <button type="button" onclick="mpCopyServerIp(this)" title="Klik untuk salin IP server"
-                    class="mp-site-nav__ip"><span class="mp-ip-text">play.mariposa.id</span></button>
+                <button type="button" onclick="mpCopyServerIp(this)" data-ip="play.mariposa.id" title="Salin alamat server Java"
+                    class="mp-site-nav__ip"><span class="mp-site-nav__ip-label">Java</span><span class="mp-ip-text">play.mariposa.id</span></button>
+                <button type="button" onclick="mpCopyServerIp(this)" data-ip="bedrock.mariposa.id:20601" title="Salin bedrock.mariposa.id:20601"
+                    class="mp-site-nav__ip"><span class="mp-ip-text">⧉ Bedrock IP</span></button>
 
                 @if(session('verified_username'))
                 <div style="position:relative;">
@@ -99,7 +102,7 @@
         <div style="background:#13131a;border:1px solid rgba(255,255,255,0.1);border-radius:1rem;padding:2rem;max-width:24rem;width:100%;position:relative;box-sizing:border-box;">
             <button onclick="mpCloseVerifyModal()" type="button" style="position:absolute;top:1rem;right:1rem;background:none;border:none;color:#64748b;font-size:1.25rem;cursor:pointer;line-height:1;">×</button>
             <h3 style="font-weight:600;color:white;font-size:1.125rem;margin-bottom:0.5rem;">Masukkan Username Minecraft</h3>
-            <p style="color:#94a3b8;font-size:0.8125rem;margin-bottom:1.25rem;">Username harus sudah pernah join ke play.mariposa.id minimal sekali.</p>
+            <p style="color:#94a3b8;font-size:0.8125rem;margin-bottom:1.25rem;">Username harus sudah pernah join ke server Mariposa Indonesia minimal sekali.</p>
             <div id="mp-platform-toggle" class="mp-platform-toggle">
                 <button type="button" class="mp-platform-btn active" data-platform="java">🖥️ Java</button>
                 <button type="button" class="mp-platform-btn" data-platform="bedrock">📱 Bedrock</button>
@@ -139,7 +142,7 @@
         <div class="mp-site-footer__inner">
             <strong>MARIPOSA INDONESIA</strong>
             <span>Minecraft Survival RPG</span>
-            <span style="font-family:'JetBrains Mono',monospace;">play.mariposa.id</span>
+            <span style="font-family:'JetBrains Mono',monospace;overflow-wrap:anywhere;">Java: play.mariposa.id · Bedrock: bedrock.mariposa.id:20601</span>
         </div>
     </footer>
 
@@ -247,7 +250,8 @@
         }
 
         function mpCopyServerIp(btn) {
-            const ip = 'play.mariposa.id';
+            const ip = btn.dataset.ip;
+            if (!ip) return;
             navigator.clipboard.writeText(ip).then(() => {
                 const textEl = btn.querySelector('.mp-ip-text') || btn;
                 const original = textEl.textContent;

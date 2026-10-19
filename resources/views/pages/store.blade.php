@@ -10,7 +10,7 @@
     .mp-store-hero__eyebrow { position:relative; z-index:1; color:#f4c56f; font-family:'JetBrains Mono',monospace; font-size:.7rem; font-weight:700; letter-spacing:.12em; }
     .mp-store-hero h1 { position:relative; z-index:1; max-width:34rem; color:#fff; font-family:'JetBrains Mono',monospace; font-size:clamp(2rem,4vw,3.1rem); font-weight:800; letter-spacing:-.05em; line-height:1.12; margin:.65rem 0; text-shadow:3px 3px 0 #1e2b1d; }
     .mp-store-hero p { position:relative; z-index:1; max-width:34rem; color:#e0e7d9; font-size:.9rem; line-height:1.65; text-shadow:0 2px 8px #000; }
-    .mp-store-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:1.25rem; align-items:stretch; }
+    .mp-store-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1.25rem; align-items:stretch; }
     .mp-store-card { --card-accent:#a78bfa; position:relative; display:flex; flex-direction:column; min-width:0; padding:1.5rem; border:2px solid color-mix(in srgb,var(--card-accent) 55%,#3b4f38); border-radius:0; background:linear-gradient(160deg,color-mix(in srgb,var(--card-accent) 7%,#1b2519),#151c15 42%,#101610); box-shadow:5px 5px 0 #080b08; transition:transform .2s,border-color .2s,box-shadow .2s; }
     .mp-store-card:hover { transform:translate(-2px,-2px); border-color:var(--card-accent); box-shadow:7px 7px 0 #080b08; }
     .mp-store-card:focus-within { border-color:var(--card-accent); }
@@ -25,18 +25,20 @@
     .mp-store-card__price-value { color:#fff; font-size:clamp(1.65rem,2.5vw,2.2rem); font-weight:800; line-height:1.2; letter-spacing:-.045em; margin-top:.25rem; white-space:nowrap; }
     .mp-store-card__price-value span { color:#aaaabc; font-size:.85rem; font-weight:500; letter-spacing:0; margin-right:.22rem; }
     .mp-store-card__price-note { color:#a1a1b1; font-size:.74rem; line-height:1.45; margin-top:.4rem; }
-    .mp-store-card__features { list-style:none; padding:1.3rem 0 1.5rem; margin:0; display:flex; flex-direction:column; gap:.72rem; flex:1; }
-    .mp-store-card__features li { display:flex; align-items:flex-start; gap:.65rem; color:#c2c2d0; font-size:.83rem; line-height:1.4; overflow-wrap:anywhere; }
+    .mp-store-card__features { list-style:none; padding:1.15rem 0 .65rem; margin:0; display:flex; flex-direction:column; gap:.7rem; }
+    .mp-store-card__features li { display:flex; align-items:flex-start; gap:.65rem; color:#c2c2d0; font-size:.83rem; line-height:1.45; overflow-wrap:anywhere; }
     .mp-store-card__check { flex:none; display:grid; place-items:center; width:1.15rem; height:1.15rem; margin-top:.04rem; border:1px solid color-mix(in srgb,var(--card-accent) 55%,transparent); background:color-mix(in srgb,var(--card-accent) 22%,transparent); color:var(--card-accent); font-size:.74rem; font-weight:700; }
-    .mp-store-card__empty { color:#818193; font-size:.8rem; line-height:1.5; padding:1.25rem 0; flex:1; }
-    .mp-store-card__action { display:flex; justify-content:center; align-items:center; min-height:2.9rem; width:100%; padding:.65rem .9rem; border:2px solid color-mix(in srgb,var(--card-accent) 60%,#3e5139); border-radius:0; background:color-mix(in srgb,var(--card-accent) 14%,#202c1f); color:#fff; text-align:center; text-decoration:none; font-family:'JetBrains Mono',monospace; font-size:.82rem; font-weight:700; transition:background .2s,transform .2s; }
+    .mp-store-card__more { display:inline-flex; align-self:flex-start; margin:0 0 1.4rem 1.8rem; color:var(--card-accent); font-family:'JetBrains Mono',monospace; font-size:.72rem; font-weight:700; text-decoration:none; }
+    .mp-store-card__more:hover { text-decoration:underline; }
+    .mp-store-card__more:focus-visible { outline:2px solid var(--card-accent); outline-offset:3px; }
+    .mp-store-card__empty { color:#818193; font-size:.8rem; line-height:1.5; padding:1.25rem 0; }
+    .mp-store-card__action { display:flex; justify-content:center; align-items:center; min-height:2.9rem; width:100%; margin-top:auto; padding:.65rem .9rem; border:2px solid color-mix(in srgb,var(--card-accent) 60%,#3e5139); border-radius:0; background:color-mix(in srgb,var(--card-accent) 14%,#202c1f); color:#fff; text-align:center; text-decoration:none; font-family:'JetBrains Mono',monospace; font-size:.82rem; font-weight:700; transition:background .2s,transform .2s; }
     .mp-store-card__action:hover { background:color-mix(in srgb,var(--card-accent) 28%,#17171f); transform:translateY(-1px); }
     .mp-store-card__action:focus-visible { outline:2px solid var(--card-accent); outline-offset:3px; }
     .mp-store-card__action--disabled { color:#89899a; border-color:rgba(255,255,255,.09); background:rgba(255,255,255,.04); cursor:not-allowed; }
     .mp-store-card__action--disabled:hover { background:rgba(255,255,255,.04); transform:none; }
     .mp-store-card__status { color:#9292a3; text-align:center; font-size:.72rem; line-height:1.4; margin-top:.55rem; }
-    @media (max-width:1100px) { .mp-store-grid { grid-template-columns:repeat(3,minmax(0,1fr)); } }
-    @media (max-width:800px) { .mp-store-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+    @media (max-width:880px) { .mp-store-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
     @media (max-width:560px) { .mp-store-grid { grid-template-columns:1fr; } .mp-store-card { padding:1.4rem; } .mp-store-card__description { min-height:0; } .mp-store-hero { padding:1.6rem; } .mp-store-hero::after { right:-8%; font-size:8rem; } }
     @media (prefers-reduced-motion:reduce) { .mp-store-card,.mp-store-card__action { transition:none; } .mp-store-card:hover,.mp-store-card__action:hover { transform:none; } }
 </style>
@@ -98,6 +100,14 @@
         <h2 style="font-size:1.25rem;font-weight:600;color:#94a3b8;margin-bottom:1.5rem;text-transform:uppercase;letter-spacing:0.05em;font-size:0.875rem;">{{ $category }}</h2>
         <div class="mp-store-grid">
             @foreach($items as $product)
+            @php
+                $visibleFeatures = collect($product->features ?? [])
+                    ->filter(fn ($feature) => is_string($feature) && trim($feature) !== '')
+                    ->map(fn ($feature) => trim($feature))
+                    ->values();
+                $featurePreview = $visibleFeatures->take(5);
+                $remainingFeatures = $visibleFeatures->count() - $featurePreview->count();
+            @endphp
             <article class="mp-store-card" style="--card-accent:{{ $product->color ?? '#a78bfa' }};">
                 <div class="mp-store-card__top">
                     <div class="mp-store-card__icon" aria-hidden="true">
@@ -173,12 +183,15 @@
                     <p class="mp-store-card__price-note">Pilih durasi dan lihat totalnya di halaman berikutnya</p>
                     @endif
                 </div>
-                @if(!empty($product->features))
+                @if($visibleFeatures->isNotEmpty())
                 <ul class="mp-store-card__features" aria-label="Benefit {{ $product->name }}">
-                    @foreach($product->features as $feature)
+                    @foreach($featurePreview as $feature)
                     <li><span class="mp-store-card__check" aria-hidden="true">✓</span><span>{{ $feature }}</span></li>
                     @endforeach
                 </ul>
+                @if($remainingFeatures > 0)
+                <a href="{{ route('store.show', $product) }}" class="mp-store-card__more">+{{ $remainingFeatures }} benefit lainnya →</a>
+                @endif
                 @else
                 <p class="mp-store-card__empty">Lihat detail produk untuk informasi lengkap.</p>
                 @endif

@@ -18,6 +18,7 @@
     .mp-rpg-hero__copy { display:inline-flex; align-items:center; gap:.7rem; min-height:3.15rem; padding:.82rem 1rem; border:2px solid #839677; border-radius:0; background:#182218; box-shadow:4px 4px 0 #070b08; color:#f6f6ec; font-family:'JetBrains Mono',monospace; font-size:.82rem; font-weight:700; cursor:pointer; }
     .mp-rpg-hero__copy:hover { background:#253726; border-color:#a7c796; }
     .mp-rpg-hero__copy span:first-child { color:#9cde90; }
+    .mp-rpg-hero__platform { color:#efc76f; font-size:.7rem; text-transform:uppercase; }
     .mp-rpg-hero__hint { color:#d0d2c5; font-size:.78rem; margin-top:1.15rem; text-shadow:0 2px 8px #000; }
     .mp-rpg-strip { position:relative; z-index:2; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1px; margin-top:-2.2rem; border:2px solid #4b5b42; background:#4b5b42; box-shadow:7px 7px 0 #080b08; }
     .mp-rpg-strip__item { display:flex; align-items:center; gap:1rem; min-height:5.4rem; padding:1rem 1.35rem; background:#1a2119; }
@@ -78,7 +79,7 @@
     .mp-rpg-cta h2 { color:#fff; font-family:'JetBrains Mono',monospace; font-size:clamp(1.5rem,3vw,2.3rem); line-height:1.2; letter-spacing:-.04em; margin:.8rem 0 .4rem; }
     .mp-rpg-cta p { color:#b8bdac; font-size:.86rem; }
     @media(max-width:800px) { .mp-rpg-hero { min-height:38rem; background-position:58% center; } .mp-rpg-hero h1 { max-width:12ch; } .mp-rpg-cards,.mp-rpg-systems__grid,.mp-rpg-dungeons__grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .mp-rpg-lore { grid-template-columns:1fr; } .mp-rpg-lore__seal { min-height:10rem; } }
-    @media(max-width:640px) { .mp-rpg__wrap { padding:0 1rem; } .mp-rpg-hero { min-height:39rem; align-items:end; background-position:66% center; background-image:linear-gradient(0deg,rgba(8,12,9,.98),rgba(8,12,9,.75) 42%,rgba(8,12,9,.18) 90%),url('{{ asset('images/survival-rpg-hero.jpg') }}'); } .mp-rpg-hero__content { padding-top:3rem; padding-bottom:3.5rem; } .mp-rpg-hero h1 { font-size:clamp(3rem,13vw,4.4rem); } .mp-rpg-strip { grid-template-columns:1fr; margin-top:-1rem; } .mp-rpg-strip__item { min-height:4.7rem; } .mp-rpg-section { padding:5rem 0 4rem; } .mp-rpg-cards,.mp-rpg-systems__grid,.mp-rpg-dungeons__grid { grid-template-columns:1fr; } .mp-rpg-systems { padding-bottom:4.5rem; } .mp-rpg-lore,.mp-rpg-guild { padding:1.3rem; margin-bottom:4.5rem; } .mp-rpg-guild__features,.mp-rpg-quests__grid { grid-template-columns:1fr; } .mp-rpg-dungeons,.mp-rpg-quests { margin-bottom:4.5rem; } .mp-rpg-cta { display:block; padding:1.5rem; } .mp-rpg-cta .btn-primary { width:100%; margin-top:1.4rem; } }
+    @media(max-width:640px) { .mp-rpg__wrap { padding:0 1rem; } .mp-rpg-hero { min-height:39rem; align-items:end; background-position:66% center; background-image:linear-gradient(0deg,rgba(8,12,9,.98),rgba(8,12,9,.75) 42%,rgba(8,12,9,.18) 90%),url('{{ asset('images/survival-rpg-hero.jpg') }}'); } .mp-rpg-hero__content { padding-top:3rem; padding-bottom:3.5rem; } .mp-rpg-hero h1 { font-size:clamp(3rem,13vw,4.4rem); } .mp-rpg-hero__copy { width:100%; justify-content:space-between; font-size:.72rem; padding:.7rem .8rem; } .mp-rpg-strip { grid-template-columns:1fr; margin-top:-1rem; } .mp-rpg-strip__item { min-height:4.7rem; } .mp-rpg-section { padding:5rem 0 4rem; } .mp-rpg-cards,.mp-rpg-systems__grid,.mp-rpg-dungeons__grid { grid-template-columns:1fr; } .mp-rpg-systems { padding-bottom:4.5rem; } .mp-rpg-lore,.mp-rpg-guild { padding:1.3rem; margin-bottom:4.5rem; } .mp-rpg-guild__features,.mp-rpg-quests__grid { grid-template-columns:1fr; } .mp-rpg-dungeons,.mp-rpg-quests { margin-bottom:4.5rem; } .mp-rpg-cta { display:block; padding:1.5rem; } .mp-rpg-cta .btn-primary { width:100%; margin-top:1.4rem; } }
     @media(prefers-reduced-motion:reduce) { .mp-rpg-card { transition:none; } .mp-rpg-card:hover { transform:none; } }
 </style>
 @endpush
@@ -92,9 +93,10 @@
             <p class="mp-rpg-hero__lead">Begin your adventure. Bangun rumah, kembangkan karakter, jalani quest, dan bantu bangkitkan kembali Kerajaan Mariposa bersama petualang lain.</p>
             <div class="mp-rpg-hero__actions">
                 <a href="{{ route('store') }}" class="btn-primary">Jelajahi Rank <span aria-hidden="true" style="margin-left:.6rem;">↗</span></a>
-                <button type="button" class="mp-rpg-hero__copy" onclick="mpCopyServerIp(this)" title="Salin IP server"><span aria-hidden="true">▣</span><span class="mp-ip-text">play.mariposa.id</span></button>
+                <button type="button" class="mp-rpg-hero__copy" onclick="mpCopyServerIp(this)" data-ip="play.mariposa.id" title="Salin alamat server Java"><span class="mp-rpg-hero__platform">Java</span><span class="mp-ip-text">play.mariposa.id</span></button>
+                <button type="button" class="mp-rpg-hero__copy" onclick="mpCopyServerIp(this)" data-ip="bedrock.mariposa.id:20601" title="Salin alamat dan port server Bedrock"><span class="mp-rpg-hero__platform">Bedrock</span><span class="mp-ip-text">bedrock.mariposa.id:20601</span></button>
             </div>
-            <p class="mp-rpg-hero__hint">Salin alamat server, lalu tambahkan di daftar server Minecraft kamu.</p>
+            <p class="mp-rpg-hero__hint">Java: gunakan alamat server. Bedrock: masukkan <strong>bedrock.mariposa.id</strong> sebagai alamat dan <strong>20601</strong> sebagai port.</p>
         </div>
     </section>
 
@@ -219,7 +221,7 @@
 
         <section class="mp-rpg-cta" aria-labelledby="mp-rpg-community-title">
             <div><span class="mp-rpg__eyebrow">Komunitas Mariposa Indonesia</span><h2 id="mp-rpg-community-title">Petualangan lebih seru bersama.</h2><p>Temui pemain lain dan ikuti kabar server melalui Discord.</p></div>
-            <a href="https://discord.gg/GSzE45fpz" target="_blank" rel="noopener noreferrer" class="btn-primary">Gabung Discord ↗</a>
+            <a href="https://discord.gg/eY9HaRREyV" target="_blank" rel="noopener noreferrer" class="btn-primary">Gabung Discord ↗</a>
         </section>
     </div>
 </div>
