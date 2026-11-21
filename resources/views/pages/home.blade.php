@@ -20,6 +20,13 @@
     .mp-rpg-hero__copy span:first-child { color:#9cde90; }
     .mp-rpg-hero__platform { color:#efc76f; font-size:.7rem; text-transform:uppercase; }
     .mp-rpg-hero__hint { color:#d0d2c5; font-size:.78rem; margin-top:1.15rem; text-shadow:0 2px 8px #000; }
+    .mp-rpg-hero__vote { display:flex; flex-wrap:wrap; align-items:center; gap:.6rem; margin-top:1.3rem; }
+    .mp-rpg-hero__vote-label { width:100%; color:#efc76f; font-family:'JetBrains Mono',monospace; font-size:.74rem; font-weight:700; text-shadow:0 2px 8px #000; }
+    .mp-rpg-hero__vote-btn { display:inline-flex; align-items:center; min-height:2.6rem; padding:.6rem .95rem; background:#e9c776; color:#1a1408; font-family:'JetBrains Mono',monospace; font-size:.78rem; font-weight:800; text-decoration:none; box-shadow:4px 4px 0 #5d4a1f; transition:transform .15s,background .15s; }
+    .mp-rpg-hero__vote-btn:hover { background:#f6d88d; transform:translate(-2px,-2px); }
+    .mp-rpg-hero__vote-btn:focus-visible { outline:2px solid #fff; outline-offset:3px; }
+    @media(max-width:640px) { .mp-rpg-hero__vote-btn { flex:1 1 100%; justify-content:center; } }
+    @media(prefers-reduced-motion:reduce) { .mp-rpg-hero__vote-btn { transition:none; } .mp-rpg-hero__vote-btn:hover { transform:none; } }
     .mp-rpg-status { max-width:34rem; margin-top:1.4rem; padding:.85rem 1rem; border:2px solid #48553d; background:rgba(14,20,14,.82); box-shadow:4px 4px 0 #070b08; font-family:'JetBrains Mono',monospace; }
     .mp-rpg-status__head { display:flex; align-items:center; gap:.6rem; color:#f6f6ec; font-size:.8rem; font-weight:700; }
     .mp-rpg-status__dot { width:.6rem; height:.6rem; flex:none; background:#8a8f80; }
@@ -106,6 +113,12 @@
 @endpush
 
 @section('content')
+@php
+            $voteSites = [
+                ['name' => 'Minecraft-MP', 'url' => 'https://minecraft-mp.com/server-s363993'],
+                ['name' => 'IOMC Server List', 'url' => 'https://iomcserverlist.biz.id/server.php?id=61'],
+            ];
+@endphp
 <div class="mp-rpg">
     <section class="mp-rpg-hero" aria-labelledby="mp-rpg-title">
         <div class="mp-rpg__wrap mp-rpg-hero__content">
@@ -118,6 +131,13 @@
                 <button type="button" class="mp-rpg-hero__copy" onclick="mpCopyServerIp(this)" data-ip="play.mariposa.id:19132" title="Salin alamat dan port server Bedrock"><span class="mp-rpg-hero__platform">Bedrock</span><span class="mp-ip-text">play.mariposa.id:19132</span></button>
             </div>
             <p class="mp-rpg-hero__hint">Java: gunakan alamat server. Bedrock: masukkan <strong>play.mariposa.id</strong> sebagai alamat dan <strong>19132</strong> sebagai port.</p>
+
+            <div class="mp-rpg-hero__vote" aria-label="Vote server">
+                <span class="mp-rpg-hero__vote-label">★ Vote server, bantu Mariposa naik peringkat:</span>
+                @foreach($voteSites as $site)
+                <a href="{{ $site['url'] }}" target="_blank" rel="noopener noreferrer" class="mp-rpg-hero__vote-btn">Vote di {{ $site['name'] }} ↗</a>
+                @endforeach
+            </div>
 
             <div class="mp-rpg-status" id="mp-server-status" data-state="loading" aria-live="polite">
                 <div class="mp-rpg-status__head">
@@ -248,12 +268,6 @@
             </div>
         </section>
 
-        @php
-            $voteSites = [
-                ['name' => 'Minecraft-MP', 'url' => 'https://minecraft-mp.com/server-s363993'],
-                ['name' => 'IOMC Server List', 'url' => 'https://iomcserverlist.biz.id/server.php?id=61'],
-            ];
-        @endphp
         <section class="mp-rpg-vote" id="vote" aria-labelledby="mp-rpg-vote-title">
             <div class="mp-rpg-section__heading">
                 <span class="mp-rpg__eyebrow">Dukung Server</span>
