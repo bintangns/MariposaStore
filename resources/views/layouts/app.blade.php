@@ -64,6 +64,7 @@
                 @foreach(['home' => 'Beranda', 'store' => 'Store', 'rules' => 'Peraturan', 'staff' => 'Staff', 'terms' => 'S&K', 'orders' => 'Riwayat', 'nicknames' => 'Koleksi'] as $routeName => $label)
                 <a href="{{ route($routeName) }}" @if(request()->routeIs($routeName, $routeName.'.*')) aria-current="page" @endif>{{ $label }}</a>
                 @endforeach
+                <a href="{{ route('home') }}#vote">Vote</a>
             </div>
             <div class="mp-site-nav__actions">
                 <button type="button" onclick="mpCopyServerIp(this)" data-ip="play.mariposa.id" title="Salin alamat server Java"
@@ -94,6 +95,7 @@
             @foreach(['home' => 'Beranda', 'store' => 'Store', 'rules' => 'Peraturan', 'staff' => 'Staff', 'terms' => 'S&K', 'orders' => 'Riwayat', 'nicknames' => 'Koleksi'] as $routeName => $label)
             <a href="{{ route($routeName) }}" @if(request()->routeIs($routeName, $routeName.'.*')) aria-current="page" @endif>{{ $label }}</a>
             @endforeach
+            <a href="{{ route('home') }}#vote">Vote</a>
         </div>
     </nav>
 

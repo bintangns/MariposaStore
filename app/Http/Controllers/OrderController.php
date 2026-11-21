@@ -14,6 +14,8 @@ class OrderController extends Controller
         $orders   = collect();
 
         if ($username) {
+            Order::purgeAbandoned();
+
             $orders = Order::with('product')
                 ->whereRaw('LOWER(minecraft_username) = ?', [$username])
                 ->latest()

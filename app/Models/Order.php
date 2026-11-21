@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class Order extends Model
 {
@@ -68,6 +69,95 @@ class Order extends Model
         }
 
         return false;
+    }
+
+    /**
+     * Masa tenggang setelah customer meninggalkan halaman pembayaran.
+     * Kalau dia balik lagi (refresh / tombol back) dalam waktu ini, order
+     * dipulihkan; kalau nggak, order dianggap ditinggal & ikut dihapus.
+     */
+    public const LEAVE_GRACE_SECONDS = 30;
+
+    /**
+     * Order "pending murni" (belum upload bukti, belum lunas) — satu-satunya
+     * jenis order yang boleh dibatalkan/dihapus otomatis.
+     */
+    public function isUnpaidPending(): bool
+    {
+        return $this->status === 'pending' && !$this->payment_proof;
+    }
+
+    /**
+     * Customer menutup / meninggalkan halaman pembayaran: percepat batas
+     * waktunya jadi LEAVE_GRACE_SECONDS dari sekarang.
+     */
+    public function markPaymentPageLeft(): void
+    {
+        if (!$this->isUnpaidPending()) {
+            return;
+        }
+
+        $graceEnd = now()->addSeconds(self::LEAVE_GRACE_SECONDS);
+
+        if (!$this->expires_at || $this->expires_at->gt($graceEnd)) {
+            $this->update(['expires_at' => $graceEnd]);
+        }
+    }
+
+    /**
+     * Customer balik lagi ke halaman pembayaran sebelum masa tenggang habis
+     * (mis. refresh): kembalikan batas waktu normalnya.
+     */
+    public function markPaymentPageBack(): void
+    {
+        // Sengaja gak panggil expireIfNeeded() dulu: selama order belum
+        // dibatalkan/dihapus, customer yang terbukti masih di halaman
+        // pembayaran berhak dapat sisa waktu normalnya lagi.
+        if (!$this->isUnpaidPending()) {
+            return;
+        }
+
+        $normalEnd = $this->created_at->copy()->addMinutes(self::PAYMENT_EXPIRY_MINUTES);
+
+        if ($normalEnd->isFuture() && (!$this->expires_at || $this->expires_at->lt($normalEnd))) {
+            $this->update(['expires_at' => $normalEnd]);
+        }
+    }
+
+    /**
+     * Hapus permanen order yang ditinggal tanpa dibayar, biar daftar order
+     * admin gak penuh spam:
+     *  - pending tanpa bukti transfer yang batas waktunya udah lewat, dan
+     *  - order yang udah dibatalkan (expired / dibatalkan customer) tanpa bukti transfer.
+     * Order yang udah upload bukti, lunas, terkirim, atau failed TIDAK disentuh.
+     * Nickname "inventory" yang dibuat bareng order-nya ikut dihapus — kalau
+     * nggak, FK-nya jadi null dan nickname-nya nyangkut sebagai data yatim.
+     */
+    public static function purgeAbandoned(): int
+    {
+        $ids = static::query()
+            ->whereNull('payment_proof')
+            ->where(function ($q) {
+                $q->where(function ($q) {
+                    $q->where('status', 'pending')
+                        ->whereNotNull('expires_at')
+                        ->where('expires_at', '<', now());
+                })->orWhere(function ($q) {
+                    $q->where('status', 'cancelled')
+                        ->whereIn('payment_status', ['expired', 'cancelled_by_user']);
+                });
+            })
+            ->pluck('id');
+
+        if ($ids->isEmpty()) {
+            return 0;
+        }
+
+        return DB::transaction(function () use ($ids) {
+            PlayerNickname::whereIn('order_id', $ids)->delete();
+
+            return static::whereIn('id', $ids)->delete();
+        });
     }
 
     /**

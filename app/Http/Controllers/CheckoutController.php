@@ -215,6 +215,9 @@ class CheckoutController extends Controller
     {
         abort_unless(strtolower($order->minecraft_username) === session('verified_username'), 403);
 
+        // Sekaligus cek expired & pulihkan batas waktu normal kalau customer
+        // cuma refresh / balik lagi dalam masa tenggang (lihat presence()).
+        $order->markPaymentPageBack();
         $order->expireIfNeeded();
 
         if ($order->status !== 'pending') {
@@ -232,6 +235,9 @@ class CheckoutController extends Controller
     {
         abort_unless(strtolower($order->minecraft_username) === session('verified_username'), 403);
 
+        // Customer masih di halaman pembayaran (submit form) — batalkan efek
+        // "ninggalin halaman" yang mungkin kepicu waktu dia buka app bank.
+        $order->markPaymentPageBack();
         $order->expireIfNeeded();
 
         if ($order->status !== 'pending') {
@@ -287,6 +293,26 @@ class CheckoutController extends Controller
         }
 
         return view('pages.checkout-result', ['status' => 'cancelled', 'order' => $order->fresh()]);
+    }
+
+    /**
+     * Dipanggil lewat navigator.sendBeacon dari halaman pembayaran:
+     * state=left  -> customer nutup / ninggalin halaman, order dibatalkan
+     *                 kalau dia gak balik dalam Order::LEAVE_GRACE_SECONDS;
+     * state=back  -> halaman dibuka lagi dari cache browser (tombol back),
+     *                 batas waktu normalnya dipulihkan.
+     */
+    public function presence(Request $request, Order $order)
+    {
+        if (strtolower($order->minecraft_username) !== session('verified_username')) {
+            return response()->noContent(403);
+        }
+
+        $request->input('state') === 'back'
+            ? $order->markPaymentPageBack()
+            : $order->markPaymentPageLeft();
+
+        return response()->noContent();
     }
 
     public function notification(Request $request)

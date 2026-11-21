@@ -24,6 +24,8 @@ class AdminController extends Controller
 
     public function index(Request $request)
     {
+        Order::purgeAbandoned();
+
         $stats = [
             'total_orders'     => Order::count(),
             'total_revenue'    => Order::where('status', 'delivered')->sum('amount'),
@@ -347,6 +349,8 @@ class AdminController extends Controller
 
     public function orders()
     {
+        Order::purgeAbandoned();
+
         $orders = Order::with('product')->latest()->paginate(20);
         return view('admin.orders', compact('orders'));
     }

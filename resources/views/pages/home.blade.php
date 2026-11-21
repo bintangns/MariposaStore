@@ -86,6 +86,16 @@
     .mp-rpg-quests__grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.7rem; }
     .mp-rpg-quest { padding:1rem 1.1rem; border:1px solid #51674a; background:#1a2419; color:#e7ecd9; font-family:'JetBrains Mono',monospace; font-size:.78rem; }
     .mp-rpg-quest::before { content:"✦"; margin-right:.65rem; color:#e9c776; }
+    .mp-rpg-vote { margin-bottom:5.5rem; scroll-margin-top:6rem; }
+    .mp-rpg-vote__grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.9rem; }
+    .mp-rpg-vote__site { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:1.2rem 1.3rem; border:2px solid #51674a; background:#1a2419; box-shadow:4px 4px 0 #070b08; color:#f7f5e9; text-decoration:none; transition:border-color .2s,background .2s,transform .2s; }
+    .mp-rpg-vote__site:hover { border-color:#e9c776; background:#223021; transform:translate(-2px,-2px); }
+    .mp-rpg-vote__site:focus-visible { outline:2px solid #e9c776; outline-offset:3px; }
+    .mp-rpg-vote__num { color:#e9c776; font-family:'JetBrains Mono',monospace; font-size:.7rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; }
+    .mp-rpg-vote__name { display:block; margin-top:.3rem; font-family:'JetBrains Mono',monospace; font-size:.95rem; font-weight:700; overflow-wrap:anywhere; }
+    .mp-rpg-vote__go { flex:none; padding:.55rem .85rem; background:#e9c776; color:#1a1408; font-family:'JetBrains Mono',monospace; font-size:.75rem; font-weight:800; box-shadow:3px 3px 0 #5d4a1f; }
+    @media(max-width:640px) { .mp-rpg-vote__grid { grid-template-columns:1fr; } .mp-rpg-vote { margin-bottom:4.5rem; } }
+    @media(prefers-reduced-motion:reduce) { .mp-rpg-vote__site { transition:none; } .mp-rpg-vote__site:hover { transform:none; } }
     .mp-rpg-cta { display:flex; justify-content:space-between; align-items:center; gap:2rem; padding:2.4rem; border:2px solid #917a45; background:linear-gradient(115deg,#24271c,#182018); box-shadow:7px 7px 0 #080b08; }
     .mp-rpg-cta h2 { color:#fff; font-family:'JetBrains Mono',monospace; font-size:clamp(1.5rem,3vw,2.3rem); line-height:1.2; letter-spacing:-.04em; margin:.8rem 0 .4rem; }
     .mp-rpg-cta p { color:#b8bdac; font-size:.86rem; }
@@ -235,6 +245,28 @@
                 <div class="mp-rpg-quest">Side Quest</div>
                 <div class="mp-rpg-quest">Exploration Quest</div>
                 <div class="mp-rpg-quest">NPC Story Quest</div>
+            </div>
+        </section>
+
+        @php
+            $voteSites = [
+                ['name' => 'Minecraft-MP', 'url' => 'https://minecraft-mp.com/server-s363993'],
+                ['name' => 'IOMC Server List', 'url' => 'https://iomcserverlist.biz.id/server.php?id=61'],
+            ];
+        @endphp
+        <section class="mp-rpg-vote" id="vote" aria-labelledby="mp-rpg-vote-title">
+            <div class="mp-rpg-section__heading">
+                <span class="mp-rpg__eyebrow">Dukung Server</span>
+                <h2 id="mp-rpg-vote-title">Vote Mariposa setiap hari.</h2>
+                <p>Setiap vote membantu Mariposa Indonesia naik peringkat dan ditemukan lebih banyak petualang. Klik salah satu situs di bawah, lalu masukkan username Minecraft kamu di halaman vote.</p>
+            </div>
+            <div class="mp-rpg-vote__grid">
+                @foreach($voteSites as $i => $site)
+                <a href="{{ $site['url'] }}" target="_blank" rel="noopener noreferrer" class="mp-rpg-vote__site">
+                    <span><span class="mp-rpg-vote__num">Vote #{{ $i + 1 }}</span><span class="mp-rpg-vote__name">{{ $site['name'] }}</span></span>
+                    <span class="mp-rpg-vote__go">Vote ↗</span>
+                </a>
+                @endforeach
             </div>
         </section>
 

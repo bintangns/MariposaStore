@@ -40,7 +40,7 @@
     </div>
     @endif
 
-    <form action="{{ route('checkout.manual.upload', $order->order_id) }}" method="POST" enctype="multipart/form-data">
+    <form data-payment-flow action="{{ route('checkout.manual.upload', $order->order_id) }}" method="POST" enctype="multipart/form-data">
         @csrf
         <div style="margin-bottom:1.25rem;">
             <label style="display:block;font-size:0.875rem;color:#94a3b8;margin-bottom:0.5rem;">Upload Bukti Pembayaran (screenshot transfer)</label>
@@ -54,7 +54,7 @@
         </button>
     </form>
 
-    <form id="cancel-form" action="{{ route('checkout.cancel', $order->order_id) }}" method="POST" onsubmit="return confirm('Batalkan pembayaran ini?')" style="text-align:center;margin-top:1rem;">
+    <form id="cancel-form" data-payment-flow action="{{ route('checkout.cancel', $order->order_id) }}" method="POST" onsubmit="return confirm('Batalkan pembayaran ini?')" style="text-align:center;margin-top:1rem;">
         @csrf
         <button type="submit" style="background:none;border:none;color:#64748b;font-size:0.8125rem;text-decoration:underline;cursor:pointer;font-family:inherit;">
             Batalkan Pembayaran
@@ -85,6 +85,46 @@ const countdownTimer = setInterval(() => {
         cancelForm.submit();
     }
 }, 1000);
+
+// Kalau customer ninggalin halaman ini (tutup tab, pindah halaman, dsb) tanpa
+// bayar, kabari server biar order-nya ikut dibatalkan & dihapus. Ada masa
+// tenggang singkat (Order::LEAVE_GRACE_SECONDS) jadi refresh / tombol back
+// gak bikin order langsung hilang.
+(function () {
+    const presenceUrl = @json(route('checkout.presence', $order->order_id));
+    const csrf = @json(csrf_token());
+    let intentionalNav = false;
+
+    function sendPresence(state) {
+        const data = new FormData();
+        data.append('_token', csrf);
+        data.append('state', state);
+        navigator.sendBeacon(presenceUrl, data);
+    }
+
+    // Navigasi yang memang bagian dari alur pembayaran gak dihitung "ninggalin".
+    document.querySelectorAll('[data-payment-flow]').forEach(function (el) {
+        el.addEventListener(el.tagName === 'FORM' ? 'submit' : 'click', function (e) {
+            // Konfirmasi "Batalkan?" yang dijawab Cancel bukan navigasi.
+            if (!e.defaultPrevented) intentionalNav = true;
+        });
+    });
+
+    window.addEventListener('pagehide', function () {
+        if (!intentionalNav) sendPresence('left');
+    });
+
+    window.addEventListener('pageshow', function (e) {
+        intentionalNav = false;
+        if (e.persisted) sendPresence('back');
+    });
+
+    // Sebagian browser HP bisa memicu pagehide waktu pindah ke app lain
+    // (mis. app bank buat transfer) — begitu tab-nya kelihatan lagi, pulihkan.
+    document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'visible') sendPresence('back');
+    });
+})();
 </script>
 @endpush
 @endif
