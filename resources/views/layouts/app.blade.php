@@ -68,7 +68,7 @@
             <div class="mp-site-nav__actions">
                 <button type="button" onclick="mpCopyServerIp(this)" data-ip="play.mariposa.id" title="Salin alamat server Java"
                     class="mp-site-nav__ip"><span class="mp-site-nav__ip-label">Java</span><span class="mp-ip-text">play.mariposa.id</span></button>
-                <button type="button" onclick="mpCopyServerIp(this)" data-ip="bedrock.mariposa.id:20601" title="Salin bedrock.mariposa.id:20601"
+                <button type="button" onclick="mpCopyServerIp(this)" data-ip="play.mariposa.id:19132" title="Salin play.mariposa.id:19132"
                     class="mp-site-nav__ip"><span class="mp-ip-text">⧉ Bedrock IP</span></button>
 
                 @if(session('verified_username'))
@@ -142,7 +142,7 @@
         <div class="mp-site-footer__inner">
             <strong>MARIPOSA INDONESIA</strong>
             <span>Minecraft Survival RPG</span>
-            <span style="font-family:'JetBrains Mono',monospace;overflow-wrap:anywhere;">Java: play.mariposa.id · Bedrock: bedrock.mariposa.id:20601</span>
+            <span style="font-family:'JetBrains Mono',monospace;overflow-wrap:anywhere;">Java: play.mariposa.id · Bedrock: play.mariposa.id:19132</span>
         </div>
     </footer>
 

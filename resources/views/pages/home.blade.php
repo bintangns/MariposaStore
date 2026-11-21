@@ -20,6 +20,17 @@
     .mp-rpg-hero__copy span:first-child { color:#9cde90; }
     .mp-rpg-hero__platform { color:#efc76f; font-size:.7rem; text-transform:uppercase; }
     .mp-rpg-hero__hint { color:#d0d2c5; font-size:.78rem; margin-top:1.15rem; text-shadow:0 2px 8px #000; }
+    .mp-rpg-status { max-width:34rem; margin-top:1.4rem; padding:.85rem 1rem; border:2px solid #48553d; background:rgba(14,20,14,.82); box-shadow:4px 4px 0 #070b08; font-family:'JetBrains Mono',monospace; }
+    .mp-rpg-status__head { display:flex; align-items:center; gap:.6rem; color:#f6f6ec; font-size:.8rem; font-weight:700; }
+    .mp-rpg-status__dot { width:.6rem; height:.6rem; flex:none; background:#8a8f80; }
+    .mp-rpg-status[data-state="online"] .mp-rpg-status__dot { background:#7ee06f; box-shadow:0 0 0 3px rgba(126,224,111,.22); animation:mp-status-pulse 2s ease-in-out infinite; }
+    .mp-rpg-status[data-state="offline"] .mp-rpg-status__dot { background:#e0605a; }
+    .mp-rpg-status__label strong { color:#efc76f; }
+    .mp-rpg-status__players { display:flex; flex-wrap:wrap; gap:.4rem; margin:.75rem 0 0; padding:.75rem 0 0; list-style:none; border-top:1px dashed #3b4733; max-height:9.5rem; overflow-y:auto; }
+    .mp-rpg-status__players li { display:inline-flex; align-items:center; gap:.35rem; padding:.22rem .45rem .22rem .25rem; background:#182218; border:1px solid #3b4733; color:#dfe3d4; font-size:.7rem; }
+    .mp-rpg-status__players img { width:16px; height:16px; image-rendering:pixelated; }
+    .mp-rpg-status__players .mp-rpg-status__more { color:#9aa08f; border-style:dashed; }
+    @keyframes mp-status-pulse { 50% { box-shadow:0 0 0 6px rgba(126,224,111,0); } }
     .mp-rpg-strip { position:relative; z-index:2; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1px; margin-top:-2.2rem; border:2px solid #4b5b42; background:#4b5b42; box-shadow:7px 7px 0 #080b08; }
     .mp-rpg-strip__item { display:flex; align-items:center; gap:1rem; min-height:5.4rem; padding:1rem 1.35rem; background:#1a2119; }
     .mp-rpg-strip__icon { display:grid; place-items:center; width:2.5rem; height:2.5rem; flex:none; border:2px solid #637954; background:#2b3b27; color:#e4cb81; font-size:1.25rem; box-shadow:3px 3px 0 #0b100b; }
@@ -80,7 +91,7 @@
     .mp-rpg-cta p { color:#b8bdac; font-size:.86rem; }
     @media(max-width:800px) { .mp-rpg-hero { min-height:38rem; background-position:58% center; } .mp-rpg-hero h1 { max-width:12ch; } .mp-rpg-cards,.mp-rpg-systems__grid,.mp-rpg-dungeons__grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .mp-rpg-lore { grid-template-columns:1fr; } .mp-rpg-lore__seal { min-height:10rem; } }
     @media(max-width:640px) { .mp-rpg__wrap { padding:0 1rem; } .mp-rpg-hero { min-height:39rem; align-items:end; background-position:66% center; background-image:linear-gradient(0deg,rgba(8,12,9,.98),rgba(8,12,9,.75) 42%,rgba(8,12,9,.18) 90%),url('{{ asset('images/survival-rpg-hero.jpg') }}'); } .mp-rpg-hero__content { padding-top:3rem; padding-bottom:3.5rem; } .mp-rpg-hero h1 { font-size:clamp(3rem,13vw,4.4rem); } .mp-rpg-hero__copy { width:100%; justify-content:space-between; font-size:.72rem; padding:.7rem .8rem; } .mp-rpg-strip { grid-template-columns:1fr; margin-top:-1rem; } .mp-rpg-strip__item { min-height:4.7rem; } .mp-rpg-section { padding:5rem 0 4rem; } .mp-rpg-cards,.mp-rpg-systems__grid,.mp-rpg-dungeons__grid { grid-template-columns:1fr; } .mp-rpg-systems { padding-bottom:4.5rem; } .mp-rpg-lore,.mp-rpg-guild { padding:1.3rem; margin-bottom:4.5rem; } .mp-rpg-guild__features,.mp-rpg-quests__grid { grid-template-columns:1fr; } .mp-rpg-dungeons,.mp-rpg-quests { margin-bottom:4.5rem; } .mp-rpg-cta { display:block; padding:1.5rem; } .mp-rpg-cta .btn-primary { width:100%; margin-top:1.4rem; } }
-    @media(prefers-reduced-motion:reduce) { .mp-rpg-card { transition:none; } .mp-rpg-card:hover { transform:none; } }
+    @media(prefers-reduced-motion:reduce) { .mp-rpg-status__dot { animation:none !important; } .mp-rpg-card { transition:none; } .mp-rpg-card:hover { transform:none; } }
 </style>
 @endpush
 
@@ -94,9 +105,17 @@
             <div class="mp-rpg-hero__actions">
                 <a href="{{ route('store') }}" class="btn-primary">Jelajahi Rank <span aria-hidden="true" style="margin-left:.6rem;">↗</span></a>
                 <button type="button" class="mp-rpg-hero__copy" onclick="mpCopyServerIp(this)" data-ip="play.mariposa.id" title="Salin alamat server Java"><span class="mp-rpg-hero__platform">Java</span><span class="mp-ip-text">play.mariposa.id</span></button>
-                <button type="button" class="mp-rpg-hero__copy" onclick="mpCopyServerIp(this)" data-ip="bedrock.mariposa.id:20601" title="Salin alamat dan port server Bedrock"><span class="mp-rpg-hero__platform">Bedrock</span><span class="mp-ip-text">bedrock.mariposa.id:20601</span></button>
+                <button type="button" class="mp-rpg-hero__copy" onclick="mpCopyServerIp(this)" data-ip="play.mariposa.id:19132" title="Salin alamat dan port server Bedrock"><span class="mp-rpg-hero__platform">Bedrock</span><span class="mp-ip-text">play.mariposa.id:19132</span></button>
             </div>
-            <p class="mp-rpg-hero__hint">Java: gunakan alamat server. Bedrock: masukkan <strong>bedrock.mariposa.id</strong> sebagai alamat dan <strong>20601</strong> sebagai port.</p>
+            <p class="mp-rpg-hero__hint">Java: gunakan alamat server. Bedrock: masukkan <strong>play.mariposa.id</strong> sebagai alamat dan <strong>19132</strong> sebagai port.</p>
+
+            <div class="mp-rpg-status" id="mp-server-status" data-state="loading" aria-live="polite">
+                <div class="mp-rpg-status__head">
+                    <span class="mp-rpg-status__dot" aria-hidden="true"></span>
+                    <span class="mp-rpg-status__label">Mengecek status server…</span>
+                </div>
+                <ul class="mp-rpg-status__players" hidden></ul>
+            </div>
         </div>
     </section>
 
@@ -226,3 +245,59 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+(function () {
+    const box = document.getElementById('mp-server-status');
+    if (!box) return;
+    const label = box.querySelector('.mp-rpg-status__label');
+    const list = box.querySelector('.mp-rpg-status__players');
+    const MAX_SHOWN = 30;
+
+    function render(data) {
+        list.replaceChildren();
+        if (!data || !data.online) {
+            box.dataset.state = 'offline';
+            label.textContent = 'Server sedang offline';
+            list.hidden = true;
+            return;
+        }
+        box.dataset.state = 'online';
+        label.replaceChildren('Server online · ');
+        const count = document.createElement('strong');
+        count.textContent = data.players_online + (data.players_max ? ' / ' + data.players_max : '');
+        label.append(count, ' pemain');
+
+        const players = Array.isArray(data.players) ? data.players : [];
+        players.slice(0, MAX_SHOWN).forEach(function (name) {
+            const li = document.createElement('li');
+            const img = document.createElement('img');
+            img.src = 'https://mc-heads.net/avatar/' + encodeURIComponent(name.replace(/^\./, '')) + '/16';
+            img.alt = '';
+            img.loading = 'lazy';
+            li.append(img, name);
+            list.append(li);
+        });
+        const hidden = Math.max(players.length, data.players_online) - Math.min(players.length, MAX_SHOWN);
+        if (players.length && hidden > 0) {
+            const more = document.createElement('li');
+            more.className = 'mp-rpg-status__more';
+            more.textContent = '+' + hidden + ' lainnya';
+            list.append(more);
+        }
+        list.hidden = list.children.length === 0;
+    }
+
+    function load() {
+        fetch(@json(route('server.status')), { headers: { 'Accept': 'application/json' } })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(render)
+            .catch(function () { render(null); });
+    }
+
+    load();
+    setInterval(function () { if (!document.hidden) load(); }, 60000);
+})();
+</script>
+@endpush

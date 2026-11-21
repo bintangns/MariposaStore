@@ -18,6 +18,7 @@ Route::get('/store/{product}', [StoreController::class, 'show'])->name('store.sh
 Route::get('/rules', [HomeController::class, 'rules'])->name('rules');
 Route::get('/staff', [HomeController::class, 'staff'])->name('staff');
 Route::get('/terms', [HomeController::class, 'terms'])->name('terms');
+Route::get('/api/server-status', [HomeController::class, 'serverStatus'])->name('server.status');
 
 // Verify username
 Route::post('/verify/check', [VerifyController::class, 'check'])->name('verify.check');

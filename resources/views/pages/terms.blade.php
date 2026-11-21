@@ -47,7 +47,7 @@
         <section id="s1">
             <h2>1. Definisi</h2>
             <ul>
-                <li><strong>Mariposa Indonesia</strong> — layanan server Minecraft Survival RPG yang kami kelola dan operasikan di <code style="color:#a78bfa;">play.mariposa.id</code> (Java) dan <code style="color:#a78bfa;">bedrock.mariposa.id:20601</code> (Bedrock).</li>
+                <li><strong>Mariposa Indonesia</strong> — layanan server Minecraft Survival RPG yang kami kelola dan operasikan di <code style="color:#a78bfa;">play.mariposa.id</code> (Java) dan <code style="color:#a78bfa;">play.mariposa.id:19132</code> (Bedrock).</li>
                 <li><strong>Kontribusi</strong> — pembayaran sukarela dari Pengguna melalui Store untuk mendukung operasional server, yang diiringi pemberian Manfaat Virtual sebagai bentuk apresiasi.</li>
                 <li><strong>Manfaat Virtual</strong> — rank, koin, item, crate key, dan/atau fitur lain yang diberikan kepada Pengguna sebagai apresiasi atas kontribusinya. Manfaat Virtual hanya berlaku di dalam server Mariposa Indonesia.</li>
                 <li><strong>Pengguna / Kamu</strong> — individu yang menggunakan layanan kami dan/atau memberikan kontribusi.</li>
