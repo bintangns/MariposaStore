@@ -10,6 +10,7 @@ use App\Models\RankReward;
 use App\Models\Setting;
 use App\Services\DiscordService;
 use App\Services\MinecraftService;
+use App\Services\PaymentVerificationService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -21,6 +22,7 @@ class AdminController extends Controller
     public function __construct(
         private MinecraftService $minecraft,
         private DiscordService $discord,
+        private PaymentVerificationService $payments,
     ) {}
 
     public function index(Request $request)
@@ -364,7 +366,7 @@ class AdminController extends Controller
 
     public function deliver(Order $order)
     {
-        $allDelivered = $this->performDelivery($order);
+        $allDelivered = $this->payments->deliver($order);
 
         if ($allDelivered) {
             return back()->with('success', 'Produk berhasil dikirim!');
@@ -373,31 +375,6 @@ class AdminController extends Controller
         $failedCount = count($order->fresh()->failed_commands);
 
         return back()->with('error', "{$failedCount} command gagal terkirim (RCON gak reachable?). Cek detail di order ini dan coba kirim ulang.");
-    }
-
-    /**
-     * Kirim command RCON produk untuk order ini & update status. Dipakai oleh
-     * deliver() (tombol "Kirim Manual") dan verifyManualPayment() (verifikasi
-     * bukti transfer manual).
-     */
-    private function performDelivery(Order $order): bool
-    {
-        $commands = $order->resolveCommands();
-        $results = $this->minecraft->deliverProduct($commands);
-        $allDelivered = collect($results)->every(fn ($r) => $r['success']);
-
-        $order->update([
-            'status' => $allDelivered ? 'delivered' : 'paid',
-            'delivered_at' => $allDelivered ? now() : $order->delivered_at,
-            'delivery_log' => $results,
-        ]);
-
-        if ($allDelivered) {
-            $order->handleDeliverySuccess();
-            $this->discord->notifyDelivered($order);
-        }
-
-        return $allDelivered;
     }
 
     /**
@@ -465,12 +442,11 @@ class AdminController extends Controller
      */
     public function verifyManualPayment(Order $order)
     {
-        if (! $order->payment_proof || $order->status !== 'pending') {
-            return back()->with('error', 'Order ini gak punya bukti pembayaran yang bisa diverifikasi.');
+        if (! $this->payments->claimForVerification($order)) {
+            return back()->with('error', 'Order ini gak punya bukti pembayaran yang bisa diverifikasi, atau udah diproses.');
         }
 
-        $order->update(['status' => 'paid']);
-        $allDelivered = $this->performDelivery($order);
+        $allDelivered = $this->payments->deliver($order);
 
         if ($allDelivered) {
             return back()->with('success', 'Pembayaran diverifikasi & produk berhasil dikirim!');
@@ -486,11 +462,9 @@ class AdminController extends Controller
      */
     public function rejectManualPayment(Order $order)
     {
-        if ($order->status !== 'pending') {
+        if (! $this->payments->reject($order)) {
             return back()->with('error', 'Order ini sudah diproses.');
         }
-
-        $order->update(['status' => 'failed']);
 
         return back()->with('success', 'Order ditolak.');
     }

@@ -8,6 +8,7 @@ use App\Models\PlayerNickname;
 use App\Models\Product;
 use App\Models\Setting;
 use App\Services\DiscordService;
+use App\Services\TelegramService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -16,6 +17,7 @@ class CheckoutController extends Controller
 {
     public function __construct(
         private DiscordService $discord,
+        private TelegramService $telegram,
     ) {}
 
     public function create(Request $request, Product $product)
@@ -247,6 +249,7 @@ class CheckoutController extends Controller
         ]);
 
         $this->discord->notifyNewOrder($order);
+        $this->telegram->notifyPaymentProof($order);
 
         return redirect()->route('checkout.manual.uploaded', $order->order_id);
     }

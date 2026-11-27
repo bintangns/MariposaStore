@@ -16,6 +16,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // Tanpa ini, Laravel generate URL http:// meski halaman diakses https:// -> mixed content diblokir browser.
         $middleware->trustProxies(at: '*');
         $middleware->redirectGuestsTo(fn () => route('admin.login'));
+
+        // Dipanggil server Telegram (bukan browser), jadi gak bawa token CSRF.
+        // Diamankan pakai secret header + cek ID admin di TelegramWebhookController.
+        $middleware->preventRequestForgery(except: ['telegram/webhook']);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

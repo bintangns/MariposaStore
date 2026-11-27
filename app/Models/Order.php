@@ -2,11 +2,16 @@
 
 namespace App\Models;
 
+use Database\Factories\OrderFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
 class Order extends Model
 {
+    /** @use HasFactory<OrderFactory> */
+    use HasFactory;
+
     /**
      * Berapa lama order "pending" (belum ada payment_proof/belum dibayar)
      * boleh menggantung sebelum otomatis dianggap dibatalkan/expired, biar

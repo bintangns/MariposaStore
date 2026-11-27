@@ -2,10 +2,15 @@
 
 namespace App\Models;
 
+use Database\Factories\ProductFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Product extends Model
 {
+    /** @use HasFactory<ProductFactory> */
+    use HasFactory;
+
     protected $fillable = [
         'name',
         'rank_name',     // LuckPerms group name, dipakai untuk auto-generate command durasi
@@ -51,7 +56,7 @@ class Product extends Model
             return null;
         }
 
-        return 'Rp ' . number_format($this->price, 0, ',', '.');
+        return 'Rp '.number_format($this->price, 0, ',', '.');
     }
 
     public function scopeActive($query)

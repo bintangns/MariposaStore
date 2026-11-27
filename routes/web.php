@@ -7,6 +7,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\NicknameController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\StoreController;
+use App\Http\Controllers\TelegramWebhookController;
 use App\Http\Controllers\VerifyController;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
@@ -63,6 +64,9 @@ Route::post('/checkout/{order:order_id}/presence', [CheckoutController::class, '
 Route::get('/checkout/{order:order_id}/manual', [CheckoutController::class, 'manualPayment'])->name('checkout.manual');
 Route::post('/checkout/{order:order_id}/manual', [CheckoutController::class, 'uploadProof'])->name('checkout.manual.upload');
 Route::get('/checkout/{order:order_id}/manual/uploaded', [CheckoutController::class, 'manualUploaded'])->name('checkout.manual.uploaded');
+
+// Bot Telegram admin: tombol Verifikasi/Tolak bukti pembayaran (lihat TelegramWebhookController)
+Route::post('/telegram/webhook', TelegramWebhookController::class)->name('telegram.webhook');
 
 // Order history
 Route::get('/orders', [OrderController::class, 'index'])->name('orders');
