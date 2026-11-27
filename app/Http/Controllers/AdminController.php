@@ -5,21 +5,22 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\Gradient;
 use App\Models\Order;
-use App\Models\PlayerNickname;
 use App\Models\Product;
 use App\Models\RankReward;
 use App\Models\Setting;
-use App\Services\MinecraftService;
 use App\Services\DiscordService;
+use App\Services\MinecraftService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 
 class AdminController extends Controller
 {
     public function __construct(
         private MinecraftService $minecraft,
-        private DiscordService   $discord,
+        private DiscordService $discord,
     ) {}
 
     public function index(Request $request)
@@ -27,9 +28,9 @@ class AdminController extends Controller
         Order::purgeAbandoned();
 
         $stats = [
-            'total_orders'     => Order::count(),
-            'total_revenue'    => Order::where('status', 'delivered')->sum('amount'),
-            'pending_orders'   => Order::where('status', 'pending')->count(),
+            'total_orders' => Order::count(),
+            'total_revenue' => Order::where('status', 'delivered')->sum('amount'),
+            'pending_orders' => Order::where('status', 'pending')->count(),
             'delivered_orders' => Order::where('status', 'delivered')->count(),
         ];
         $recentOrders = Order::with('product')->latest()->limit(10)->get();
@@ -39,12 +40,12 @@ class AdminController extends Controller
         $rangeQuery = Order::whereBetween('created_at', [$from, $to]);
 
         $analytics = [
-            'from'         => $from,
-            'to'           => $to,
+            'from' => $from,
+            'to' => $to,
             'transactions' => (clone $rangeQuery)->count(),
-            'revenue'      => (clone $rangeQuery)->where('status', 'delivered')->sum('amount'),
-            'delivered'    => (clone $rangeQuery)->where('status', 'delivered')->count(),
-            'pending'      => (clone $rangeQuery)->where('status', 'pending')->count(),
+            'revenue' => (clone $rangeQuery)->where('status', 'delivered')->sum('amount'),
+            'delivered' => (clone $rangeQuery)->where('status', 'delivered')->count(),
+            'pending' => (clone $rangeQuery)->where('status', 'pending')->count(),
         ];
 
         $dailyRevenue = (clone $rangeQuery)
@@ -56,8 +57,8 @@ class AdminController extends Controller
         for ($cursor = $from->copy(); $cursor->lte($to); $cursor->addDay()) {
             $key = $cursor->format('Y-m-d');
             $chartData[] = [
-                'date'    => $key,
-                'label'   => $cursor->format('d M'),
+                'date' => $key,
+                'label' => $cursor->format('d M'),
                 'revenue' => (int) ($dailyRevenue[$key] ?? 0),
             ];
         }
@@ -75,8 +76,8 @@ class AdminController extends Controller
      */
     private function resolveAnalyticsRange(Request $request): array
     {
-        $to   = $request->filled('to') ? \Carbon\Carbon::parse($request->query('to'))->endOfDay() : now()->endOfDay();
-        $from = $request->filled('from') ? \Carbon\Carbon::parse($request->query('from'))->startOfDay() : $to->copy()->subDays(29)->startOfDay();
+        $to = $request->filled('to') ? Carbon::parse($request->query('to'))->endOfDay() : now()->endOfDay();
+        $from = $request->filled('from') ? Carbon::parse($request->query('from'))->startOfDay() : $to->copy()->subDays(29)->startOfDay();
 
         if ($from->gt($to)) {
             [$from, $to] = [$to->copy()->startOfDay(), $from->copy()->endOfDay()];
@@ -92,6 +93,7 @@ class AdminController extends Controller
     public function products()
     {
         $products = Product::with('category', 'durations')->orderBy('sort_order')->get();
+
         return view('admin.products', compact('products'));
     }
 
@@ -100,10 +102,10 @@ class AdminController extends Controller
         $categories = Category::ordered()->get();
 
         return view('admin.product-form', [
-            'product'             => new Product(),
-            'categories'          => $categories,
-            'rconTargets'         => array_keys(config('minecraft.rcon_targets', [])),
-            'commandRows'         => [],
+            'product' => new Product,
+            'categories' => $categories,
+            'rconTargets' => array_keys(config('minecraft.rcon_targets', [])),
+            'commandRows' => [],
             'durationCommandRows' => ['7' => [], '30' => [], 'permanent' => []],
         ]);
     }
@@ -111,20 +113,20 @@ class AdminController extends Controller
     public function storeProduct(Request $request)
     {
         $data = $request->validate([
-            'name'        => 'required|string|max:100',
-            'rank_name'   => 'nullable|string|max:50',
+            'name' => 'required|string|max:100',
+            'rank_name' => 'nullable|string|max:50',
             'requires_nickname' => 'nullable|boolean',
-            'nickname_type'     => 'nullable|in:custom,gradient',
+            'nickname_type' => 'nullable|in:custom,gradient',
             'description' => 'required|string',
-            'price'       => 'nullable|integer|min:1000',
+            'price' => 'nullable|integer|min:1000',
             'category_id' => 'required|exists:categories,id',
-            'commands'              => 'nullable|array',
-            'commands.*.target'     => 'nullable|string',
-            'commands.*.command'    => 'nullable|string|max:500',
-            'features'    => 'nullable|string',
-            'color'       => 'nullable|string',
-            'sort_order'  => 'nullable|integer',
-            'is_active'   => 'boolean',
+            'commands' => 'nullable|array',
+            'commands.*.target' => 'nullable|string',
+            'commands.*.command' => 'nullable|string|max:500',
+            'features' => 'nullable|string',
+            'color' => 'nullable|string',
+            'sort_order' => 'nullable|integer',
+            'is_active' => 'boolean',
         ]);
 
         [$data, $durations] = $this->applyProductType($request, $data);
@@ -152,10 +154,10 @@ class AdminController extends Controller
         }
 
         return view('admin.product-form', [
-            'product'             => $product,
-            'categories'          => $categories,
-            'rconTargets'         => array_keys(config('minecraft.rcon_targets', [])),
-            'commandRows'         => $this->parseCommandRows($product->commands ?? []),
+            'product' => $product,
+            'categories' => $categories,
+            'rconTargets' => array_keys(config('minecraft.rcon_targets', [])),
+            'commandRows' => $this->parseCommandRows($product->commands ?? []),
             'durationCommandRows' => $durationCommandRows,
         ]);
     }
@@ -168,6 +170,7 @@ class AdminController extends Controller
     {
         return array_map(function ($line) {
             [$target, $command] = $this->minecraft->parseCommandTarget($line);
+
             return ['target' => $target, 'command' => $command];
         }, $commands);
     }
@@ -188,26 +191,27 @@ class AdminController extends Controller
             $target = in_array($row['target'] ?? null, $validTargets, true) ? $row['target'] : 'global';
             $lines[] = "{$target}: {$command}";
         }
+
         return $lines;
     }
 
     public function updateProduct(Request $request, Product $product)
     {
         $data = $request->validate([
-            'name'        => 'required|string|max:100',
-            'rank_name'   => 'nullable|string|max:50',
+            'name' => 'required|string|max:100',
+            'rank_name' => 'nullable|string|max:50',
             'requires_nickname' => 'nullable|boolean',
-            'nickname_type'     => 'nullable|in:custom,gradient',
+            'nickname_type' => 'nullable|in:custom,gradient',
             'description' => 'required|string',
-            'price'       => 'nullable|integer|min:1000',
+            'price' => 'nullable|integer|min:1000',
             'category_id' => 'required|exists:categories,id',
-            'commands'              => 'nullable|array',
-            'commands.*.target'     => 'nullable|string',
-            'commands.*.command'    => 'nullable|string|max:500',
-            'features'    => 'nullable|string',
-            'color'       => 'nullable|string',
-            'sort_order'  => 'nullable|integer',
-            'is_active'   => 'boolean',
+            'commands' => 'nullable|array',
+            'commands.*.target' => 'nullable|string',
+            'commands.*.command' => 'nullable|string|max:500',
+            'features' => 'nullable|string',
+            'color' => 'nullable|string',
+            'sort_order' => 'nullable|integer',
+            'is_active' => 'boolean',
         ]);
 
         [$data, $durations] = $this->applyProductType($request, $data);
@@ -226,6 +230,7 @@ class AdminController extends Controller
         }
 
         $product->delete();
+
         return redirect()->route('admin.products')->with('success', 'Produk berhasil dihapus!');
     }
 
@@ -239,9 +244,9 @@ class AdminController extends Controller
     {
         $isSubscription = $request->boolean('is_subscription');
 
-        if (!$isSubscription) {
+        if (! $isSubscription) {
             if (empty($data['price'])) {
-                throw \Illuminate\Validation\ValidationException::withMessages([
+                throw ValidationException::withMessages([
                     'price' => 'Harga wajib diisi untuk produk tipe Sekali Bayar.',
                 ]);
             }
@@ -271,33 +276,33 @@ class AdminController extends Controller
         $input = $request->input('durations', []);
 
         $validated = $request->validate([
-            'durations.7.enabled'         => 'nullable|boolean',
-            'durations.7.price'           => 'nullable|integer|min:0',
-            'durations.7.commands'           => 'nullable|array',
-            'durations.7.commands.*.target'  => 'nullable|string',
+            'durations.7.enabled' => 'nullable|boolean',
+            'durations.7.price' => 'nullable|integer|min:0',
+            'durations.7.commands' => 'nullable|array',
+            'durations.7.commands.*.target' => 'nullable|string',
             'durations.7.commands.*.command' => 'nullable|string|max:500',
-            'durations.30.enabled'        => 'nullable|boolean',
-            'durations.30.price'          => 'nullable|integer|min:0',
-            'durations.30.commands'           => 'nullable|array',
-            'durations.30.commands.*.target'  => 'nullable|string',
+            'durations.30.enabled' => 'nullable|boolean',
+            'durations.30.price' => 'nullable|integer|min:0',
+            'durations.30.commands' => 'nullable|array',
+            'durations.30.commands.*.target' => 'nullable|string',
             'durations.30.commands.*.command' => 'nullable|string|max:500',
             'durations.permanent.enabled' => 'nullable|boolean',
-            'durations.permanent.price'   => 'nullable|integer|min:0',
-            'durations.permanent.commands'           => 'nullable|array',
-            'durations.permanent.commands.*.target'  => 'nullable|string',
+            'durations.permanent.price' => 'nullable|integer|min:0',
+            'durations.permanent.commands' => 'nullable|array',
+            'durations.permanent.commands.*.target' => 'nullable|string',
             'durations.permanent.commands.*.command' => 'nullable|string|max:500',
         ]);
 
-        $hasEnabled = collect($input)->contains(fn ($d) => !empty($d['enabled']));
+        $hasEnabled = collect($input)->contains(fn ($d) => ! empty($d['enabled']));
 
-        if (!$hasEnabled) {
-            throw \Illuminate\Validation\ValidationException::withMessages([
+        if (! $hasEnabled) {
+            throw ValidationException::withMessages([
                 'durations' => 'Aktifkan minimal satu durasi (7 Hari / 30 Hari / Permanent) untuk produk tipe Subscription.',
             ]);
         }
 
-        if (!$request->filled('rank_name')) {
-            throw \Illuminate\Validation\ValidationException::withMessages([
+        if (! $request->filled('rank_name')) {
+            throw ValidationException::withMessages([
                 'rank_name' => 'Rank Name (grup LuckPerms) wajib diisi kalau ada durasi yang diaktifkan.',
             ]);
         }
@@ -312,23 +317,24 @@ class AdminController extends Controller
     private function syncDurations(Product $product, array $input): void
     {
         $definitions = [
-            '7'         => ['label' => '7 Hari', 'days' => 7, 'sort_order' => 1],
-            '30'        => ['label' => '30 Hari', 'days' => 30, 'sort_order' => 2],
+            '7' => ['label' => '7 Hari', 'days' => 7, 'sort_order' => 1],
+            '30' => ['label' => '30 Hari', 'days' => 30, 'sort_order' => 2],
             'permanent' => ['label' => 'Permanent', 'days' => null, 'sort_order' => 3],
         ];
         $rconTargets = array_keys(config('minecraft.rcon_targets', []));
 
         foreach ($definitions as $key => $meta) {
-            $enabled  = !empty($input[$key]['enabled']);
-            $price    = (int) ($input[$key]['price'] ?? 0);
+            $enabled = ! empty($input[$key]['enabled']);
+            $price = (int) ($input[$key]['price'] ?? 0);
             $commands = $this->buildCommandLines($input[$key]['commands'] ?? [], $rconTargets);
 
             $query = $meta['days'] === null
                 ? $product->durations()->whereNull('days')
                 : $product->durations()->where('days', $meta['days']);
 
-            if (!$enabled || $price < 1) {
+            if (! $enabled || $price < 1) {
                 $query->delete();
+
                 continue;
             }
 
@@ -337,11 +343,11 @@ class AdminController extends Controller
                 $existing->update(['label' => $meta['label'], 'price' => $price, 'commands' => $commands]);
             } else {
                 $product->durations()->create([
-                    'label'      => $meta['label'],
-                    'days'       => $meta['days'],
-                    'price'      => $price,
+                    'label' => $meta['label'],
+                    'days' => $meta['days'],
+                    'price' => $price,
                     'sort_order' => $meta['sort_order'],
-                    'commands'   => $commands,
+                    'commands' => $commands,
                 ]);
             }
         }
@@ -352,6 +358,7 @@ class AdminController extends Controller
         Order::purgeAbandoned();
 
         $orders = Order::with('product')->latest()->paginate(20);
+
         return view('admin.orders', compact('orders'));
     }
 
@@ -364,6 +371,7 @@ class AdminController extends Controller
         }
 
         $failedCount = count($order->fresh()->failed_commands);
+
         return back()->with('error', "{$failedCount} command gagal terkirim (RCON gak reachable?). Cek detail di order ini dan coba kirim ulang.");
     }
 
@@ -374,12 +382,12 @@ class AdminController extends Controller
      */
     private function performDelivery(Order $order): bool
     {
-        $commands     = $order->resolveCommands();
-        $results      = $this->minecraft->deliverProduct($commands);
+        $commands = $order->resolveCommands();
+        $results = $this->minecraft->deliverProduct($commands);
         $allDelivered = collect($results)->every(fn ($r) => $r['success']);
 
         $order->update([
-            'status'       => $allDelivered ? 'delivered' : 'paid',
+            'status' => $allDelivered ? 'delivered' : 'paid',
             'delivered_at' => $allDelivered ? now() : $order->delivered_at,
             'delivery_log' => $results,
         ]);
@@ -403,7 +411,7 @@ class AdminController extends Controller
 
         $failedKeys = [];
         foreach ($log as $key => $entry) {
-            if (!($entry['success'] ?? false)) {
+            if (! ($entry['success'] ?? false)) {
                 $failedKeys[] = $key;
             }
         }
@@ -423,17 +431,19 @@ class AdminController extends Controller
 
         $order->update([
             'delivery_log' => $log,
-            'status'       => $allDelivered ? 'delivered' : 'paid',
+            'status' => $allDelivered ? 'delivered' : 'paid',
             'delivered_at' => $allDelivered ? now() : $order->delivered_at,
         ]);
 
         if ($allDelivered) {
             $order->handleDeliverySuccess();
             $this->discord->notifyDelivered($order);
+
             return back()->with('success', 'Semua command berhasil dikirim ulang! Order sudah lengkap.');
         }
 
         $stillFailed = collect($log)->where('success', false)->count();
+
         return back()->with('error', "Masih ada {$stillFailed} command yang gagal. Cek koneksi RCON server tujuan lalu coba retry lagi.");
     }
 
@@ -455,7 +465,7 @@ class AdminController extends Controller
      */
     public function verifyManualPayment(Order $order)
     {
-        if (!$order->payment_proof || $order->status !== 'pending') {
+        if (! $order->payment_proof || $order->status !== 'pending') {
             return back()->with('error', 'Order ini gak punya bukti pembayaran yang bisa diverifikasi.');
         }
 
@@ -467,6 +477,7 @@ class AdminController extends Controller
         }
 
         $failedCount = count($order->fresh()->failed_commands);
+
         return back()->with('error', "Pembayaran diverifikasi, tapi {$failedCount} command gagal terkirim. Coba kirim ulang.");
     }
 
@@ -480,6 +491,7 @@ class AdminController extends Controller
         }
 
         $order->update(['status' => 'failed']);
+
         return back()->with('success', 'Order ditolak.');
     }
 
@@ -489,6 +501,7 @@ class AdminController extends Controller
     public function destroyOrder(Order $order)
     {
         $order->delete();
+
         return back()->with('success', 'Order berhasil dihapus.');
     }
 
@@ -500,9 +513,9 @@ class AdminController extends Controller
     {
         return view('admin.rcon-test', [
             'targets' => array_keys(config('minecraft.rcon_targets', [])),
-            'result'  => null,
+            'result' => null,
             'command' => '',
-            'target'  => 'global',
+            'target' => 'global',
         ]);
     }
 
@@ -511,7 +524,7 @@ class AdminController extends Controller
         $targets = array_keys(config('minecraft.rcon_targets', []));
 
         $data = $request->validate([
-            'target'  => 'required|string|in:' . implode(',', $targets),
+            'target' => 'required|string|in:'.implode(',', $targets),
             'command' => 'required|string|max:500',
         ]);
 
@@ -519,37 +532,40 @@ class AdminController extends Controller
 
         return view('admin.rcon-test', [
             'targets' => $targets,
-            'result'  => $result,
+            'result' => $result,
             'command' => $data['command'],
-            'target'  => $data['target'],
+            'target' => $data['target'],
         ]);
     }
 
     public function categories()
     {
         $categories = Category::ordered()->withCount('products')->get();
+
         return view('admin.categories', compact('categories'));
     }
 
     public function storeCategory(Request $request)
     {
         $data = $request->validate([
-            'name'       => 'required|string|max:100',
+            'name' => 'required|string|max:100',
             'sort_order' => 'nullable|integer',
         ]);
 
         Category::create($data);
+
         return back()->with('success', 'Kategori berhasil ditambahkan!');
     }
 
     public function updateCategory(Request $request, Category $category)
     {
         $data = $request->validate([
-            'name'       => 'required|string|max:100',
+            'name' => 'required|string|max:100',
             'sort_order' => 'nullable|integer',
         ]);
 
         $category->update($data);
+
         return back()->with('success', 'Kategori berhasil diupdate!');
     }
 
@@ -560,60 +576,65 @@ class AdminController extends Controller
         }
 
         $category->delete();
+
         return back()->with('success', 'Kategori berhasil dihapus!');
     }
 
     public function gradients()
     {
         $gradients = Gradient::ordered()->get();
+
         return view('admin.gradients', compact('gradients'));
     }
 
     public function storeGradient(Request $request)
     {
         Gradient::create($this->validateGradient($request));
+
         return back()->with('success', 'Gradient berhasil ditambahkan!');
     }
 
     public function updateGradient(Request $request, Gradient $gradient)
     {
         $gradient->update($this->validateGradient($request));
+
         return back()->with('success', 'Gradient berhasil diupdate!');
     }
 
     public function destroyGradient(Gradient $gradient)
     {
         $gradient->delete();
+
         return back()->with('success', 'Gradient berhasil dihapus!');
     }
 
     private function validateGradient(Request $request): array
     {
         $data = $request->validate([
-            'name'       => 'required|string|max:50',
-            'colors'     => 'required|string',
+            'name' => 'required|string|max:50',
+            'colors' => 'required|string',
             'sort_order' => 'nullable|integer',
         ]);
 
         $colors = array_values(array_filter(array_map('trim', explode(',', $data['colors']))));
 
         foreach ($colors as $c) {
-            if (!preg_match('/^#[0-9a-fA-F]{6}$/', $c)) {
-                throw \Illuminate\Validation\ValidationException::withMessages([
+            if (! preg_match('/^#[0-9a-fA-F]{6}$/', $c)) {
+                throw ValidationException::withMessages([
                     'colors' => "Format warna gak valid: \"{$c}\". Pakai hex 6 digit (mis. #FF0000), dipisah koma.",
                 ]);
             }
         }
 
         if (count($colors) < 2) {
-            throw \Illuminate\Validation\ValidationException::withMessages([
+            throw ValidationException::withMessages([
                 'colors' => 'Minimal 2 warna buat bikin gradient.',
             ]);
         }
 
         return [
-            'name'       => $data['name'],
-            'colors'     => $colors,
+            'name' => $data['name'],
+            'colors' => $colors,
             'sort_order' => $data['sort_order'] ?? 0,
         ];
     }
@@ -621,16 +642,15 @@ class AdminController extends Controller
     public function settings()
     {
         $settings = [
-            'maintenance_mode'    => Setting::isMaintenanceMode(),
+            'maintenance_mode' => Setting::isMaintenanceMode(),
             'maintenance_message' => Setting::get('maintenance_message', ''),
-            'promo_enabled'       => Setting::isPromoActive(),
-            'promo_type'          => Setting::promoType(),
-            'promo_value'         => Setting::promoValue(),
-            'promo_label'         => Setting::promoLabel(),
-            'manual_payment_mode'         => Setting::isManualPaymentMode(),
+            'promo_enabled' => Setting::isPromoActive(),
+            'promo_type' => Setting::promoType(),
+            'promo_value' => Setting::promoValue(),
+            'promo_label' => Setting::promoLabel(),
             'manual_payment_instructions' => Setting::get('manual_payment_instructions', ''),
-            'free_gradient_product_id'    => Setting::freeGradientProductId(),
-            'free_custom_product_id'      => Setting::freeCustomProductId(),
+            'free_gradient_product_id' => Setting::freeGradientProductId(),
+            'free_custom_product_id' => Setting::freeCustomProductId(),
         ];
 
         $nicknameProducts = Product::whereNotNull('nickname_type')->orderBy('name')->get();
@@ -641,20 +661,19 @@ class AdminController extends Controller
     public function updateSettings(Request $request)
     {
         $data = $request->validate([
-            'maintenance_mode'    => 'nullable|boolean',
+            'maintenance_mode' => 'nullable|boolean',
             'maintenance_message' => 'nullable|string|max:255',
-            'promo_enabled'       => 'nullable|boolean',
-            'promo_type'          => 'required|in:percentage,fixed',
-            'promo_value'         => 'nullable|numeric|min:0',
-            'promo_label'         => 'nullable|string|max:100',
-            'manual_payment_mode'         => 'nullable|boolean',
+            'promo_enabled' => 'nullable|boolean',
+            'promo_type' => 'required|in:percentage,fixed',
+            'promo_value' => 'nullable|numeric|min:0',
+            'promo_label' => 'nullable|string|max:100',
             'manual_payment_instructions' => 'nullable|string|max:1000',
-            'free_gradient_product_id'    => 'nullable|integer|exists:products,id',
-            'free_custom_product_id'      => 'nullable|integer|exists:products,id',
+            'free_gradient_product_id' => 'nullable|integer|exists:products,id',
+            'free_custom_product_id' => 'nullable|integer|exists:products,id',
         ]);
 
         if ($data['promo_type'] === 'percentage' && ($data['promo_value'] ?? 0) > 100) {
-            throw \Illuminate\Validation\ValidationException::withMessages([
+            throw ValidationException::withMessages([
                 'promo_value' => 'Diskon persentase maksimal 100%.',
             ]);
         }
@@ -665,7 +684,6 @@ class AdminController extends Controller
         Setting::set('promo_type', $data['promo_type']);
         Setting::set('promo_value', $data['promo_value'] ?? 0);
         Setting::set('promo_label', $data['promo_label'] ?? '');
-        Setting::set('manual_payment_mode', $request->boolean('manual_payment_mode') ? '1' : '0');
         Setting::set('manual_payment_instructions', $data['manual_payment_instructions'] ?? '');
         Setting::set('free_gradient_product_id', $data['free_gradient_product_id'] ?? '');
         Setting::set('free_custom_product_id', $data['free_custom_product_id'] ?? '');
@@ -697,17 +715,17 @@ class AdminController extends Controller
     public function storeRankReward(Request $request)
     {
         $data = $request->validate([
-            'product_id'     => 'required|integer|exists:products,id|unique:rank_rewards,product_id',
+            'product_id' => 'required|integer|exists:products,id|unique:rank_rewards,product_id',
             'gradient_count' => 'nullable|integer|min:0',
-            'custom_count'   => 'nullable|integer|min:0',
+            'custom_count' => 'nullable|integer|min:0',
         ], [
             'product_id.unique' => 'Produk ini udah punya reward, edit langsung di tabel bawah.',
         ]);
 
         RankReward::create([
-            'product_id'     => $data['product_id'],
+            'product_id' => $data['product_id'],
             'gradient_count' => $data['gradient_count'] ?? 0,
-            'custom_count'   => $data['custom_count'] ?? 0,
+            'custom_count' => $data['custom_count'] ?? 0,
         ]);
 
         return back()->with('success', 'Reward rank berhasil ditambahkan!');
@@ -717,12 +735,12 @@ class AdminController extends Controller
     {
         $data = $request->validate([
             'gradient_count' => 'nullable|integer|min:0',
-            'custom_count'   => 'nullable|integer|min:0',
+            'custom_count' => 'nullable|integer|min:0',
         ]);
 
         $rankReward->update([
             'gradient_count' => $data['gradient_count'] ?? 0,
-            'custom_count'   => $data['custom_count'] ?? 0,
+            'custom_count' => $data['custom_count'] ?? 0,
         ]);
 
         return back()->with('success', 'Reward rank berhasil diupdate!');
@@ -731,6 +749,7 @@ class AdminController extends Controller
     public function destroyRankReward(RankReward $rankReward)
     {
         $rankReward->delete();
+
         return back()->with('success', 'Reward rank berhasil dihapus!');
     }
 

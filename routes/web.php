@@ -1,15 +1,15 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\DB;
-use App\Http\Controllers\HomeController;
-use App\Http\Controllers\StoreController;
-use App\Http\Controllers\CheckoutController;
-use App\Http\Controllers\VerifyController;
-use App\Http\Controllers\OrderController;
-use App\Http\Controllers\NicknameController;
-use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminAuthController;
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\NicknameController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\StoreController;
+use App\Http\Controllers\VerifyController;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
 
 // Public routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -34,13 +34,14 @@ Route::get('/debug-db', function () {
         $user = env('MINECRAFT_DB_USERNAME');
 
         $conn = DB::connection('minecraft')->getPdo();
+
         return response()->json([
             'status' => 'connected',
             'host' => $host,
             'database' => $db,
             'username' => $user,
         ]);
-    } catch (\Exception $e) {
+    } catch (Exception $e) {
         return response()->json([
             'status' => 'failed',
             'host' => env('MINECRAFT_DB_HOST'),
@@ -55,19 +56,13 @@ Route::post('/api/verify/confirm', [VerifyController::class, 'confirm'])->name('
 
 // Checkout
 Route::post('/checkout/{product}', [CheckoutController::class, 'create'])->name('checkout.create');
-Route::get('/checkout/success', [CheckoutController::class, 'success'])->name('checkout.success');
-Route::get('/checkout/pending', [CheckoutController::class, 'pending'])->name('checkout.pending');
-Route::get('/checkout/failed', [CheckoutController::class, 'failed'])->name('checkout.failed');
 Route::post('/checkout/{order:order_id}/cancel', [CheckoutController::class, 'cancel'])->name('checkout.cancel');
 Route::post('/checkout/{order:order_id}/presence', [CheckoutController::class, 'presence'])->name('checkout.presence');
 
-// Checkout - mode pembayaran manual (upload bukti transfer, sementara pengganti Duitku)
+// Checkout - pembayaran QRIS GoPay Merchant (upload bukti transaksi, diverifikasi admin)
 Route::get('/checkout/{order:order_id}/manual', [CheckoutController::class, 'manualPayment'])->name('checkout.manual');
 Route::post('/checkout/{order:order_id}/manual', [CheckoutController::class, 'uploadProof'])->name('checkout.manual.upload');
 Route::get('/checkout/{order:order_id}/manual/uploaded', [CheckoutController::class, 'manualUploaded'])->name('checkout.manual.uploaded');
-
-// Duitku callback
-Route::post('/payment/notification', [CheckoutController::class, 'notification'])->name('payment.notification');
 
 // Order history
 Route::get('/orders', [OrderController::class, 'index'])->name('orders');

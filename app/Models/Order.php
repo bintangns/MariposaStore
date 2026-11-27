@@ -51,8 +51,7 @@ class Order extends Model
 
     /**
      * Kalau order ini masih "pending" murni (belum ada bukti pembayaran
-     * manual yang diupload, belum ada callback sukses dari Duitku) dan udah
-     * lewat batas waktu — otomatis tandai "cancelled" biar gak nyampah di
+     * QRIS yang diupload) dan udah lewat batas waktu — otomatis tandai "cancelled" biar gak nyampah di
      * daftar order admin. Order yang udah upload bukti transfer TIDAK
      * di-auto-cancel meski lewat waktu, karena udah nunggu verifikasi admin.
      */
@@ -60,11 +59,12 @@ class Order extends Model
     {
         if (
             $this->status === 'pending'
-            && !$this->payment_proof
+            && ! $this->payment_proof
             && $this->expires_at
             && $this->expires_at->isPast()
         ) {
             $this->update(['status' => 'cancelled', 'payment_status' => 'expired']);
+
             return true;
         }
 
@@ -84,7 +84,7 @@ class Order extends Model
      */
     public function isUnpaidPending(): bool
     {
-        return $this->status === 'pending' && !$this->payment_proof;
+        return $this->status === 'pending' && ! $this->payment_proof;
     }
 
     /**
@@ -93,13 +93,13 @@ class Order extends Model
      */
     public function markPaymentPageLeft(): void
     {
-        if (!$this->isUnpaidPending()) {
+        if (! $this->isUnpaidPending()) {
             return;
         }
 
         $graceEnd = now()->addSeconds(self::LEAVE_GRACE_SECONDS);
 
-        if (!$this->expires_at || $this->expires_at->gt($graceEnd)) {
+        if (! $this->expires_at || $this->expires_at->gt($graceEnd)) {
             $this->update(['expires_at' => $graceEnd]);
         }
     }
@@ -113,13 +113,13 @@ class Order extends Model
         // Sengaja gak panggil expireIfNeeded() dulu: selama order belum
         // dibatalkan/dihapus, customer yang terbukti masih di halaman
         // pembayaran berhak dapat sisa waktu normalnya lagi.
-        if (!$this->isUnpaidPending()) {
+        if (! $this->isUnpaidPending()) {
             return;
         }
 
         $normalEnd = $this->created_at->copy()->addMinutes(self::PAYMENT_EXPIRY_MINUTES);
 
-        if ($normalEnd->isFuture() && (!$this->expires_at || $this->expires_at->lt($normalEnd))) {
+        if ($normalEnd->isFuture() && (! $this->expires_at || $this->expires_at->lt($normalEnd))) {
             $this->update(['expires_at' => $normalEnd]);
         }
     }
@@ -167,7 +167,7 @@ class Order extends Model
     public function getFailedCommandsAttribute(): array
     {
         return collect($this->delivery_log ?? [])
-            ->filter(fn ($entry) => !($entry['success'] ?? false))
+            ->filter(fn ($entry) => ! ($entry['success'] ?? false))
             ->values()
             ->all();
     }
@@ -212,7 +212,7 @@ class Order extends Model
         foreach (static::activeRankOrdersFor($username) as $order) {
             foreach ($order->eligibleUpgradeOptions() as $opt) {
                 $key = "{$opt['product']->id}-{$opt['duration']->id}";
-                if (!isset($credits[$key]) || $order->amount > $credits[$key]['credit']) {
+                if (! isset($credits[$key]) || $order->amount > $credits[$key]['credit']) {
                     $credits[$key] = ['credit' => $order->amount, 'from_order_id' => $order->id];
                 }
             }
@@ -237,9 +237,11 @@ class Order extends Model
         foreach (static::activeRankOrdersFor($username) as $order) {
             $product = $order->product;
             $categoryId = $product->category_id;
-            if ($categoryId === null) continue;
+            if ($categoryId === null) {
+                continue;
+            }
 
-            if (!isset($highest[$categoryId]) || $product->sort_order > $highest[$categoryId]['sort_order']) {
+            if (! isset($highest[$categoryId]) || $product->sort_order > $highest[$categoryId]['sort_order']) {
                 $highest[$categoryId] = ['sort_order' => $product->sort_order, 'product_name' => $product->name];
             }
         }
@@ -265,7 +267,7 @@ class Order extends Model
             ->latest()
             ->get()
             ->filter(fn (Order $order) => $order->isActiveRankOrder())
-            ->unique(fn (Order $order) => strtolower($order->minecraft_username) . '-' . $order->product_id)
+            ->unique(fn (Order $order) => strtolower($order->minecraft_username).'-'.$order->product_id)
             ->sortBy(fn (Order $order) => strtolower($order->minecraft_username))
             ->values();
     }
@@ -283,7 +285,7 @@ class Order extends Model
      */
     public function isActiveRankOrder(): bool
     {
-        if ($this->status !== 'delivered' || !$this->product_duration_id || $this->rank_reset_at) {
+        if ($this->status !== 'delivered' || ! $this->product_duration_id || $this->rank_reset_at) {
             return false;
         }
 
@@ -305,7 +307,7 @@ class Order extends Model
      */
     public function eligibleUpgradeOptions(): array
     {
-        if (!$this->isActiveRankOrder()) {
+        if (! $this->isActiveRankOrder()) {
             return [];
         }
 
@@ -369,22 +371,22 @@ class Order extends Model
     public function resolveCommands(): array
     {
         $username = $this->minecraft_username;
-        $uuid     = $this->minecraft_uuid ?: $this->minecraft_username;
+        $uuid = $this->minecraft_uuid ?: $this->minecraft_username;
         $nickname = $this->custom_nickname ?? '';
-        $replace  = fn (string $cmd) => str_replace(
+        $replace = fn (string $cmd) => str_replace(
             ['{player}', '{uuid}', '{nickname}'],
             [$username, $uuid, $nickname],
             $cmd
         );
 
         if ($this->product_duration_id) {
-            if (!empty($this->duration_commands)) {
+            if (! empty($this->duration_commands)) {
                 return array_map($replace, $this->duration_commands);
             }
 
             if ($this->product->rank_name) {
                 $rankName = $this->product->rank_name;
-                $command  = $this->duration_days
+                $command = $this->duration_days
                     ? "lp user {$uuid} parent addtemp {$rankName} {$this->duration_days}d"
                     : "lp user {$uuid} parent set {$rankName}";
 
@@ -397,7 +399,7 @@ class Order extends Model
 
     public function getFormattedAmountAttribute()
     {
-        return 'Rp ' . number_format($this->amount, 0, ',', '.');
+        return 'Rp '.number_format($this->amount, 0, ',', '.');
     }
 
     public function getStatusLabelAttribute()
@@ -408,13 +410,13 @@ class Order extends Model
             return 'Menunggu Konfirmasi';
         }
 
-        return match($this->status) {
-            'pending'   => 'Menunggu Pembayaran',
-            'paid'      => 'Dibayar',
+        return match ($this->status) {
+            'pending' => 'Menunggu Pembayaran',
+            'paid' => 'Dibayar',
             'delivered' => 'Selesai',
-            'failed'    => 'Gagal',
+            'failed' => 'Gagal',
             'cancelled' => 'Dibatalkan',
-            default     => $this->status,
+            default => $this->status,
         };
     }
 
@@ -424,18 +426,18 @@ class Order extends Model
             return 'purple';
         }
 
-        return match($this->status) {
-            'pending'   => 'yellow',
-            'paid'      => 'blue',
+        return match ($this->status) {
+            'pending' => 'yellow',
+            'paid' => 'blue',
             'delivered' => 'green',
-            'failed'    => 'red',
-            default     => 'gray',
+            'failed' => 'red',
+            default => 'gray',
         };
     }
 
     /**
      * Dipanggil tiap kali delivery order ini sukses penuh (status baru pindah
-     * ke "delivered") — dari webhook Duitku, tombol Kirim Manual admin,
+     * ke "delivered") — dari tombol Kirim Manual admin,
      * verifikasi pembayaran manual, maupun retry command yang gagal.
      */
     public function handleDeliverySuccess(): void
@@ -451,7 +453,7 @@ class Order extends Model
     private function activateLinkedNickname(): void
     {
         $nickname = PlayerNickname::where('order_id', $this->id)->first();
-        if (!$nickname) {
+        if (! $nickname) {
             return;
         }
 
@@ -470,13 +472,13 @@ class Order extends Model
     private function grantRankRewardIfApplicable(): void
     {
         $reward = RankReward::where('product_id', $this->product_id)->first();
-        if (!$reward) {
+        if (! $reward) {
             return;
         }
 
         PlayerRankCredit::firstOrCreate([
             'minecraft_username' => strtolower($this->minecraft_username),
-            'product_id'         => $this->product_id,
+            'product_id' => $this->product_id,
         ]);
     }
 }

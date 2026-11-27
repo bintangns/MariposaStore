@@ -18,14 +18,35 @@
             <span style="color:white;font-family:'JetBrains Mono',monospace;">{{ $order->minecraft_username }}</span>
         </div>
         <div style="border-top:1px solid rgba(255,255,255,0.06);padding-top:0.75rem;display:flex;justify-content:space-between;">
-            <span style="color:#94a3b8;">Total Transfer</span>
+            <span style="color:#94a3b8;">Total Bayar</span>
             <span style="color:white;font-size:1.25rem;font-weight:700;">{{ $order->formatted_amount }}</span>
         </div>
     </div>
 
+    <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:1rem;padding:1.5rem;margin-bottom:1.5rem;text-align:center;">
+        <h3 style="color:white;font-size:1.0625rem;font-weight:600;margin-bottom:0.25rem;">Scan QRIS</h3>
+        <p style="color:#94a3b8;font-size:0.8125rem;margin-bottom:1rem;">Bisa dibayar pakai GoPay, m-banking, atau e-wallet apa pun yang support QRIS.</p>
+
+        <img src="{{ asset('images/qris-gopay.jpg') }}" alt="QRIS Mariposa Indonesia"
+            style="display:block;width:100%;max-width:20rem;height:auto;margin:0 auto 1rem;border-radius:0.75rem;background:white;">
+
+        <a data-payment-flow href="{{ asset('images/qris-gopay.jpg') }}" download="QRIS-Mariposa-{{ $order->order_id }}.jpg"
+            style="display:inline-block;color:#c4b5fd;font-size:0.8125rem;border:1px solid rgba(139,92,246,0.4);border-radius:0.5rem;padding:0.5rem 1rem;text-decoration:none;">
+            ⬇ Simpan Gambar QRIS
+        </a>
+    </div>
+
     <div style="background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.25);border-radius:1rem;padding:1.5rem;margin-bottom:1.5rem;">
-        <h3 style="color:#c4b5fd;font-size:0.9375rem;font-weight:600;margin-bottom:0.625rem;">Instruksi Transfer</h3>
-        <p style="color:#e2e8f0;font-size:0.875rem;line-height:1.7;white-space:pre-line;">{{ Setting::manualPaymentInstructions() }}</p>
+        <h3 style="color:#c4b5fd;font-size:0.9375rem;font-weight:600;margin-bottom:0.625rem;">Cara Bayar</h3>
+        <ol style="color:#e2e8f0;font-size:0.875rem;line-height:1.7;padding-left:1.25rem;margin:0;">
+            <li>Scan QRIS di atas (atau simpan gambarnya lalu upload dari galeri di app pembayaran kamu).</li>
+            <li>Pastikan nama merchant <strong>MARIPOSA INDONESIA, VIDEO GAME</strong>.</li>
+            <li>Masukkan nominal <strong>tepat {{ $order->formatted_amount }}</strong>, lalu bayar.</li>
+            <li>Screenshot bukti transaksi yang berhasil, lalu upload di bawah.</li>
+        </ol>
+        @if(Setting::manualPaymentInstructions())
+        <p style="color:#cbd5e1;font-size:0.8125rem;line-height:1.7;white-space:pre-line;margin-top:0.875rem;padding-top:0.875rem;border-top:1px solid rgba(139,92,246,0.2);">{{ Setting::manualPaymentInstructions() }}</p>
+        @endif
     </div>
 
     @if($errors->any())
@@ -43,7 +64,7 @@
     <form data-payment-flow action="{{ route('checkout.manual.upload', $order->order_id) }}" method="POST" enctype="multipart/form-data">
         @csrf
         <div style="margin-bottom:1.25rem;">
-            <label style="display:block;font-size:0.875rem;color:#94a3b8;margin-bottom:0.5rem;">Upload Bukti Pembayaran (screenshot transfer)</label>
+            <label style="display:block;font-size:0.875rem;color:#94a3b8;margin-bottom:0.5rem;">Upload Bukti Pembayaran (screenshot bukti transaksi QRIS)</label>
             <input type="file" name="proof" accept="image/png,image/jpeg,image/webp" required
                 style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:0.5rem;padding:0.625rem 1rem;color:white;font-size:0.8125rem;box-sizing:border-box;">
             <div style="color:#64748b;font-size:0.75rem;margin-top:0.375rem;">Format JPG/PNG/WEBP, maksimal 5MB.</div>
@@ -65,7 +86,7 @@
 @if($order->expires_at)
 @push('scripts')
 <script>
-// Sama kayak halaman checkout Duitku: order otomatis kebatalin server-side
+// Order otomatis kebatalin server-side
 // begitu lewat Order::PAYMENT_EXPIRY_MINUTES (Order::expireIfNeeded), timer
 // ini cuma kasih tau customer & auto-submit form batal pas waktunya habis.
 const expiresAt = new Date('{{ $order->expires_at->toIso8601String() }}').getTime();

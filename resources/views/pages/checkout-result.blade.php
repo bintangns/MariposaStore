@@ -3,15 +3,7 @@
 
 @section('content')
 <div style="max-width:40rem;margin:0 auto;padding:4rem 1.5rem;text-align:center;">
-    @if($status === 'success')
-        <div style="font-size:4rem;margin-bottom:1.5rem;">🎉</div>
-        <h1 style="font-size:2rem;font-weight:700;color:#4ade80;margin-bottom:1rem;">Pembayaran Berhasil!</h1>
-        <p style="color:#94a3b8;margin-bottom:2rem;">Rank kamu sudah aktif. Selamat bermain di Mariposa Indonesia!</p>
-    @elseif($status === 'pending')
-        <div style="font-size:4rem;margin-bottom:1.5rem;">⏳</div>
-        <h1 style="font-size:2rem;font-weight:700;color:#fbbf24;margin-bottom:1rem;">Menunggu Pembayaran</h1>
-        <p style="color:#94a3b8;margin-bottom:2rem;">Selesaikan pembayaran kamu. Rank akan aktif otomatis setelah dikonfirmasi.</p>
-    @elseif($status === 'manual_pending')
+    @if($status === 'manual_pending')
         <div style="font-size:4rem;margin-bottom:1.5rem;">🕐</div>
         <h1 style="font-size:2rem;font-weight:700;color:#fbbf24;margin-bottom:1rem;">Bukti Pembayaran Diterima</h1>
         <p style="color:#94a3b8;margin-bottom:2rem;">Terima kasih! Tim kami akan verifikasi pembayaran kamu secepatnya, rank akan dikirim setelah diverifikasi.</p>

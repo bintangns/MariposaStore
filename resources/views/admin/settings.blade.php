@@ -110,28 +110,18 @@
                 </div>
 
                 <div class="card">
-                    <h2>💳 Mode Pembayaran Manual</h2>
-                    <div class="desc">Sementara matiin Duitku — customer upload bukti transfer manual, kamu verifikasi & kirim rank dari sini.</div>
-
-                    <div class="form-group" style="display:flex;align-items:center;gap:0.75rem;">
-                        <input type="hidden" name="manual_payment_mode" value="0">
-                        <input type="checkbox" name="manual_payment_mode" value="1" id="manual_payment_mode"
-                            {{ old('manual_payment_mode', $settings['manual_payment_mode']) ? 'checked' : '' }}
-                            style="width:auto;accent-color:#7c3aed;">
-                        <label for="manual_payment_mode" style="margin-bottom:0;cursor:pointer;">Aktifkan Mode Pembayaran Manual (matikan Duitku)</label>
-                    </div>
+                    <h2>💳 Pembayaran QRIS</h2>
+                    <div class="desc">Customer scan QRIS GoPay Merchant, upload bukti transaksi, lalu kamu verifikasi & kirim rank dari halaman Orders.</div>
 
                     <div class="form-group">
-                        <label>Instruksi Transfer</label>
-                        <textarea name="manual_payment_instructions" style="min-height:110px;" placeholder="Transfer ke BCA 1234567890 a.n. Bintang&#10;atau QRIS: (link/nomor QRIS)&#10;&#10;Setelah transfer, upload bukti pembayaran di halaman ini.">{{ old('manual_payment_instructions', $settings['manual_payment_instructions']) }}</textarea>
-                        <div class="hint">Ditampilkan ke customer di halaman upload bukti (rekening/e-wallet tujuan, dll). Tulis manual karena bisa beda-beda tiap saat.</div>
+                        <label>Catatan Tambahan (opsional)</label>
+                        <textarea name="manual_payment_instructions" style="min-height:110px;" placeholder="Contoh: Verifikasi maks. 1x24 jam. Ada kendala? Hubungi admin di Discord.">{{ old('manual_payment_instructions', $settings['manual_payment_instructions']) }}</textarea>
+                        <div class="hint">Gambar QRIS & langkah-langkah bayar udah otomatis tampil di halaman pembayaran. Isi ini cuma kalau mau nambahin catatan di bawahnya — kosongkan kalau gak perlu.</div>
                     </div>
 
-                    @if($settings['manual_payment_mode'])
                     <div style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.3);border-radius:0.5rem;padding:0.75rem 1rem;font-size:0.8125rem;color:#fcd34d;">
-                        ⚠ Mode manual lagi aktif. Cek halaman <a href="{{ route('admin.orders') }}" style="color:#fde68a;">Orders</a> buat verifikasi bukti transfer yang masuk & kirim rank-nya.
+                        Cek halaman <a href="{{ route('admin.orders') }}" style="color:#fde68a;">Orders</a> buat verifikasi bukti transaksi QRIS yang masuk & kirim rank-nya.
                     </div>
-                    @endif
                 </div>
 
                 <div class="card">

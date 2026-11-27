@@ -37,14 +37,13 @@ class Setting extends Model
         return static::get('maintenance_message') ?: 'Store sedang maintenance. Pembelian sementara dinonaktifkan, silakan coba lagi nanti.';
     }
 
-    public static function isManualPaymentMode(): bool
+    /**
+     * Catatan tambahan opsional dari admin, ditampilkan di bawah langkah-langkah
+     * bayar QRIS di halaman pembayaran. Null kalau admin gak isi apa-apa.
+     */
+    public static function manualPaymentInstructions(): ?string
     {
-        return (bool) static::get('manual_payment_mode', false);
-    }
-
-    public static function manualPaymentInstructions(): string
-    {
-        return static::get('manual_payment_instructions') ?: 'Transfer sesuai total ke rekening/e-wallet yang tertera, lalu upload bukti pembayaran di bawah ini.';
+        return static::get('manual_payment_instructions') ?: null;
     }
 
     public static function isPromoActive(): bool
@@ -76,12 +75,14 @@ class Setting extends Model
     public static function freeGradientProductId(): ?int
     {
         $id = static::get('free_gradient_product_id');
+
         return $id ? (int) $id : null;
     }
 
     public static function freeCustomProductId(): ?int
     {
         $id = static::get('free_custom_product_id');
+
         return $id ? (int) $id : null;
     }
 
@@ -91,7 +92,7 @@ class Setting extends Model
      */
     public static function applyPromo(?int $price): ?int
     {
-        if ($price === null || !static::isPromoActive()) {
+        if ($price === null || ! static::isPromoActive()) {
             return $price;
         }
 

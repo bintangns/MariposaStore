@@ -114,7 +114,7 @@
             <h2>5. Pembayaran</h2>
 
             <h3>5.1. Metode Pembayaran</h3>
-            <p>Kontribusi hanya boleh dilakukan melalui metode pembayaran resmi yang Kami sediakan di Store (diproses lewat Duitku — QRIS, Transfer Bank, GoPay, OVO, dan metode lain yang tersedia). Kami tidak bertanggung jawab atas pembayaran melalui pihak ketiga tidak resmi atau di luar sistem Store.</p>
+            <p>Kontribusi hanya boleh dilakukan melalui metode pembayaran resmi yang Kami sediakan di Store (saat ini hanya QRIS GoPay Merchant atas nama MARIPOSA INDONESIA, VIDEO GAME — bisa dibayar lewat GoPay, m-banking, atau e-wallet apa pun yang mendukung QRIS). Kami tidak bertanggung jawab atas pembayaran melalui pihak ketiga tidak resmi atau di luar sistem Store.</p>
 
             <h3>5.2. Biaya Tambahan</h3>
             <p>Biaya transaksi, biaya admin, atau selisih konversi mata uang menjadi tanggung jawab kamu.</p>
@@ -127,7 +127,7 @@
             <h2>6. Privasi Data Kamu</h2>
 
             <h3>6.1. Pengumpulan Data</h3>
-            <p>Untuk memproses kontribusi, Kami dapat mengumpulkan data tertentu seperti username Minecraft, riwayat transaksi, dan informasi yang diperlukan oleh penyedia pembayaran (Duitku). Kalau kamu menghubungi kami lewat Discord untuk dukungan, kami juga dapat menerima informasi dari interaksi tersebut.</p>
+            <p>Untuk memproses kontribusi, Kami dapat mengumpulkan data tertentu seperti username Minecraft, riwayat transaksi, dan bukti transaksi pembayaran yang kamu upload untuk verifikasi. Kalau kamu menghubungi kami lewat Discord untuk dukungan, kami juga dapat menerima informasi dari interaksi tersebut.</p>
 
             <h3>6.2. Penggunaan Data</h3>
             <p>Data digunakan semata-mata untuk memproses kontribusi, pemberian Manfaat Virtual, dan dukungan layanan. Kami tidak menjual data kamu kepada pihak ketiga.</p>

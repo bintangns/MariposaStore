@@ -252,13 +252,13 @@
 
             <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid rgba(255,255,255,0.06);">
                 <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.75rem;color:#64748b;margin-bottom:0.375rem;">
-                    <span>🔒</span> Pembayaran aman via Duitku
+                    <span>🔒</span> Pembayaran via QRIS (GoPay Merchant)
                 </div>
                 <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.75rem;color:#64748b;margin-bottom:0.375rem;">
-                    <span>⚡</span> Rank langsung aktif setelah pembayaran
+                    <span>⚡</span> Rank dikirim setelah pembayaran diverifikasi admin
                 </div>
                 <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.75rem;color:#64748b;">
-                    <span>💳</span> QRIS, Transfer Bank, GoPay, OVO
+                    <span>💳</span> GoPay, m-banking & e-wallet yang support QRIS
                 </div>
             </div>
         </div>
